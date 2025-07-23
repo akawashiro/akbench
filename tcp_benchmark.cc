@@ -37,7 +37,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Receiver: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     }
 
     // Create a TCP socket for each iteration
@@ -103,7 +104,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       }
       if (bytes_received == 0) {
         if (!is_warmup) {
-          LOG(INFO) << "Receiver: Sender disconnected prematurely.";
+          LOG(INFO) << ReceivePrefix(iteration)
+                    << "Sender disconnected prematurely.";
         }
         break;
       }
@@ -119,7 +121,7 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << "Receiver: Received "
+      VLOG(1) << ReceivePrefix(iteration) << "Received "
               << total_received / (1024.0 * 1024.0 * 1024.0)
               << " GiB of data in " << elapsed_time.count() * 1000 << " ms.";
     }
@@ -156,7 +158,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Sender: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
       VLOG(1) << SendPrefix(iteration) << "Connecting to receiver at "
               << LOOPBACK_IP << ":" << PORT;
@@ -215,8 +218,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << "Sender: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << SendPrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     close(sock_fd);

@@ -39,7 +39,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Receiver: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Starting iteration...";
     }
@@ -63,7 +64,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       LOG(FATAL) << "receive: mmap: " << strerror(errno);
     }
 
-    VLOG(1) << "Receiver: Shared memory and semaphores initialized";
+    VLOG(1) << ReceivePrefix(iteration)
+            << "Shared memory and semaphores initialized";
     barrier.Wait();
 
     std::vector<uint8_t> received_data(data_size, 0);
@@ -88,8 +90,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << "Receiver: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << ReceivePrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     // Verify received data (always, even during warmup)
@@ -122,7 +124,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Sender: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
       VLOG(1) << SendPrefix(iteration) << "Starting iteration...";
     }
@@ -163,8 +166,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << "Sender: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << SendPrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     munmap(shared_buffer, shared_buffer_size);

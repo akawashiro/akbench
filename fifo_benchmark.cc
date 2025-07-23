@@ -32,10 +32,11 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Sender: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
-      VLOG(1) << "Sender: Starting iteration " << iteration << "/"
-              << num_iterations;
+      VLOG(1) << SendPrefix(iteration) << "Starting iteration " << iteration
+              << "/" << num_iterations;
     }
 
     // Open FIFO for writing
@@ -63,8 +64,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << "Sender: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << SendPrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     close(write_fd);
@@ -76,7 +77,7 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   LOG(INFO) << "Send bandwidth: " << bandwidth_gibps << GIBYTE_PER_SEC_UNIT
             << ".";
 
-  VLOG(1) << "Sender: Exiting.";
+  VLOG(1) << SendPrefix(-1) << "Exiting.";
 }
 
 double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -90,10 +91,11 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Receiver: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
-      VLOG(1) << "Receiver: Starting iteration " << iteration << "/"
-              << num_iterations;
+      VLOG(1) << ReceivePrefix(iteration) << "Starting iteration " << iteration
+              << "/" << num_iterations;
     }
 
     std::vector<uint8_t> recv_buffer(buffer_size);
@@ -117,7 +119,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       }
       if (bytes_read == 0) {
         if (!is_warmup) {
-          VLOG(1) << "Receiver: Sender closed the FIFO prematurely.";
+          VLOG(1) << ReceivePrefix(iteration)
+                  << "Sender closed the FIFO prematurely.";
         }
         break;
       }
@@ -132,8 +135,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << "Receiver: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << ReceivePrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     if (!VerifyDataReceived(received_data, data_size)) {
@@ -149,7 +152,7 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
             << GIBYTE_PER_SEC_UNIT << ".";
 
-  VLOG(1) << "Receiver: Exiting.";
+  VLOG(1) << ReceivePrefix(-1) << "Exiting.";
 
   return bandwidth;
 }

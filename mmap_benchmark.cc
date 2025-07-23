@@ -62,7 +62,8 @@ void SendProcess(const int num_warmups, const int num_iterations,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Sender: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
       VLOG(1) << SendPrefix(iteration) << "Starting iteration...";
     }
@@ -88,8 +89,8 @@ void SendProcess(const int num_warmups, const int num_iterations,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << "Sender: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << SendPrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     munmap(mapped_region, total_size);
@@ -100,7 +101,7 @@ void SendProcess(const int num_warmups, const int num_iterations,
   LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30)
             << GIBYTE_PER_SEC_UNIT << ".";
 
-  VLOG(1) << "Sender: Exiting.";
+  VLOG(1) << SendPrefix(-1) << "Exiting.";
 }
 
 double ReceiveProcess(const int num_warmups, const int num_iterations,
@@ -135,7 +136,8 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << "Receiver: Warm-up " << iteration << "/" << num_warmups;
+      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
+              << num_warmups;
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Starting iteration...";
     }
@@ -164,8 +166,8 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << "Receiver: Time taken: " << elapsed_time.count() * 1000
-              << " ms.";
+      VLOG(1) << ReceivePrefix(iteration)
+              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
 
     // Verify received data (always, even during warmup)
@@ -183,7 +185,7 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
             << GIBYTE_PER_SEC_UNIT << ".";
 
-  VLOG(1) << "Receiver: Exiting.";
+  VLOG(1) << ReceivePrefix(-1) << "Exiting.";
 
   return bandwidth;
 }
