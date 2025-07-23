@@ -20,8 +20,8 @@ namespace {
 const std::string BARRIER_ID = "/fifo_benchmark";
 const std::string FIFO_PATH = "/tmp/fifo_benchmark_pipe";
 
-void SendProcess(int num_warmups, int num_iterations,
-                 uint64_t data_size, uint64_t buffer_size) {
+void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                 uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<uint8_t> data_to_send = GenerateDataToSend(data_size);
@@ -80,8 +80,8 @@ void SendProcess(int num_warmups, int num_iterations,
   VLOG(1) << "Sender: Exiting.";
 }
 
-void ReceiveProcess(int num_warmups, int num_iterations,
-                    uint64_t data_size, uint64_t buffer_size) {
+void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                    uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
