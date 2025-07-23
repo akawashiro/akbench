@@ -2,9 +2,7 @@
 
 ## How to build
 ```bash
-$ git submodule update --init --recursive
-$ cmake -S . -B build -D CMAKE_BUILD_TYPE=RelWithDebInfo
-$ cmake --build build -j
+$ ./build.sh
 ```
 
 ## How to run
