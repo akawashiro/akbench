@@ -119,43 +119,8 @@ int main(int argc, char *argv[]) {
 
   // Run the appropriate benchmark
   double bandwidth = 0.0;
-  if (type == "memcpy") {
-    bandwidth = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
-  } else if (type == "memcpy_mt") {
-    if (num_threads_opt.has_value()) {
-      // Run with specified number of threads
-      bandwidth = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
-                                       num_threads_opt.value());
-    } else {
-      // Run with 1-4 threads for compatibility
-      for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
-        bandwidth = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
-                                         n_threads);
-        std::cout << "memcpy_mt (" << n_threads
-                  << " threads): " << bandwidth / (1ULL << 30) << " GiByte/sec"
-                  << std::endl;
-      }
-      return 0;
-    }
-  } else if (type == "tcp") {
-    bandwidth =
-        RunTcpBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "uds") {
-    bandwidth =
-        RunUdsBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "pipe") {
-    bandwidth =
-        RunPipeBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "fifo") {
-    bandwidth =
-        RunFifoBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "mmap") {
-    bandwidth =
-        RunMmapBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "shm") {
-    bandwidth =
-        RunShmBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  } else if (type == "all") {
+
+  if (type == "all") {
     bandwidth = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
     std::cout << "memcpy: " << bandwidth / (1ULL << 30) << " GiByte/sec"
               << std::endl;
@@ -200,6 +165,42 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
     return 0;
+  } else if (type == "memcpy") {
+    bandwidth = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
+  } else if (type == "memcpy_mt") {
+    if (num_threads_opt.has_value()) {
+      // Run with specified number of threads
+      bandwidth = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
+                                       num_threads_opt.value());
+    } else {
+      // Run with 1-4 threads for compatibility
+      for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
+        bandwidth = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
+                                         n_threads);
+        std::cout << "memcpy_mt (" << n_threads
+                  << " threads): " << bandwidth / (1ULL << 30) << " GiByte/sec"
+                  << std::endl;
+      }
+      return 0;
+    }
+  } else if (type == "tcp") {
+    bandwidth =
+        RunTcpBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "uds") {
+    bandwidth =
+        RunUdsBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "pipe") {
+    bandwidth =
+        RunPipeBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "fifo") {
+    bandwidth =
+        RunFifoBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "mmap") {
+    bandwidth =
+        RunMmapBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "shm") {
+    bandwidth =
+        RunShmBenchmark(num_iterations, num_warmups, data_size, buffer_size);
   } else {
     LOG(ERROR) << "Unknown benchmark type: " << type
                << ". Available types: memcpy, memcpy_mt, tcp, udp, uds, pipe, "
