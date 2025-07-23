@@ -37,13 +37,13 @@ void SendProcess(const int num_warmups, const int num_iterations,
        ++iteration) {
     int fd = open(MMAP_FILE_PATH.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
     if (fd == -1) {
-      LOG(ERROR) << "send: open: " << strerror(errno);
+      LOG(FATAL) << "send: open: " << strerror(errno);
       return;
     }
 
     size_t total_size = sizeof(MmapBuffer) + 2 * buffer_size;
     if (ftruncate(fd, total_size) == -1) {
-      LOG(ERROR) << "send: ftruncate: " << strerror(errno);
+      LOG(FATAL) << "send: ftruncate: " << strerror(errno);
       close(fd);
       return;
     }
@@ -52,9 +52,7 @@ void SendProcess(const int num_warmups, const int num_iterations,
     void *mapped_region =
         mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mapped_region == MAP_FAILED) {
-      LOG(ERROR) << "send: mmap: " << strerror(errno);
-      close(fd);
-      return;
+      LOG(FATAL) << "send: mmap: " << strerror(errno);
     }
     barrier.Wait();
 
@@ -104,8 +102,8 @@ void SendProcess(const int num_warmups, const int num_iterations,
   VLOG(1) << "Sender: Exiting.";
 }
 
-void ReceiveProcess(const int num_warmups, const int num_iterations,
-                    const uint64_t data_size, const uint64_t buffer_size) {
+double ReceiveProcess(const int num_warmups, const int num_iterations,
+                      const uint64_t data_size, const uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   barrier.Wait();
   std::vector<double> durations;
@@ -115,15 +113,12 @@ void ReceiveProcess(const int num_warmups, const int num_iterations,
     barrier.Wait();
     int fd = open(MMAP_FILE_PATH.c_str(), O_RDWR);
     if (fd == -1) {
-      LOG(ERROR) << "receive: open: " << strerror(errno);
-      return;
+      LOG(FATAL) << "receive: open: " << strerror(errno);
     }
 
     struct stat file_stat;
     if (fstat(fd, &file_stat) == -1) {
-      LOG(ERROR) << "receive: fstat: " << strerror(errno);
-      close(fd);
-      return;
+      LOG(FATAL) << "receive: fstat: " << strerror(errno);
     }
 
     size_t total_size = file_stat.st_size;
@@ -131,9 +126,7 @@ void ReceiveProcess(const int num_warmups, const int num_iterations,
     void *mapped_region =
         mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mapped_region == MAP_FAILED) {
-      LOG(ERROR) << "receive: mmap: " << strerror(errno);
-      close(fd);
-      return;
+      LOG(FATAL) << "receive: mmap: " << strerror(errno);
     }
 
     MmapBuffer *mmap_buffer = static_cast<MmapBuffer *>(mapped_region);
@@ -176,7 +169,7 @@ void ReceiveProcess(const int num_warmups, const int num_iterations,
 
     // Verify received data (always, even during warmup)
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
+      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
@@ -189,30 +182,31 @@ void ReceiveProcess(const int num_warmups, const int num_iterations,
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
 
   VLOG(1) << "Receiver: Exiting.";
+
+  return bandwidth;
 }
 
 } // namespace
 
-int RunMmapBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                     uint64_t buffer_size) {
+double RunMmapBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                        uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   unlink(MMAP_FILE_PATH.c_str());
 
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(ERROR) << "fork: " << strerror(errno);
-    return 1;
+    LOG(FATAL) << "fork: " << strerror(errno);
   }
 
   if (pid == 0) {
     SendProcess(num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
+    double bandwidth =
+        ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
     unlink(MMAP_FILE_PATH.c_str());
+    return bandwidth;
   }
-
-  return 0;
 }

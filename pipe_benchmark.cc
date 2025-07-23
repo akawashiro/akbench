@@ -44,8 +44,7 @@ void SendProcess(int write_fd, int num_warmups, int num_iterations,
       ssize_t bytes_written =
           write(write_fd, data_to_send.data() + total_sent, bytes_to_send);
       if (bytes_written == -1) {
-        LOG(ERROR) << "send: write: " << strerror(errno);
-        break;
+        LOG(FATAL) << "send: write: " << strerror(errno);
       }
       total_sent += bytes_written;
     }
@@ -69,8 +68,8 @@ void SendProcess(int write_fd, int num_warmups, int num_iterations,
   VLOG(1) << "Sender: Exiting.";
 }
 
-void ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
-                    uint64_t data_size, uint64_t buffer_size) {
+double ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
+                      uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -97,8 +96,7 @@ void ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
     while (total_received < data_size) {
       ssize_t bytes_read = read(read_fd, recv_buffer.data(), buffer_size);
       if (bytes_read == -1) {
-        LOG(ERROR) << "receive: read: " << strerror(errno);
-        break;
+        LOG(FATAL) << "receive: read: " << strerror(errno);
       }
       if (bytes_read == 0) {
         if (!is_warmup) {
@@ -122,7 +120,7 @@ void ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
     }
 
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
+      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
@@ -133,16 +131,17 @@ void ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
 
   close(read_fd);
   VLOG(1) << "Receiver: Exiting.";
+
+  return bandwidth;
 }
 
 } // namespace
 
-int RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                     uint64_t buffer_size) {
+double RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                        uint64_t buffer_size) {
   int pipe_fds[2];
   if (pipe(pipe_fds) == -1) {
-    LOG(ERROR) << "pipe: " << strerror(errno);
-    return 1;
+    LOG(FATAL) << "pipe: " << strerror(errno);
   }
 
   int read_fd = pipe_fds[0];
@@ -151,10 +150,7 @@ int RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(ERROR) << "fork: " << strerror(errno);
-    close(read_fd);
-    close(write_fd);
-    return 1;
+    LOG(FATAL) << "fork: " << strerror(errno);
   }
 
   if (pid == 0) {
@@ -163,10 +159,9 @@ int RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
     exit(0);
   } else {
     close(write_fd);
-    ReceiveProcess(read_fd, num_warmups, num_iterations, data_size,
-                   buffer_size);
+    double bandwidth = ReceiveProcess(read_fd, num_warmups, num_iterations,
+                                      data_size, buffer_size);
     waitpid(pid, nullptr, 0);
+    return bandwidth;
   }
-
-  return 0;
 }

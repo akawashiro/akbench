@@ -21,8 +21,8 @@ const std::string SOCKET_PATH = "/tmp/unix_domain_socket_test.sock";
 constexpr size_t DEFAULT_BUFFER_SIZE = (1 << 20);
 const std::string BARRIER_ID = "/uds_benchmark";
 
-void ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
-                    uint64_t data_size) {
+double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
+                      uint64_t data_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -45,16 +45,12 @@ void ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
 
     // Bind the socket to the specified path
     if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-      LOG(ERROR) << "Failed to bind socket to " << SOCKET_PATH;
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "Failed to bind socket to " << SOCKET_PATH;
     }
 
     // Listen for incoming connections
     if (listen(listen_fd, 0) == -1) {
-      LOG(ERROR) << "Failed to listen on socket " << SOCKET_PATH;
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "Failed to listen on socket " << SOCKET_PATH;
     }
 
     VLOG(1) << ReceivePrefix(iteration) << "Waiting for sender connection on "
@@ -106,6 +102,8 @@ void ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
   LOG(INFO) << " Receive bandwidth: " << bandwidth / (1 << 30)
             << " GiByte/sec.";
+
+  return bandwidth;
 }
 
 void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
@@ -135,10 +133,8 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
                 << "Connection failed: " << strerror(errno) << ". Retrying...";
         sleep(1);
       } else {
-        LOG(ERROR) << SendPrefix(iteration)
+        LOG(FATAL) << SendPrefix(iteration)
                    << "Unexpected error: " << strerror(errno);
-        close(sock_fd);
-        return;
       }
     }
 
@@ -154,7 +150,7 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
       ssize_t bytes_sent =
           send(sock_fd, data_to_send.data() + total_sent, bytes_to_send, 0);
       if (bytes_sent == -1) {
-        LOG(ERROR) << "Send: Failed to send data: " << strerror(errno);
+        LOG(FATAL) << "Send: Failed to send data: " << strerror(errno);
         break;
       }
       total_sent += bytes_sent;
@@ -177,8 +173,8 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
   LOG(INFO) << " Send bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
 }
 
-int RunUdsBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                    uint64_t buffer_size) {
+double RunUdsBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                       uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();
@@ -188,9 +184,9 @@ int RunUdsBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
     SendProcess(buffer_size, num_warmups, num_iterations, data_size);
     exit(0);
   } else {
-    ReceiveProcess(buffer_size, num_warmups, num_iterations, data_size);
+    double bandwidth =
+        ReceiveProcess(buffer_size, num_warmups, num_iterations, data_size);
     waitpid(pid, nullptr, 0);
+    return bandwidth;
   }
-
-  return 0;
 }

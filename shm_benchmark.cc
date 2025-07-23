@@ -29,8 +29,8 @@ struct SharedBuffer {
 
 void CleanupResources() { shm_unlink(SHM_NAME.c_str()); }
 
-void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                    uint64_t buffer_size) {
+double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                      uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   std::vector<double> durations;
 
@@ -48,15 +48,11 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     const size_t shared_buffer_size = sizeof(SharedBuffer) + 2 * buffer_size;
     int shm_fd = shm_open(SHM_NAME.c_str(), O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
-      LOG(ERROR) << "receive: shm_open: " << strerror(errno);
-      return;
+      LOG(FATAL) << "receive: shm_open: " << strerror(errno);
     }
 
     if (ftruncate(shm_fd, shared_buffer_size) == -1) {
-      LOG(ERROR) << "receive: ftruncate: " << strerror(errno);
-      close(shm_fd);
-      CleanupResources();
-      return;
+      LOG(FATAL) << "receive: ftruncate: " << strerror(errno);
     }
 
     SharedBuffer *shared_buffer = static_cast<SharedBuffer *>(
@@ -64,10 +60,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
              shm_fd, 0));
     memset(shared_buffer, 0, shared_buffer_size);
     if (shared_buffer == MAP_FAILED) {
-      LOG(ERROR) << "receive: mmap: " << strerror(errno);
-      close(shm_fd);
-      CleanupResources();
-      return;
+      LOG(FATAL) << "receive: mmap: " << strerror(errno);
     }
 
     VLOG(1) << "Receiver: Shared memory and semaphores initialized";
@@ -101,7 +94,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
     // Verify received data (always, even during warmup)
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
+      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
@@ -113,6 +106,8 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+
+  return bandwidth;
 }
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -136,17 +131,14 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     const size_t shared_buffer_size = sizeof(SharedBuffer) + 2 * buffer_size;
     int shm_fd = shm_open(SHM_NAME.c_str(), O_RDWR, 0666);
     if (shm_fd == -1) {
-      LOG(ERROR) << "send: shm_open: " << strerror(errno);
-      return;
+      LOG(FATAL) << "send: shm_open: " << strerror(errno);
     }
 
     SharedBuffer *shared_buffer = static_cast<SharedBuffer *>(
         mmap(NULL, shared_buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED,
              shm_fd, 0));
     if (shared_buffer == MAP_FAILED) {
-      LOG(ERROR) << "send: mmap: " << strerror(errno);
-      close(shm_fd);
-      return;
+      LOG(FATAL) << "send: mmap: " << strerror(errno);
     }
 
     barrier.Wait();
@@ -184,25 +176,24 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-int RunShmBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                    uint64_t buffer_size) {
+double RunShmBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                       uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   CleanupResources();
 
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(ERROR) << "Fork failed: " << strerror(errno);
-    return 1;
+    LOG(FATAL) << "Fork failed: " << strerror(errno);
   }
 
   if (pid == 0) {
     SendProcess(num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
+    double bandwidth =
+        ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
+    return bandwidth;
   }
-
-  return 0;
 }

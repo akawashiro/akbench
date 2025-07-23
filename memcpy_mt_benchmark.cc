@@ -10,8 +10,8 @@
 
 #include "common.h"
 
-void MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
-                         int num_iterations, uint64_t data_size) {
+double MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
+                           int num_iterations, uint64_t data_size) {
   std::vector<uint8_t> src = GenerateDataToSend(data_size);
   std::vector<uint8_t> dst(data_size, 0x00);
   uint64_t chunk_size = data_size / n_threads;
@@ -56,13 +56,16 @@ void MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
   LOG(INFO) << n_threads << " threads bandwidth: " << bandwidth / (1 << 30)
             << " GiByte/sec.";
+
+  return bandwidth;
 }
 
-int RunMemcpyMtBenchmark(int num_iterations, int num_warmups,
-                         uint64_t data_size, uint64_t num_threads) {
+double RunMemcpyMtBenchmark(int num_iterations, int num_warmups,
+                            uint64_t data_size, uint64_t num_threads) {
   VLOG(1) << "Starting multi-threaded memcpy bandwidth test with "
           << num_threads << " threads...";
-  MemcpyInMultiThread(num_threads, num_warmups, num_iterations, data_size);
+  double bandwidth =
+      MemcpyInMultiThread(num_threads, num_warmups, num_iterations, data_size);
 
-  return 0;
+  return bandwidth;
 }

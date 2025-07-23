@@ -22,8 +22,8 @@ const int PORT = 12345;
 const std::string LOOPBACK_IP = "127.0.0.1";
 const std::string BARRIER_ID = "/tcp_benchmark";
 
-void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                    uint64_t buffer_size) {
+double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                      uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -43,17 +43,14 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Create a TCP socket for each iteration
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd == -1) {
-      LOG(ERROR) << "receive: socket: " << strerror(errno);
-      return;
+      LOG(FATAL) << "receive: socket: " << strerror(errno);
     }
 
     // Allow immediate reuse of the port after the program exits
     int optval = 1;
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
                    sizeof(optval)) == -1) {
-      LOG(ERROR) << "receive: setsockopt SO_REUSEADDR: " << strerror(errno);
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "receive: setsockopt SO_REUSEADDR: " << strerror(errno);
     }
 
     // Configure receive address
@@ -65,16 +62,12 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Bind the socket to the specified IP address and port
     if (bind(listen_fd, (struct sockaddr *)&receive_addr,
              sizeof(receive_addr)) == -1) {
-      LOG(ERROR) << "receive: bind: " << strerror(errno);
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "receive: bind: " << strerror(errno);
     }
 
     // Listen for incoming connections
     if (listen(listen_fd, 5) == -1) {
-      LOG(ERROR) << "receive: listen: " << strerror(errno);
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "receive: listen: " << strerror(errno);
     }
 
     barrier.Wait();
@@ -84,9 +77,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Accept a sender connection for this iteration
     conn_fd = accept(listen_fd, (struct sockaddr *)&send_addr, &send_len);
     if (conn_fd == -1) {
-      LOG(ERROR) << "receive: accept: " << strerror(errno);
-      close(listen_fd);
-      return;
+      LOG(FATAL) << "receive: accept: " << strerror(errno);
     }
 
     if (!is_warmup) {
@@ -108,8 +99,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_received =
           recv(conn_fd, recv_buffer.data(), buffer_size, 0);
       if (bytes_received == -1) {
-        LOG(ERROR) << "receive: recv: " << strerror(errno);
-        break;
+        LOG(FATAL) << "receive: recv: " << strerror(errno);
       }
       if (bytes_received == 0) {
         if (!is_warmup) {
@@ -136,7 +126,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
     // Verify received data (always, even during warmup)
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
+      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
@@ -149,6 +139,8 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
 
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+
+  return bandwidth;
 }
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -175,8 +167,7 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Create a TCP socket
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd == -1) {
-      LOG(ERROR) << "send: socket: " << strerror(errno);
-      return;
+      LOG(FATAL) << "send: socket: " << strerror(errno);
     }
 
     // Configure receive address to connect to
@@ -211,8 +202,7 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_sent =
           send(sock_fd, data_to_send.data() + total_sent, bytes_to_send, 0);
       if (bytes_sent == -1) {
-        LOG(ERROR) << "send: send: " << strerror(errno);
-        break;
+        LOG(FATAL) << "send: send: " << strerror(errno);
       }
       total_sent += bytes_sent;
     }
@@ -238,23 +228,22 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-int RunTcpBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                    uint64_t buffer_size) {
+double RunTcpBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                       uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();
   if (pid == -1) {
-    LOG(ERROR) << "fork: " << strerror(errno);
-    return 1;
+    LOG(FATAL) << "fork: " << strerror(errno);
   }
 
   if (pid == 0) {
     SendProcess(num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
+    double bandwidth =
+        ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
+    return bandwidth;
   }
-
-  return 0;
 }

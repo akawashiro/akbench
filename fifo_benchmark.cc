@@ -41,8 +41,7 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Open FIFO for writing
     int write_fd = open(FIFO_PATH.c_str(), O_WRONLY);
     if (write_fd == -1) {
-      LOG(ERROR) << "send: open FIFO for writing: " << strerror(errno);
-      return;
+      LOG(FATAL) << "send: open FIFO for writing: " << strerror(errno);
     }
 
     barrier.Wait();
@@ -54,8 +53,7 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_written =
           write(write_fd, data_to_send.data() + total_sent, bytes_to_send);
       if (bytes_written == -1) {
-        LOG(ERROR) << "send: write: " << strerror(errno);
-        break;
+        LOG(FATAL) << "send: write: " << strerror(errno);
       }
       total_sent += bytes_written;
     }
@@ -80,8 +78,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   VLOG(1) << "Sender: Exiting.";
 }
 
-void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                    uint64_t buffer_size) {
+double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                      uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -104,8 +102,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Open FIFO for reading
     int read_fd = open(FIFO_PATH.c_str(), O_RDONLY);
     if (read_fd == -1) {
-      LOG(ERROR) << "receive: open FIFO for reading: " << strerror(errno);
-      return;
+      LOG(FATAL) << "receive: open FIFO for reading: " << strerror(errno);
     }
 
     barrier.Wait();
@@ -115,8 +112,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     while (total_received < data_size) {
       ssize_t bytes_read = read(read_fd, recv_buffer.data(), buffer_size);
       if (bytes_read == -1) {
-        LOG(ERROR) << "receive: read: " << strerror(errno);
-        break;
+        LOG(FATAL) << "receive: read: " << strerror(errno);
       }
       if (bytes_read == 0) {
         if (!is_warmup) {
@@ -140,7 +136,7 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     }
 
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
+      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
@@ -152,27 +148,26 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
 
   VLOG(1) << "Receiver: Exiting.";
+
+  return bandwidth;
 }
 
 } // namespace
 
-int RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                     uint64_t buffer_size) {
+double RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+                        uint64_t buffer_size) {
   // Remove any existing FIFO
   unlink(FIFO_PATH.c_str());
 
   // Create FIFO
   if (mkfifo(FIFO_PATH.c_str(), 0666) == -1) {
-    LOG(ERROR) << "mkfifo: " << strerror(errno);
-    return 1;
+    LOG(FATAL) << "mkfifo: " << strerror(errno);
   }
 
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(ERROR) << "fork: " << strerror(errno);
-    unlink(FIFO_PATH.c_str());
-    return 1;
+    LOG(FATAL) << "fork: " << strerror(errno);
   }
 
   if (pid == 0) {
@@ -181,12 +176,13 @@ int RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
     exit(0);
   } else {
     // Parent process: receiver
-    ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
+    double bandwidth =
+        ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
+
+    // Clean up FIFO
+    unlink(FIFO_PATH.c_str());
+
+    return bandwidth;
   }
-
-  // Clean up FIFO
-  unlink(FIFO_PATH.c_str());
-
-  return 0;
 }
