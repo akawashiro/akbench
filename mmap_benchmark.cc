@@ -133,11 +133,12 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size) {
 
   for (int iteration = 0; iteration < num_warmups + num_iterations;
        ++iteration) {
+    std::vector<uint8_t> received_data(data_size);
     barrier.Wait();
     auto start_time = std::chrono::high_resolution_clock::now();
     while (sync->bytes_written.load() == 0) {
     }
-    memcpy(data_region, data_region, data_size);
+    memcpy(received_data.data(), data_region, data_size);
     auto end_time = std::chrono::high_resolution_clock::now();
     barrier.Wait();
 
@@ -150,9 +151,6 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size) {
               << " ms.";
     }
 
-    std::vector<uint8_t> received_data(
-        reinterpret_cast<uint8_t *>(data_region),
-        reinterpret_cast<uint8_t *>(data_region) + data_size);
     if (!VerifyDataReceived(received_data, data_size)) {
       LOG(ERROR) << ReceivePrefix(iteration) << "Data verification failed!";
     } else {
