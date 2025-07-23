@@ -121,48 +121,49 @@ int main(int argc, char *argv[]) {
   double bandwidth = 0.0;
 
   if (type == "all") {
+    // Collect all benchmark results first, then output at the end
+    std::vector<std::pair<std::string, double>> results;
+
     bandwidth = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
-    std::cout << "memcpy: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("memcpy", bandwidth);
 
     // Run memcpy_mt with 1-4 threads for "all" case
     for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
       bandwidth = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
                                        n_threads);
-      std::cout << "memcpy_mt (" << n_threads
-                << " threads): " << bandwidth / (1ULL << 30)
-                << GIBYTE_PER_SEC_UNIT << std::endl;
+      results.emplace_back(
+          "memcpy_mt (" + std::to_string(n_threads) + " threads)", bandwidth);
     }
 
     bandwidth =
         RunTcpBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "tcp: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("tcp", bandwidth);
 
     bandwidth =
         RunUdsBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "uds: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("uds", bandwidth);
 
     bandwidth =
         RunPipeBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "pipe: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("pipe", bandwidth);
 
     bandwidth =
         RunFifoBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "fifo: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("fifo", bandwidth);
 
     bandwidth =
         RunMmapBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "mmap: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("mmap", bandwidth);
 
     bandwidth =
         RunShmBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-    std::cout << "shm: " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-              << std::endl;
+    results.emplace_back("shm", bandwidth);
+
+    // Output all results at the end
+    for (const auto &result : results) {
+      std::cout << result.first << ": " << result.second / (1ULL << 30)
+                << GIBYTE_PER_SEC_UNIT << std::endl;
+    }
 
     return 0;
   } else if (type == "memcpy") {
