@@ -41,6 +41,9 @@ target_link_libraries(pipe_benchmark ${BANDWIDTH_LIBS})
 add_library(fifo_benchmark fifo_benchmark.cc)
 target_link_libraries(fifo_benchmark ${BANDWIDTH_LIBS})
 
+add_library(mq_benchmark mq_benchmark.cc)
+target_link_libraries(mq_benchmark ${BANDWIDTH_LIBS} rt)
+
 add_library(mmap_benchmark mmap_benchmark.cc)
 target_link_libraries(mmap_benchmark ${BANDWIDTH_LIBS})
 
@@ -57,6 +60,7 @@ target_link_libraries(
   uds_benchmark
   pipe_benchmark
   fifo_benchmark
+  mq_benchmark
   mmap_benchmark
   shm_benchmark
   ${BANDWIDTH_LIBS}
