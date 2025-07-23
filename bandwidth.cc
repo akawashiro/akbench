@@ -28,6 +28,9 @@ ABSL_FLAG(uint64_t, data_size, (1 << 30), "Size of data to transfer in bytes");
 ABSL_FLAG(std::optional<uint64_t>, buffer_size, std::nullopt,
           "Buffer size for I/O operations in bytes (default: 1 MiByte, not "
           "applicable to memcpy benchmarks)");
+ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
+          "Number of threads for memcpy_mt benchmark (default: run with 1-4 "
+          "threads)");
 ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
           "Show VLOG messages lower than this level.");
 
@@ -44,6 +47,7 @@ int main(int argc, char *argv[]) {
   int num_warmups = absl::GetFlag(FLAGS_num_warmups);
   uint64_t data_size = absl::GetFlag(FLAGS_data_size);
   std::optional<uint64_t> buffer_size_opt = absl::GetFlag(FLAGS_buffer_size);
+  std::optional<uint64_t> num_threads_opt = absl::GetFlag(FLAGS_num_threads);
 
   // Validate type
   if (type.empty()) {
@@ -57,6 +61,21 @@ int main(int argc, char *argv[]) {
       buffer_size_opt.has_value()) {
     LOG(ERROR) << "Buffer size option is not applicable to " << type
                << " benchmark type";
+    return 1;
+  }
+
+  // Check if num_threads is specified for incompatible benchmark types
+  if (type != "memcpy_mt" && num_threads_opt.has_value()) {
+    LOG(ERROR) << "Number of threads option is only applicable to memcpy_mt "
+                  "benchmark type";
+    return 1;
+  }
+
+  // Validate num_threads for memcpy_mt
+  if (type == "memcpy_mt" && num_threads_opt.has_value() &&
+      num_threads_opt.value() == 0) {
+    LOG(ERROR) << "num_threads must be greater than 0, got: "
+               << num_threads_opt.value();
     return 1;
   }
 
@@ -102,7 +121,17 @@ int main(int argc, char *argv[]) {
   if (type == "memcpy") {
     result = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
   } else if (type == "memcpy_mt") {
-    result = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size);
+    if (num_threads_opt.has_value()) {
+      // Run with specified number of threads
+      result = RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
+                                    num_threads_opt.value());
+    } else {
+      // Run with 1-4 threads for compatibility
+      for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
+        result |= RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
+                                       n_threads);
+      }
+    }
   } else if (type == "tcp") {
     result =
         RunTcpBenchmark(num_iterations, num_warmups, data_size, buffer_size);
@@ -123,7 +152,11 @@ int main(int argc, char *argv[]) {
         RunShmBenchmark(num_iterations, num_warmups, data_size, buffer_size);
   } else if (type == "all") {
     result = RunMemcpyBenchmark(num_iterations, num_warmups, data_size);
-    result |= RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size);
+    // Run memcpy_mt with 1-4 threads for "all" case
+    for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
+      result |= RunMemcpyMtBenchmark(num_iterations, num_warmups, data_size,
+                                     n_threads);
+    }
     result |=
         RunTcpBenchmark(num_iterations, num_warmups, data_size, buffer_size);
     result |=

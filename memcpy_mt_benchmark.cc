@@ -59,11 +59,10 @@ void MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
 }
 
 int RunMemcpyMtBenchmark(int num_iterations, int num_warmups,
-                         uint64_t data_size) {
-  VLOG(1) << "Starting multi-threaded memcpy bandwidth test...";
-  for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
-    MemcpyInMultiThread(n_threads, num_warmups, num_iterations, data_size);
-  }
+                         uint64_t data_size, uint64_t num_threads) {
+  VLOG(1) << "Starting multi-threaded memcpy bandwidth test with "
+          << num_threads << " threads...";
+  MemcpyInMultiThread(num_threads, num_warmups, num_iterations, data_size);
 
   return 0;
 }
