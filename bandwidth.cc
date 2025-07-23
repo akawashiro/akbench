@@ -9,6 +9,7 @@
 #include "absl/log/log.h"
 
 #include "common.h"
+#include "fifo_benchmark.h"
 #include "memcpy_benchmark.h"
 #include "memcpy_mt_benchmark.h"
 #include "mmap_benchmark.h"
@@ -18,7 +19,7 @@
 #include "uds_benchmark.h"
 
 ABSL_FLAG(std::string, type, "",
-          "Benchmark type to run (memcpy, memcpy_mt, tcp, uds, pipe, "
+          "Benchmark type to run (memcpy, memcpy_mt, tcp, uds, pipe, fifo, "
           "mmap, shm)");
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
   // Validate type
   if (type.empty()) {
     LOG(ERROR) << "Must specify --type. Available types: memcpy, memcpy_mt, "
-                  "tcp, uds, pipe, mmap, shm, all";
+                  "tcp, uds, pipe, fifo, mmap, shm, all";
     return 1;
   }
 
@@ -111,6 +112,9 @@ int main(int argc, char *argv[]) {
   } else if (type == "pipe") {
     result =
         RunPipeBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+  } else if (type == "fifo") {
+    result =
+        RunFifoBenchmark(num_iterations, num_warmups, data_size, buffer_size);
   } else if (type == "mmap") {
     result =
         RunMmapBenchmark(num_iterations, num_warmups, data_size, buffer_size);
@@ -127,13 +131,15 @@ int main(int argc, char *argv[]) {
     result |=
         RunPipeBenchmark(num_iterations, num_warmups, data_size, buffer_size);
     result |=
+        RunFifoBenchmark(num_iterations, num_warmups, data_size, buffer_size);
+    result |=
         RunMmapBenchmark(num_iterations, num_warmups, data_size, buffer_size);
     result |=
         RunShmBenchmark(num_iterations, num_warmups, data_size, buffer_size);
   } else {
     LOG(ERROR) << "Unknown benchmark type: " << type
                << ". Available types: memcpy, memcpy_mt, tcp, udp, uds, pipe, "
-                  "mmap, shm, all";
+                  "fifo, mmap, shm, all";
     return 1;
   }
 
