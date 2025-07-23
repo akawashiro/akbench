@@ -23,8 +23,7 @@ ABSL_FLAG(std::string, type, "",
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
 ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
-ABSL_FLAG(uint64_t, data_size, (1 << 30),
-          "Size of data to transfer in bytes");
+ABSL_FLAG(uint64_t, data_size, (1 << 30), "Size of data to transfer in bytes");
 ABSL_FLAG(std::optional<uint64_t>, buffer_size, std::nullopt,
           "Buffer size for I/O operations in bytes (default: 1 MiByte, not "
           "applicable to memcpy benchmarks)");

@@ -29,7 +29,8 @@ struct SharedBuffer {
 
 void CleanupResources() { shm_unlink(SHM_NAME.c_str()); }
 
-void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size, uint64_t buffer_size) {
+void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                    uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   std::vector<double> durations;
 
@@ -81,12 +82,11 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size, uin
     auto start_time = std::chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < n_pipeline; ++i) {
       barrier.Wait();
-      char* buffer_ptr = shared_buffer->data + ((i + PIPELINE_INDEX) % 2) * buffer_size;
-      memcpy(received_data.data() + bytes_received,
-             buffer_ptr,
+      char *buffer_ptr =
+          shared_buffer->data + ((i + PIPELINE_INDEX) % 2) * buffer_size;
+      memcpy(received_data.data() + bytes_received, buffer_ptr,
              shared_buffer->data_size[(i + PIPELINE_INDEX) % 2]);
-      bytes_received +=
-          shared_buffer->data_size[(i + PIPELINE_INDEX) % 2];
+      bytes_received += shared_buffer->data_size[(i + PIPELINE_INDEX) % 2];
     }
     auto end_time = std::chrono::high_resolution_clock::now();
     barrier.Wait();
@@ -115,7 +115,8 @@ void ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size, uin
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
 }
 
-void SendProcess(int num_warmups, int num_iterations, uint64_t data_size, uint64_t buffer_size) {
+void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
+                 uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   std::vector<uint8_t> data_to_send = GenerateDataToSend(data_size);
   std::vector<double> durations;
@@ -157,9 +158,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size, uint64
     for (uint64_t i = 0; i < n_pipeline; ++i) {
       barrier.Wait();
       const size_t size_to_send = std::min(data_size - bytes_send, buffer_size);
-      char* buffer_ptr = shared_buffer->data + ((i + PIPELINE_INDEX) % 2) * buffer_size;
-      memcpy(buffer_ptr,
-             data_to_send.data() + bytes_send, size_to_send);
+      char *buffer_ptr =
+          shared_buffer->data + ((i + PIPELINE_INDEX) % 2) * buffer_size;
+      memcpy(buffer_ptr, data_to_send.data() + bytes_send, size_to_send);
       shared_buffer->data_size[(i + PIPELINE_INDEX) % 2] = size_to_send;
       bytes_send += size_to_send;
     }
