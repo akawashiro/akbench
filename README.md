@@ -9,17 +9,18 @@ $ ./build.sh
 ```bash
 $ ./build/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
 ...
-memcpy: 17.5928 GiByte/sec
-memcpy_mt (1 threads): 17.8321 GiByte/sec
-memcpy_mt (2 threads): 18.5695 GiByte/sec
-memcpy_mt (3 threads): 19.0312 GiByte/sec
-memcpy_mt (4 threads): 18.5156 GiByte/sec
-tcp: 5.51598 GiByte/sec
-uds: 6.20906 GiByte/sec
-pipe: 2.16038 GiByte/sec
-fifo: 2.14102 GiByte/sec
-mmap: 10.3501 GiByte/sec
-shm: 10.531 GiByte/sec
+memcpy: 16.7302 GiByte/sec
+memcpy_mt (1 threads): 16.5431 GiByte/sec
+memcpy_mt (2 threads): 17.3747 GiByte/sec
+memcpy_mt (3 threads): 18.4483 GiByte/sec
+memcpy_mt (4 threads): 17.9042 GiByte/sec
+tcp: 5.5369 GiByte/sec
+uds: 6.15441 GiByte/sec
+pipe: 2.09526 GiByte/sec
+fifo: 2.06931 GiByte/sec
+mq: 1.77624 GiByte/sec
+mmap: 10.5466 GiByte/sec
+shm: 10.5029 GiByte/sec
 ```
 
 ## Machine information which was used to run the benchmark below
