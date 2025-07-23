@@ -8,21 +8,23 @@ $ ./build.sh
 ## How to run
 ```bash
 $ ./build/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
-I0723 12:46:47.538880 2325921 memcpy_benchmark.cc:35] Bandwidth: 17.5389 GiByte/sec
-I0723 12:46:53.849550 2325921 memcpy_mt_benchmark.cc:57] 1 threads bandwidth: 17.0284 GiByte/sec.
-I0723 12:47:00.131940 2325921 memcpy_mt_benchmark.cc:57] 2 threads bandwidth: 18.0437 GiByte/sec.
-I0723 12:47:06.372609 2325921 memcpy_mt_benchmark.cc:57] 3 threads bandwidth: 18.7292 GiByte/sec.
-I0723 12:47:12.640011 2325921 memcpy_mt_benchmark.cc:57] 4 threads bandwidth: 18.516 GiByte/sec.
-I0723 12:47:25.437456 2325921 tcp_benchmark.cc:236] Send bandwidth: 4.64173 GiByte/sec.
-I0723 12:47:25.735100 2325921 tcp_benchmark.cc:151] Receive bandwidth: 4.64172 GiByte/sec.
-I0723 12:47:41.777040 2325921 uds_benchmark.cc:177]  Send bandwidth: 5.99204 GiByte/sec.
-I0723 12:47:42.018785 2325921 uds_benchmark.cc:107]  Receive bandwidth: 5.9919 GiByte/sec.
-I0723 12:47:53.765613 2325921 pipe_benchmark.cc:66] Send bandwidth: 2.12179 GiByte/sec.
-I0723 12:47:54.072927 2325921 pipe_benchmark.cc:132] Receive bandwidth: 2.12164 GiByte/sec.
-I0723 12:48:08.253233 2325921 mmap_benchmark.cc:93] Send bandwidth: 17.5613 GiByte/sec.
-I0723 12:48:08.560872 2325921 mmap_benchmark.cc:162] Receive bandwidth: 3.69417 GiByte/sec.
-I0723 12:48:19.968790 2325921 shm_benchmark.cc:182] Send bandwidth: 10.5888 GiByte/sec.
-I0723 12:48:20.268993 2325921 shm_benchmark.cc:115] Receive bandwidth: 10.5815 GiByte/sec.
+I0723 16:32:39.927088  455583 memcpy_benchmark.cc:35] Bandwidth: 18.2019 GiByte/sec
+I0723 16:32:46.133543  455583 memcpy_mt_benchmark.cc:57] 1 threads bandwidth: 18.0911 GiByte/sec.
+I0723 16:32:52.307681  455583 memcpy_mt_benchmark.cc:57] 2 threads bandwidth: 18.6796 GiByte/sec.
+I0723 16:32:58.471745  455583 memcpy_mt_benchmark.cc:57] 3 threads bandwidth: 19.1128 GiByte/sec.
+I0723 16:33:04.658426  455583 memcpy_mt_benchmark.cc:57] 4 threads bandwidth: 18.4863 GiByte/sec.
+I0723 16:33:16.787722  455583 tcp_benchmark.cc:236] Send bandwidth: 5.60971 GiByte/sec.
+I0723 16:33:17.081114  455583 tcp_benchmark.cc:151] Receive bandwidth: 5.60973 GiByte/sec.
+I0723 16:33:32.980277  455583 uds_benchmark.cc:177]  Send bandwidth: 6.34772 GiByte/sec.
+I0723 16:33:33.219689  455583 uds_benchmark.cc:107]  Receive bandwidth: 6.34741 GiByte/sec.
+I0723 16:33:44.600178  455583 pipe_benchmark.cc:66] Send bandwidth: 2.19881 GiByte/sec.
+I0723 16:33:44.896743  455583 pipe_benchmark.cc:132] Receive bandwidth: 2.19864 GiByte/sec.
+I0723 16:33:56.193568  455583 fifo_benchmark.cc:78] Send bandwidth: 2.20693 GiByte/sec.
+I0723 16:33:56.489123  455583 fifo_benchmark.cc:152] Receive bandwidth: 2.20677 GiByte/sec.
+I0723 16:34:10.182039  455583 mmap_benchmark.cc:93] Send bandwidth: 18.1229 GiByte/sec.
+I0723 16:34:10.479678  455583 mmap_benchmark.cc:162] Receive bandwidth: 3.84991 GiByte/sec.
+I0723 16:34:21.604479  455583 shm_benchmark.cc:182] Send bandwidth: 10.4686 GiByte/sec.
+I0723 16:34:21.899410  455583 shm_benchmark.cc:115] Receive bandwidth: 10.4613 GiByte/sec.
 ```
 
 ## Machine information which was used to run the benchmark below
