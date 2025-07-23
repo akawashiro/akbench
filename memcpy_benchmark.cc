@@ -32,7 +32,7 @@ double RunMemcpyBenchmark(int num_iterations, int num_warmups,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec";
+  LOG(INFO) << "Bandwidth: " << bandwidth / (1 << 30) << GIBYTE_PER_SEC_UNIT;
 
   return bandwidth;
 }

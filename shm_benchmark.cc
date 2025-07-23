@@ -105,7 +105,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
+            << GIBYTE_PER_SEC_UNIT << ".";
 
   return bandwidth;
 }
@@ -171,7 +172,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30)
+            << GIBYTE_PER_SEC_UNIT << ".";
 }
 
 } // namespace

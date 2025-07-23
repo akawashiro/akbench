@@ -55,7 +55,7 @@ double MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
   LOG(INFO) << n_threads << " threads bandwidth: " << bandwidth / (1 << 30)
-            << " GiByte/sec.";
+            << GIBYTE_PER_SEC_UNIT << ".";
 
   return bandwidth;
 }

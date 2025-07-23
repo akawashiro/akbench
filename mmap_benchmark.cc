@@ -97,7 +97,8 @@ void SendProcess(const int num_warmups, const int num_iterations,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30)
+            << GIBYTE_PER_SEC_UNIT << ".";
 
   VLOG(1) << "Sender: Exiting.";
 }
@@ -179,7 +180,8 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30) << " GiByte/sec.";
+  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
+            << GIBYTE_PER_SEC_UNIT << ".";
 
   VLOG(1) << "Receiver: Exiting.";
 
