@@ -8,23 +8,18 @@ $ ./build.sh
 ## How to run
 ```bash
 $ ./build/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
-I0723 16:32:39.927088  455583 memcpy_benchmark.cc:35] Bandwidth: 18.2019 GiByte/sec
-I0723 16:32:46.133543  455583 memcpy_mt_benchmark.cc:57] 1 threads bandwidth: 18.0911 GiByte/sec.
-I0723 16:32:52.307681  455583 memcpy_mt_benchmark.cc:57] 2 threads bandwidth: 18.6796 GiByte/sec.
-I0723 16:32:58.471745  455583 memcpy_mt_benchmark.cc:57] 3 threads bandwidth: 19.1128 GiByte/sec.
-I0723 16:33:04.658426  455583 memcpy_mt_benchmark.cc:57] 4 threads bandwidth: 18.4863 GiByte/sec.
-I0723 16:33:16.787722  455583 tcp_benchmark.cc:236] Send bandwidth: 5.60971 GiByte/sec.
-I0723 16:33:17.081114  455583 tcp_benchmark.cc:151] Receive bandwidth: 5.60973 GiByte/sec.
-I0723 16:33:32.980277  455583 uds_benchmark.cc:177]  Send bandwidth: 6.34772 GiByte/sec.
-I0723 16:33:33.219689  455583 uds_benchmark.cc:107]  Receive bandwidth: 6.34741 GiByte/sec.
-I0723 16:33:44.600178  455583 pipe_benchmark.cc:66] Send bandwidth: 2.19881 GiByte/sec.
-I0723 16:33:44.896743  455583 pipe_benchmark.cc:132] Receive bandwidth: 2.19864 GiByte/sec.
-I0723 16:33:56.193568  455583 fifo_benchmark.cc:78] Send bandwidth: 2.20693 GiByte/sec.
-I0723 16:33:56.489123  455583 fifo_benchmark.cc:152] Receive bandwidth: 2.20677 GiByte/sec.
-I0723 16:34:10.182039  455583 mmap_benchmark.cc:93] Send bandwidth: 18.1229 GiByte/sec.
-I0723 16:34:10.479678  455583 mmap_benchmark.cc:162] Receive bandwidth: 3.84991 GiByte/sec.
-I0723 16:34:21.604479  455583 shm_benchmark.cc:182] Send bandwidth: 10.4686 GiByte/sec.
-I0723 16:34:21.899410  455583 shm_benchmark.cc:115] Receive bandwidth: 10.4613 GiByte/sec.
+...
+memcpy: 17.5928 GiByte/sec
+memcpy_mt (1 threads): 17.8321 GiByte/sec
+memcpy_mt (2 threads): 18.5695 GiByte/sec
+memcpy_mt (3 threads): 19.0312 GiByte/sec
+memcpy_mt (4 threads): 18.5156 GiByte/sec
+tcp: 5.51598 GiByte/sec
+uds: 6.20906 GiByte/sec
+pipe: 2.16038 GiByte/sec
+fifo: 2.14102 GiByte/sec
+mmap: 10.3501 GiByte/sec
+shm: 10.531 GiByte/sec
 ```
 
 ## Machine information which was used to run the benchmark below
