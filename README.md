@@ -9,25 +9,25 @@ $ cmake --build build -j
 
 ## How to run
 ```bash
-$ ./build/bandwidth --type=all
-I0712 21:25:02.979927 2670975 memcpy_benchmark.cc:35] Bandwidth: 17.2696 GiByte/sec
-I0712 21:25:04.092510 2670975 memcpy_mt_benchmark.cc:57] 1 threads bandwidth: 17.3955 GiByte/sec.
-I0712 21:25:05.190273 2670975 memcpy_mt_benchmark.cc:57] 2 threads bandwidth: 18.8934 GiByte/sec.
-I0712 21:25:06.296253 2670975 memcpy_mt_benchmark.cc:57] 3 threads bandwidth: 18.3064 GiByte/sec.
-I0712 21:25:07.404877 2670975 memcpy_mt_benchmark.cc:57] 4 threads bandwidth: 17.9708 GiByte/sec.
-I0712 21:25:09.432892 2670975 tcp_benchmark.cc:236] Send bandwidth: 4.59247 GiByte/sec.
-I0712 21:25:09.506085 2670975 tcp_benchmark.cc:151] Receive bandwidth: 4.59251 GiByte/sec.
-I0712 21:25:21.996513 2670975 uds_benchmark.cc:177]  Send bandwidth: 6.03234 GiByte/sec.
-I0712 21:25:22.060526 2670975 uds_benchmark.cc:107]  Receive bandwidth: 6.03102 GiByte/sec.
-I0712 21:25:23.949664 2670975 pipe_benchmark.cc:66] Send bandwidth: 2.10952 GiByte/sec.
-I0712 21:25:24.023313 2670975 pipe_benchmark.cc:132] Receive bandwidth: 2.10827 GiByte/sec.
-I0712 21:25:26.377329 2670975 mmap_benchmark.cc:93] Send bandwidth: 17.9482 GiByte/sec.
-I0712 21:25:26.537044 2670975 mmap_benchmark.cc:164] Receive bandwidth: 17.949 GiByte/sec.
-I0712 21:25:28.409375 2670975 shm_benchmark.cc:243] Send bandwidth: 7.4463 GiByte/sec.
-I0712 21:25:28.482611 2670975 shm_benchmark.cc:170] Receive bandwidth: 7.41675 GiByte/sec.
+$ ./build/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
+I0723 11:42:53.916039 2065688 memcpy_benchmark.cc:35] Bandwidth: 17.7887 GiByte/sec
+I0723 11:43:00.220012 2065688 memcpy_mt_benchmark.cc:57] 1 threads bandwidth: 17.5332 GiByte/sec.
+I0723 11:43:06.487000 2065688 memcpy_mt_benchmark.cc:57] 2 threads bandwidth: 18.1036 GiByte/sec.
+I0723 11:43:12.748459 2065688 memcpy_mt_benchmark.cc:57] 3 threads bandwidth: 18.641 GiByte/sec.
+I0723 11:43:19.020962 2065688 memcpy_mt_benchmark.cc:57] 4 threads bandwidth: 18.4089 GiByte/sec.
+I0723 11:43:31.697818 2065688 tcp_benchmark.cc:236] Send bandwidth: 4.74179 GiByte/sec.
+I0723 11:43:31.995813 2065688 tcp_benchmark.cc:151] Receive bandwidth: 4.74179 GiByte/sec.
+I0723 11:43:48.021984 2065688 uds_benchmark.cc:177]  Send bandwidth: 5.99898 GiByte/sec.
+I0723 11:43:48.262913 2065688 uds_benchmark.cc:107]  Receive bandwidth: 5.99885 GiByte/sec.
+I0723 11:43:59.777098 2065688 pipe_benchmark.cc:66] Send bandwidth: 2.17152 GiByte/sec.
+I0723 11:44:00.077801 2065688 pipe_benchmark.cc:132] Receive bandwidth: 2.17137 GiByte/sec.
+I0723 11:44:15.484196 2065688 mmap_benchmark.cc:93] Send bandwidth: 17.4121 GiByte/sec.
+I0723 11:44:16.483596 2065688 mmap_benchmark.cc:164] Receive bandwidth: 17.4121 GiByte/sec.
+I0723 11:44:27.785814 2065688 shm_benchmark.cc:182] Send bandwidth: 10.6784 GiByte/sec.
+I0723 11:44:28.083560 2065688 shm_benchmark.cc:115] Receive bandwidth: 10.6712 GiByte/sec.
 ```
 
-## Machine information
+## Machine information which was used to run the benchmark below
 
 ```
 $ sudo lshw -class memory
@@ -106,6 +106,57 @@ $ sudo lshw -class memory
        clock: 1GHz (1.0ns)
        capabilities: pipeline-burst internal write-back unified
        configuration: level=3
+```
+
+```
+$ lscpu
+Architecture:                         x86_64
+CPU op-mode(s):                       32-bit, 64-bit
+Address sizes:                        48 bits physical, 48 bits virtual
+Byte Order:                           Little Endian
+CPU(s):                               32
+On-line CPU(s) list:                  0-31
+Vendor ID:                            AuthenticAMD
+Model name:                           AMD Ryzen 9 5950X 16-Core Processor
+CPU family:                           25
+Model:                                33
+Thread(s) per core:                   2
+Core(s) per socket:                   16
+Socket(s):                            1
+Stepping:                             0
+Frequency boost:                      enabled
+CPU(s) scaling MHz:                   50%
+CPU max MHz:                          5086.0000
+CPU min MHz:                          550.0000
+BogoMIPS:                             6786.93
+Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb cat_l3 cdp_l3 hw_pstate ssbd mba ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 invpcid cqm rdt_a rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local user_shstk clzero irperf xsaveerptr rdpru wbnoinvd arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold avic v_vmsave_vmload vgif v_spec_ctrl umip pku ospke vaes vpclmulqdq rdpid overflow_recov succor smca debug_swap
+Virtualization:                       AMD-V
+L1d cache:                            512 KiB (16 instances)
+L1i cache:                            512 KiB (16 instances)
+L2 cache:                             8 MiB (16 instances)
+L3 cache:                             64 MiB (2 instances)
+NUMA node(s):                         1
+NUMA node0 CPU(s):                    0-31
+Vulnerability Gather data sampling:   Not affected
+Vulnerability Ghostwrite:             Not affected
+Vulnerability Itlb multihit:          Not affected
+Vulnerability L1tf:                   Not affected
+Vulnerability Mds:                    Not affected
+Vulnerability Meltdown:               Not affected
+Vulnerability Mmio stale data:        Not affected
+Vulnerability Reg file data sampling: Not affected
+Vulnerability Retbleed:               Not affected
+Vulnerability Spec rstack overflow:   Mitigation; Safe RET
+Vulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:             Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP always-on; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected
+Vulnerability Srbds:                  Not affected
+Vulnerability Tsx async abort:        Not affected
+```
+
+```
+$ uname -a
+Linux masumi 6.14.0-24-generic #24~24.04.3-Ubuntu SMP PREEMPT_DYNAMIC Mon Jul  7 16:39:17 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
 ```
 
 ## Benchmark results using existing tools
