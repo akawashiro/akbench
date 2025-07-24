@@ -1,8 +1,11 @@
 #include <chrono> // High-precision timer from C++11 onwards
+#include <iomanip>
 #include <iostream>
 #include <mpi.h>
 #include <vector>
-#include <iomanip>
+
+#include "absl/log/log.h"
+#include "common.h"
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
@@ -13,9 +16,7 @@ int main(int argc, char **argv) {
 
   if (size != 2) {
     if (rank == 0) {
-      std::cerr
-          << "Error: This program should be run with 2 MPI processes."
-          << std::endl;
+      LOG(ERROR) << "Error: This program should be run with 2 MPI processes.";
     }
     MPI_Finalize();
     return 1;
@@ -35,13 +36,17 @@ int main(int argc, char **argv) {
   }
 
   if (rank == 0) {
-    std::cout << "Message Size (Bytes)\tBandwidth (MB/s)" << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
+    LOG(INFO) << "Message Size (Bytes)\tBandwidth (MB/s)";
+    LOG(INFO) << "----------------------------------------";
   }
 
   for (int msg_size = 1; msg_size <= max_msg_size; msg_size *= 2) {
     if (msg_size > max_msg_size)
       msg_size = max_msg_size; // Adjust to exact size on the last loop
+
+    if (rank == 0) {
+      VLOG(1) << "Testing message size: " << msg_size << " bytes";
+    }
 
     MPI_Barrier(MPI_COMM_WORLD); // Wait until all processes synchronize
 
@@ -66,17 +71,19 @@ int main(int argc, char **argv) {
     // In one ping-pong, 2 * msg_size bytes are transferred (round trip)
     // total_time is the time for num_iterations
     // Therefore, total data transferred = num_iterations * 2 * msg_size bytes
-    // Bandwidth = (total data transferred / total_time.count()) converted to MB/s
+    // Bandwidth = (total data transferred / total_time.count()) converted to
+    // MB/s
     double bandwidth_mb_s = (double)(num_iterations * 2 * msg_size) /
                             total_time.count() / (1024.0 * 1024.0);
 
     if (rank == 0) {
-      std::cout << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
-                << bandwidth_mb_s << std::endl;
+      LOG(INFO) << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
+                << bandwidth_mb_s;
     }
 
     if (msg_size == max_msg_size && msg_size % 2 != 0)
-      break; // Exit loop after last iteration (countermeasure for when msg_size is 1)
+      break; // Exit loop after last iteration (countermeasure for when msg_size
+             // is 1)
   }
 
   MPI_Finalize();
