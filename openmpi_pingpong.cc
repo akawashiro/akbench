@@ -38,103 +38,96 @@ int main(int argc, char **argv) {
   const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
   const uint64_t max_msg_size = absl::GetFlag(FLAGS_data_size);
 
+  // Use the specified message size from command line
+  const int msg_size = max_msg_size;
+
   // Allocate buffers
   std::vector<uint8_t> send_buffer;
-  std::vector<uint8_t> recv_buffer(max_msg_size);
+  std::vector<uint8_t> recv_buffer(msg_size);
 
   if (rank == 0) {
     LOG(INFO) << "Message Size (Bytes)\tBandwidth (MB/s)";
     LOG(INFO) << "----------------------------------------";
   }
 
-  for (int msg_size = 1; msg_size <= max_msg_size; msg_size *= 2) {
-    if (msg_size > max_msg_size)
-      msg_size = max_msg_size; // Adjust to exact size on the last loop
+  // Generate data for the specified message size
+  if (msg_size > CHECKSUM_SIZE) {
+    send_buffer = GenerateDataToSend(msg_size);
+  } else {
+    // For small sizes, use simple pattern
+    send_buffer.resize(msg_size);
+    for (int i = 0; i < msg_size; ++i) {
+      send_buffer[i] = static_cast<uint8_t>(i % 256);
+    }
+  }
 
-    // Generate data for current message size
+  if (rank == 0) {
+    VLOG(1) << "Testing message size: " << msg_size << " bytes";
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD); // Wait until all processes synchronize
+
+  // Warmup runs
+  for (int i = 0; i < num_warmups; ++i) {
+    if (rank == 0) {
+      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
+      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+    } else {
+      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+    }
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD); // Sync after warmup
+
+  std::vector<double> durations;
+
+  for (int i = 0; i < num_iterations; ++i) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    if (rank == 0) {
+      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
+      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+    } else {
+      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end_time - start_time;
+    durations.push_back(duration.count());
+
+    // Verify received data (only for messages with checksum)
     if (msg_size > CHECKSUM_SIZE) {
-      send_buffer = GenerateDataToSend(msg_size);
-    } else {
-      // For small sizes, use simple pattern
-      send_buffer.resize(msg_size);
-      for (int i = 0; i < msg_size; ++i) {
-        send_buffer[i] = static_cast<uint8_t>(i % 256);
+      if (!VerifyDataReceived(recv_buffer, msg_size)) {
+        LOG(ERROR) << "Data verification failed for iteration " << i;
       }
     }
-    recv_buffer.resize(msg_size);
+  }
 
-    if (rank == 0) {
-      VLOG(1) << "Testing message size: " << msg_size << " bytes";
-    }
+  // Bandwidth calculation using CalculateBandwidth function
+  // In ping-pong, 2 * msg_size bytes are transferred per iteration (round
+  // trip)
+  double bandwidth_bytes_per_sec;
+  if (num_iterations >= 3) {
+    bandwidth_bytes_per_sec =
+        CalculateBandwidth(durations, num_iterations, 2 * msg_size);
+  } else {
+    // Fallback for small num_iterations
+    double average_duration =
+        std::accumulate(durations.begin(), durations.end(), 0.0) /
+        durations.size();
+    bandwidth_bytes_per_sec = (2 * msg_size) / average_duration;
+  }
+  double bandwidth_mb_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
 
-    MPI_Barrier(MPI_COMM_WORLD); // Wait until all processes synchronize
-
-    // Warmup runs
-    for (int i = 0; i < num_warmups; ++i) {
-      if (rank == 0) {
-        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-      } else {
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-      }
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD); // Sync after warmup
-
-    std::vector<double> durations;
-
-    for (int i = 0; i < num_iterations; ++i) {
-      auto start_time = std::chrono::high_resolution_clock::now();
-
-      if (rank == 0) {
-        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-      } else {
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-      }
-
-      auto end_time = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<double> duration = end_time - start_time;
-      durations.push_back(duration.count());
-
-      // Verify received data (only for messages with checksum)
-      if (msg_size > CHECKSUM_SIZE) {
-        if (!VerifyDataReceived(recv_buffer, msg_size)) {
-          LOG(ERROR) << "Data verification failed for iteration " << i;
-        }
-      }
-    }
-
-    // Bandwidth calculation using CalculateBandwidth function
-    // In ping-pong, 2 * msg_size bytes are transferred per iteration (round
-    // trip)
-    double bandwidth_bytes_per_sec;
-    if (num_iterations >= 3) {
-      bandwidth_bytes_per_sec =
-          CalculateBandwidth(durations, num_iterations, 2 * msg_size);
-    } else {
-      // Fallback for small num_iterations
-      double average_duration =
-          std::accumulate(durations.begin(), durations.end(), 0.0) /
-          durations.size();
-      bandwidth_bytes_per_sec = (2 * msg_size) / average_duration;
-    }
-    double bandwidth_mb_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
-
-    if (rank == 0) {
-      LOG(INFO) << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
-                << bandwidth_mb_s;
-    }
-
-    if (msg_size == max_msg_size && msg_size % 2 != 0)
-      break; // Exit loop after last iteration (countermeasure for when msg_size
-             // is 1)
+  if (rank == 0) {
+    LOG(INFO) << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
+              << bandwidth_mb_s;
   }
 
   MPI_Finalize();
