@@ -78,24 +78,18 @@ int main(int argc, char **argv) {
 
   MPI_Barrier(MPI_COMM_WORLD); // Wait until all processes synchronize
 
-  // Warmup runs
-  for (int i = 0; i < num_warmups; ++i) {
-    if (rank == 0) {
-      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
-      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-    } else {
-      MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-      MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-    }
-  }
-
-  MPI_Barrier(MPI_COMM_WORLD); // Sync after warmup
-
   std::vector<double> durations;
 
-  for (int i = 0; i < num_iterations; ++i) {
+  for (int i = 0; i < num_warmups + num_iterations; ++i) {
+    bool is_warmup = i < num_warmups;
+
+    if (is_warmup && rank == 0) {
+      VLOG(1) << "Warm-up " << i << "/" << num_warmups;
+    } else if (!is_warmup && rank == 0) {
+      VLOG(1) << "Starting iteration " << (i - num_warmups) << "/"
+              << num_iterations;
+    }
+
     auto start_time = std::chrono::high_resolution_clock::now();
 
     if (rank == 0) {
@@ -109,8 +103,11 @@ int main(int argc, char **argv) {
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end_time - start_time;
-    durations.push_back(duration.count());
+
+    if (!is_warmup) {
+      std::chrono::duration<double> duration = end_time - start_time;
+      durations.push_back(duration.count());
+    }
 
     // Verify received data (only for messages with checksum)
     if (msg_size > CHECKSUM_SIZE) {
