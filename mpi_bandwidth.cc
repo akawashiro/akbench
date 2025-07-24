@@ -23,7 +23,7 @@ ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
 
 int main(int argc, char **argv) {
   absl::SetProgramUsageMessage(
-      "OpenMPI ping-pong benchmark tool for measuring MPI bandwidth.");
+      "ping-pong benchmark tool for measuring MPI bandwidth.");
   absl::ParseCommandLine(argc, argv);
   MPI_Init(&argc, &argv);
 
