@@ -4,10 +4,20 @@
 #include <mpi.h>
 #include <vector>
 
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "absl/log/log.h"
 #include "common.h"
 
+ABSL_FLAG(int, num_iterations, 100, "Number of measurement iterations");
+ABSL_FLAG(int, num_warmups, 10, "Number of warmup iterations");
+ABSL_FLAG(uint64_t, data_size, 1024 * 1024, "Maximum message size in bytes");
+
 int main(int argc, char **argv) {
+  absl::SetProgramUsageMessage(
+      "OpenMPI ping-pong benchmark tool for measuring MPI bandwidth.");
+  absl::ParseCommandLine(argc, argv);
   MPI_Init(&argc, &argv);
 
   int rank, size;
@@ -22,8 +32,10 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  const int num_iterations = 100; // Number of iterations for each message size
-  const int max_msg_size = 1024 * 1024; // Maximum message size (1 MB)
+  // Get values from command line flags
+  const int num_iterations = absl::GetFlag(FLAGS_num_iterations);
+  const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
+  const uint64_t max_msg_size = absl::GetFlag(FLAGS_data_size);
 
   // Allocate buffers
   // Using char type to handle any data type at byte level
@@ -49,6 +61,21 @@ int main(int argc, char **argv) {
     }
 
     MPI_Barrier(MPI_COMM_WORLD); // Wait until all processes synchronize
+
+    // Warmup runs
+    for (int i = 0; i < num_warmups; ++i) {
+      if (rank == 0) {
+        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+      } else {
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+      }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD); // Sync after warmup
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
