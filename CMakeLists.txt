@@ -70,3 +70,7 @@ target_link_libraries(
 add_executable(barrier_test barrier_test.cc)
 target_link_libraries(barrier_test ${BANDWIDTH_LIBS} rt pthread)
 add_test(NAME barrier_test COMMAND barrier_test)
+
+find_package(MPI REQUIRED COMPONENTS CXX)
+add_executable(openmpi_pingpong openmpi_pingpong.cc)
+target_link_libraries(openmpi_pingpong PRIVATE MPI::MPI_CXX)
