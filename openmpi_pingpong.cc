@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mpi.h>
+#include <numeric>
 #include <vector>
 
 #include "absl/flags/flag.h"
@@ -38,14 +39,8 @@ int main(int argc, char **argv) {
   const uint64_t max_msg_size = absl::GetFlag(FLAGS_data_size);
 
   // Allocate buffers
-  // Using char type to handle any data type at byte level
-  std::vector<char> send_buffer(max_msg_size);
-  std::vector<char> recv_buffer(max_msg_size);
-
-  // Initialize dummy data (optional but recommended)
-  for (int i = 0; i < max_msg_size; ++i) {
-    send_buffer[i] = static_cast<char>(i % 256);
-  }
+  std::vector<uint8_t> send_buffer;
+  std::vector<uint8_t> recv_buffer(max_msg_size);
 
   if (rank == 0) {
     LOG(INFO) << "Message Size (Bytes)\tBandwidth (MB/s)";
@@ -56,6 +51,18 @@ int main(int argc, char **argv) {
     if (msg_size > max_msg_size)
       msg_size = max_msg_size; // Adjust to exact size on the last loop
 
+    // Generate data for current message size
+    if (msg_size > CHECKSUM_SIZE) {
+      send_buffer = GenerateDataToSend(msg_size);
+    } else {
+      // For small sizes, use simple pattern
+      send_buffer.resize(msg_size);
+      for (int i = 0; i < msg_size; ++i) {
+        send_buffer[i] = static_cast<uint8_t>(i % 256);
+      }
+    }
+    recv_buffer.resize(msg_size);
+
     if (rank == 0) {
       VLOG(1) << "Testing message size: " << msg_size << " bytes";
     }
@@ -65,43 +72,60 @@ int main(int argc, char **argv) {
     // Warmup runs
     for (int i = 0; i < num_warmups; ++i) {
       if (rank == 0) {
-        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD,
+        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
       } else {
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD,
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
       }
     }
 
     MPI_Barrier(MPI_COMM_WORLD); // Sync after warmup
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<double> durations;
 
     for (int i = 0; i < num_iterations; ++i) {
+      auto start_time = std::chrono::high_resolution_clock::now();
+
       if (rank == 0) {
-        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 1, 0, MPI_COMM_WORLD,
+        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD);
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
       } else {
-        MPI_Recv(recv_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD,
+        MPI_Recv(recv_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        MPI_Send(send_buffer.data(), msg_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(send_buffer.data(), msg_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+      }
+
+      auto end_time = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double> duration = end_time - start_time;
+      durations.push_back(duration.count());
+
+      // Verify received data (only for messages with checksum)
+      if (msg_size > CHECKSUM_SIZE) {
+        if (!VerifyDataReceived(recv_buffer, msg_size)) {
+          LOG(ERROR) << "Data verification failed for iteration " << i;
+        }
       }
     }
 
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> total_time = end_time - start_time;
-
-    // Bandwidth calculation (MB/s)
-    // In one ping-pong, 2 * msg_size bytes are transferred (round trip)
-    // total_time is the time for num_iterations
-    // Therefore, total data transferred = num_iterations * 2 * msg_size bytes
-    // Bandwidth = (total data transferred / total_time.count()) converted to
-    // MB/s
-    double bandwidth_mb_s = (double)(num_iterations * 2 * msg_size) /
-                            total_time.count() / (1024.0 * 1024.0);
+    // Bandwidth calculation using CalculateBandwidth function
+    // In ping-pong, 2 * msg_size bytes are transferred per iteration (round
+    // trip)
+    double bandwidth_bytes_per_sec;
+    if (num_iterations >= 3) {
+      bandwidth_bytes_per_sec =
+          CalculateBandwidth(durations, num_iterations, 2 * msg_size);
+    } else {
+      // Fallback for small num_iterations
+      double average_duration =
+          std::accumulate(durations.begin(), durations.end(), 0.0) /
+          durations.size();
+      bandwidth_bytes_per_sec = (2 * msg_size) / average_duration;
+    }
+    double bandwidth_mb_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
 
     if (rank == 0) {
       LOG(INFO) << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
