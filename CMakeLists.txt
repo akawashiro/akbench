@@ -73,8 +73,4 @@ add_test(NAME barrier_test COMMAND barrier_test)
 
 find_package(MPI REQUIRED COMPONENTS CXX)
 add_executable(mpi_bandwidth mpi_bandwidth.cc)
-target_link_libraries(
-    mpi_bandwidth
-    PRIVATE
-    MPI::MPI_CXX
-    ${IPC_BENCH_LIBS})
+target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
