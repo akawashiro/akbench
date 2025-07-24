@@ -11,7 +11,8 @@
 #include "absl/log/log.h"
 #include "common.h"
 
-ABSL_FLAG(int, num_iterations, 100, "Number of measurement iterations");
+ABSL_FLAG(int, num_iterations, 100,
+          "Number of measurement iterations (minimum 3)");
 ABSL_FLAG(int, num_warmups, 10, "Number of warmup iterations");
 ABSL_FLAG(uint64_t, data_size, 1024 * 1024, "Maximum message size in bytes");
 
@@ -37,6 +38,16 @@ int main(int argc, char **argv) {
   const int num_iterations = absl::GetFlag(FLAGS_num_iterations);
   const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
   const uint64_t max_msg_size = absl::GetFlag(FLAGS_data_size);
+
+  // Validate num_iterations
+  if (num_iterations < 3) {
+    if (rank == 0) {
+      LOG(ERROR) << "num_iterations must be at least 3, got: "
+                 << num_iterations;
+    }
+    MPI_Finalize();
+    return 1;
+  }
 
   // Use the specified message size from command line
   const int msg_size = max_msg_size;
@@ -112,17 +123,8 @@ int main(int argc, char **argv) {
   // Bandwidth calculation using CalculateBandwidth function
   // In ping-pong, 2 * msg_size bytes are transferred per iteration (round
   // trip)
-  double bandwidth_bytes_per_sec;
-  if (num_iterations >= 3) {
-    bandwidth_bytes_per_sec =
-        CalculateBandwidth(durations, num_iterations, 2 * msg_size);
-  } else {
-    // Fallback for small num_iterations
-    double average_duration =
-        std::accumulate(durations.begin(), durations.end(), 0.0) /
-        durations.size();
-    bandwidth_bytes_per_sec = (2 * msg_size) / average_duration;
-  }
+  double bandwidth_bytes_per_sec =
+      CalculateBandwidth(durations, num_iterations, 2 * msg_size);
   double bandwidth_mb_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
 
   if (rank == 0) {
