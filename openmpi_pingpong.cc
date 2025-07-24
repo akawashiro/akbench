@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   std::vector<uint8_t> recv_buffer(msg_size);
 
   if (rank == 0) {
-    LOG(INFO) << "Message Size (Bytes)\tBandwidth (MB/s)";
+    LOG(INFO) << "Message Size (Bytes)\tBandwidth" << GIBYTE_PER_SEC_UNIT;
     LOG(INFO) << "----------------------------------------";
   }
 
@@ -125,11 +125,11 @@ int main(int argc, char **argv) {
   // trip)
   double bandwidth_bytes_per_sec =
       CalculateBandwidth(durations, num_iterations, 2 * msg_size);
-  double bandwidth_mb_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
+  double bandwidth_gib_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0 * 1024.0);
 
   if (rank == 0) {
     LOG(INFO) << msg_size << "\t\t\t" << std::fixed << std::setprecision(2)
-              << bandwidth_mb_s;
+              << bandwidth_gib_s;
   }
 
   MPI_Finalize();
