@@ -17,7 +17,6 @@ double RunStatfsBenchmark(int num_iterations, int num_warmups,
           << " iterations, " << num_warmups << " warmups, and " << loop_size
           << " operations per iteration";
 
-  // Use current directory for statfs
   const char *path = ".";
 
   std::vector<double> durations;
@@ -46,7 +45,6 @@ double RunFstatfsBenchmark(int num_iterations, int num_warmups,
           << " iterations, " << num_warmups << " warmups, and " << loop_size
           << " operations per iteration";
 
-  // Open current directory for fstatfs
   int fd = open(".", O_RDONLY);
   if (fd == -1) {
     LOG(ERROR) << "Failed to open current directory";
