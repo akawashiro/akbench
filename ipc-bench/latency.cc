@@ -11,12 +11,14 @@
 
 #include "common.h"
 
-ABSL_FLAG(std::string, type, "",
-          "Benchmark type to run (atomic)");
+#include "atomic_benchmark.h"
+
+ABSL_FLAG(std::string, type, "", "Benchmark type to run (atomic)");
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
 ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
-ABSL_FLAG(uint64_t, loop_size, (1 << 20), "number of iterations in each "
+ABSL_FLAG(uint64_t, loop_size, (1 << 20),
+          "number of iterations in each "
           "measurement loop (default: 1 Mi)");
 ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
           "Show VLOG messages lower than this level.");
@@ -49,6 +51,14 @@ int main(int argc, char *argv[]) {
 
   absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
   absl::InitializeLog();
+
+  if (type == "atomic") {
+    double result = RunAtomicBenchmark(num_iterations, num_warmups, loop_size);
+    std::cout << "Atomic benchmark result: " << result * 1e6 << " us\n";
+  } else {
+    LOG(ERROR) << "Unknown benchmark type: " << type;
+    return 1;
+  }
 
   return 0;
 }

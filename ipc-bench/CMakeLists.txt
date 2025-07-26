@@ -69,7 +69,8 @@ find_package(MPI REQUIRED COMPONENTS CXX)
 add_executable(mpi_bandwidth mpi_bandwidth.cc)
 target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
 
+add_library(atomic_benchmark atomic_benchmark.cc)
+target_link_libraries(atomic_benchmark ${IPC_BENCH_LIBS})
+
 add_executable(latency latency.cc)
-target_link_libraries(
-  latency
-  ${IPC_BENCH_LIBS})
+target_link_libraries(latency atomic_benchmark ${IPC_BENCH_LIBS})
