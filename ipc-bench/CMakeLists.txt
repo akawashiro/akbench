@@ -10,7 +10,9 @@ set(IPC_BENCH_LIBS
     absl::log_initialize
     absl::flags
     absl::flags_parse
-    barrier)
+    barrier
+    rt
+    pthread)
 
 add_library(common common.cc)
 target_link_libraries(common ${IPC_BENCH_LIBS})
@@ -43,7 +45,7 @@ add_library(mmap_benchmark mmap_benchmark.cc)
 target_link_libraries(mmap_benchmark ${IPC_BENCH_LIBS})
 
 add_library(shm_benchmark shm_benchmark.cc)
-target_link_libraries(shm_benchmark ${IPC_BENCH_LIBS} rt pthread)
+target_link_libraries(shm_benchmark ${IPC_BENCH_LIBS})
 
 add_executable(bandwidth bandwidth.cc)
 target_link_libraries(
@@ -57,14 +59,17 @@ target_link_libraries(
   mq_benchmark
   mmap_benchmark
   shm_benchmark
-  ${IPC_BENCH_LIBS}
-  rt
-  pthread)
+  ${IPC_BENCH_LIBS})
 
 add_executable(barrier_test barrier_test.cc)
-target_link_libraries(barrier_test ${IPC_BENCH_LIBS} rt pthread)
+target_link_libraries(barrier_test ${IPC_BENCH_LIBS})
 add_test(NAME barrier_test COMMAND barrier_test)
 
 find_package(MPI REQUIRED COMPONENTS CXX)
 add_executable(mpi_bandwidth mpi_bandwidth.cc)
 target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
+
+add_executable(latency latency.cc)
+target_link_libraries(
+  latency
+  ${IPC_BENCH_LIBS})
