@@ -7,7 +7,7 @@ $ ./scripts/build.sh
 
 ## How to run
 ```bash
-$ ./build/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
+$ ./build/ipc-bench/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
 ...
 memcpy: 16.7302 GiByte/sec
 memcpy_mt (1 threads): 16.5431 GiByte/sec
@@ -21,6 +21,15 @@ fifo: 2.06931 GiByte/sec
 mq: 1.77624 GiByte/sec
 mmap: 10.5466 GiByte/sec
 shm: 10.5029 GiByte/sec
+```
+
+```
+$ ./build/ipc-bench/latency --type=all
+atomic: 39.1009 ns
+condition_variable: 3885.55 ns
+statfs: 1247.57 ns
+fstatfs: 830.662 ns
+getpid: 121.154 ns
 ```
 
 ## Machine information which was used to run the benchmark below
