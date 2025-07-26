@@ -21,7 +21,7 @@ jobs:
         pipx install cmake-format --include-deps
     - name: Check formatting
       run: |
-        ./format.sh
+        ./scripts/format.sh
         git diff --exit-code
   build:
     name: Build
@@ -36,4 +36,4 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc cmake git openmpi-bin libopenmpi-dev
     - name: Build
-      run: ./build.sh
+      run: ./scripts/build.sh
