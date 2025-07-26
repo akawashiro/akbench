@@ -11,8 +11,8 @@
 
 #include "common.h"
 
-#include "atomic_benchmark.h"
-#include "condition_variable_benchmark.h"
+#include "atomic_latency.h"
+#include "condition_variable_latency.h"
 
 ABSL_FLAG(std::string, type, "",
           "Benchmark type to run (atomic, condition_variable)");

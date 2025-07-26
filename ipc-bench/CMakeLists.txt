@@ -20,45 +20,45 @@ target_link_libraries(common ${IPC_BENCH_LIBS})
 set(IPC_BENCH_LIBS common ${IPC_BENCH_LIBS})
 
 # Create benchmark libraries
-add_library(memcpy_benchmark memcpy_benchmark.cc)
-target_link_libraries(memcpy_benchmark ${IPC_BENCH_LIBS})
+add_library(memcpy_bandwidth memcpy_bandwidth.cc)
+target_link_libraries(memcpy_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(memcpy_mt_benchmark memcpy_mt_benchmark.cc)
-target_link_libraries(memcpy_mt_benchmark ${IPC_BENCH_LIBS})
+add_library(memcpy_mt_bandwidth memcpy_mt_bandwidth.cc)
+target_link_libraries(memcpy_mt_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(tcp_benchmark tcp_benchmark.cc)
-target_link_libraries(tcp_benchmark ${IPC_BENCH_LIBS})
+add_library(tcp_bandwidth tcp_bandwidth.cc)
+target_link_libraries(tcp_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(uds_benchmark uds_benchmark.cc)
-target_link_libraries(uds_benchmark ${IPC_BENCH_LIBS})
+add_library(uds_bandwidth uds_bandwidth.cc)
+target_link_libraries(uds_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(pipe_benchmark pipe_benchmark.cc)
-target_link_libraries(pipe_benchmark ${IPC_BENCH_LIBS})
+add_library(pipe_bandwidth pipe_bandwidth.cc)
+target_link_libraries(pipe_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(fifo_benchmark fifo_benchmark.cc)
-target_link_libraries(fifo_benchmark ${IPC_BENCH_LIBS})
+add_library(fifo_bandwidth fifo_bandwidth.cc)
+target_link_libraries(fifo_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(mq_benchmark mq_benchmark.cc)
-target_link_libraries(mq_benchmark ${IPC_BENCH_LIBS} rt)
+add_library(mq_bandwidth mq_bandwidth.cc)
+target_link_libraries(mq_bandwidth ${IPC_BENCH_LIBS} rt)
 
-add_library(mmap_benchmark mmap_benchmark.cc)
-target_link_libraries(mmap_benchmark ${IPC_BENCH_LIBS})
+add_library(mmap_bandwidth mmap_bandwidth.cc)
+target_link_libraries(mmap_bandwidth ${IPC_BENCH_LIBS})
 
-add_library(shm_benchmark shm_benchmark.cc)
-target_link_libraries(shm_benchmark ${IPC_BENCH_LIBS})
+add_library(shm_bandwidth shm_bandwidth.cc)
+target_link_libraries(shm_bandwidth ${IPC_BENCH_LIBS})
 
 add_executable(bandwidth bandwidth.cc)
 target_link_libraries(
   bandwidth
-  memcpy_benchmark
-  memcpy_mt_benchmark
-  tcp_benchmark
-  uds_benchmark
-  pipe_benchmark
-  fifo_benchmark
-  mq_benchmark
-  mmap_benchmark
-  shm_benchmark
+  memcpy_bandwidth
+  memcpy_mt_bandwidth
+  tcp_bandwidth
+  uds_bandwidth
+  pipe_bandwidth
+  fifo_bandwidth
+  mq_bandwidth
+  mmap_bandwidth
+  shm_bandwidth
   ${IPC_BENCH_LIBS})
 
 add_executable(barrier_test barrier_test.cc)
@@ -69,12 +69,12 @@ find_package(MPI REQUIRED COMPONENTS CXX)
 add_executable(mpi_bandwidth mpi_bandwidth.cc)
 target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
 
-add_library(atomic_benchmark atomic_benchmark.cc)
-target_link_libraries(atomic_benchmark ${IPC_BENCH_LIBS})
+add_library(atomic_latency atomic_latency.cc)
+target_link_libraries(atomic_latency ${IPC_BENCH_LIBS})
 
-add_library(condition_variable_benchmark condition_variable_benchmark.cc)
-target_link_libraries(condition_variable_benchmark ${IPC_BENCH_LIBS})
+add_library(condition_variable_latency condition_variable_latency.cc)
+target_link_libraries(condition_variable_latency ${IPC_BENCH_LIBS})
 
 add_executable(latency latency.cc)
-target_link_libraries(latency atomic_benchmark condition_variable_benchmark
+target_link_libraries(latency atomic_latency condition_variable_latency
                       ${IPC_BENCH_LIBS})

@@ -1,4 +1,4 @@
-#include "condition_variable_benchmark.h"
+#include "condition_variable_latency.h"
 
 #include <algorithm>
 #include <condition_variable>

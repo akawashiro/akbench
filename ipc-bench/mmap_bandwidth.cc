@@ -1,4 +1,4 @@
-#include "mmap_benchmark.h"
+#include "mmap_bandwidth.h"
 
 #include <fcntl.h>
 #include <sys/mman.h>

@@ -1,4 +1,4 @@
-#include "atomic_benchmark.h"
+#include "atomic_latency.h"
 
 #include <algorithm>
 #include <atomic>

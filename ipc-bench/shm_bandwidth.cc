@@ -1,4 +1,4 @@
-#include "shm_benchmark.h"
+#include "shm_bandwidth.h"
 
 #include <fcntl.h>
 #include <semaphore.h>

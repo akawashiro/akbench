@@ -1,4 +1,4 @@
-#include "memcpy_benchmark.h"
+#include "memcpy_bandwidth.h"
 
 #include <algorithm>
 #include <chrono>
