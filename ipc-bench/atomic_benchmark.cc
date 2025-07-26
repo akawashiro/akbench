@@ -1,5 +1,79 @@
 #include "atomic_benchmark.h"
 
-double RunAtomicBenchmark(int num_iterations, int num_warmups, uint64_t loop_size){
-    return 0.0;
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+
+namespace {
+
+void ParentFlip(std::atomic<bool> *parent, const std::atomic<bool> &child,
+                const uint64_t loop_size) {
+  for (uint64_t i = 0; i < loop_size; ++i) {
+    VLOG(1) << "Parent iteration " << i << "/" << loop_size;
+    parent->store(true);
+    while (child.load()) {
+      ;
+    }
+    parent->store(false);
+    while (!child.load()) {
+      ;
+    }
+  }
+}
+
+void ChildFlip(std::atomic<bool> *child, const std::atomic<bool> &parent,
+               const uint64_t loop_size) {
+  for (uint64_t i = 0; i < loop_size; ++i) {
+    VLOG(1) << "Child iteration " << i << "/" << loop_size;
+    while (!parent.load()) {
+      ;
+    }
+    child->store(true);
+    while (parent.load()) {
+      ;
+    }
+    child->store(false);
+  }
+}
+
+double CalculateOneTripDuration(const std::vector<double> &durations,
+                                const uint64_t loop_size) {
+  CHECK(durations.size() >= 3);
+  std::vector<double> sorted_durations = durations;
+  std::sort(sorted_durations.begin(), sorted_durations.end());
+  double average_duration = std::accumulate(sorted_durations.begin() + 1,
+                                            sorted_durations.end() - 1, 0.0) /
+                            (sorted_durations.size() - 2);
+  return average_duration / (4 * loop_size);
+}
+
+} // namespace
+
+double RunAtomicBenchmark(int num_iterations, int num_warmups,
+                          uint64_t loop_size) {
+  std::atomic<bool> parent{false}, child{false};
+
+  std::vector<double> durations;
+  for (int i = 0; i < num_iterations + num_warmups; i++) {
+    VLOG(1) << "Starting iteration " << i << "/"
+            << (num_iterations + num_warmups);
+    std::thread child_thread([&]() { ChildFlip(&child, parent, loop_size); });
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    ParentFlip(&parent, child, loop_size);
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    if (i >= num_warmups) {
+      std::chrono::duration<double> duration = end_time - start_time;
+      durations.push_back(duration.count());
+    }
+  }
+
+  return CalculateOneTripDuration(durations, loop_size);
 }
