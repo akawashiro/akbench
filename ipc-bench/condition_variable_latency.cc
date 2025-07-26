@@ -18,24 +18,16 @@ void ParentFlip(std::condition_variable *parent_cv,
                 std::mutex *child_mutex, bool *parent_ready, bool *child_ready,
                 const uint64_t loop_size) {
   for (uint64_t i = 0; i < loop_size; ++i) {
-    // Signal child to proceed
     {
       std::lock_guard<std::mutex> lock(*parent_mutex);
       *parent_ready = true;
     }
     parent_cv->notify_one();
 
-    // Wait for child to signal back
     {
       std::unique_lock<std::mutex> lock(*child_mutex);
       child_cv->wait(lock, [child_ready] { return *child_ready; });
       *child_ready = false;
-    }
-
-    // Reset parent ready for next iteration
-    {
-      std::lock_guard<std::mutex> lock(*parent_mutex);
-      *parent_ready = false;
     }
   }
 }
@@ -45,13 +37,12 @@ void ChildFlip(std::condition_variable *parent_cv,
                std::mutex *child_mutex, bool *parent_ready, bool *child_ready,
                const uint64_t loop_size) {
   for (uint64_t i = 0; i < loop_size; ++i) {
-    // Wait for parent to signal
     {
       std::unique_lock<std::mutex> lock(*parent_mutex);
       parent_cv->wait(lock, [parent_ready] { return *parent_ready; });
+      *parent_ready = false;
     }
 
-    // Signal back to parent
     {
       std::lock_guard<std::mutex> lock(*child_mutex);
       *child_ready = true;
