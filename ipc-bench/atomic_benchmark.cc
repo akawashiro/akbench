@@ -15,13 +15,12 @@ namespace {
 void ParentFlip(std::atomic<bool> *parent, const std::atomic<bool> &child,
                 const uint64_t loop_size) {
   for (uint64_t i = 0; i < loop_size; ++i) {
-    VLOG(1) << "Parent iteration " << i << "/" << loop_size;
     parent->store(true);
-    while (child.load()) {
+    while (!child.load()) {
       ;
     }
     parent->store(false);
-    while (!child.load()) {
+    while (child.load()) {
       ;
     }
   }
@@ -30,7 +29,6 @@ void ParentFlip(std::atomic<bool> *parent, const std::atomic<bool> &child,
 void ChildFlip(std::atomic<bool> *child, const std::atomic<bool> &parent,
                const uint64_t loop_size) {
   for (uint64_t i = 0; i < loop_size; ++i) {
-    VLOG(1) << "Child iteration " << i << "/" << loop_size;
     while (!parent.load()) {
       ;
     }
@@ -61,13 +59,20 @@ double RunAtomicBenchmark(int num_iterations, int num_warmups,
 
   std::vector<double> durations;
   for (int i = 0; i < num_iterations + num_warmups; i++) {
-    VLOG(1) << "Starting iteration " << i << "/"
+    VLOG(1) << "Starting iteration " << i + 1 << "/"
             << (num_iterations + num_warmups);
-    std::thread child_thread([&]() { ChildFlip(&child, parent, loop_size); });
+    std::thread child_thread([&child, &parent, loop_size]() {
+      ChildFlip(&child, parent, loop_size);
+    });
 
     auto start_time = std::chrono::high_resolution_clock::now();
     ParentFlip(&parent, child, loop_size);
     auto end_time = std::chrono::high_resolution_clock::now();
+
+    child_thread.join();
+    VLOG(1) << "Iteration " << i + 1 << " takes "
+            << std::chrono::duration<double>(end_time - start_time).count()
+            << " seconds.";
 
     if (i >= num_warmups) {
       std::chrono::duration<double> duration = end_time - start_time;

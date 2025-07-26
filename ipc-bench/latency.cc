@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
   if (type == "atomic") {
     double result = RunAtomicBenchmark(num_iterations, num_warmups, loop_size);
-    std::cout << "Atomic benchmark result: " << result * 1e6 << " us\n";
+    std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
   } else {
     LOG(ERROR) << "Unknown benchmark type: " << type;
     return 1;
