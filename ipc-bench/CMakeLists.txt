@@ -50,7 +50,6 @@ target_link_libraries(mmap_benchmark ${IPC_BENCH_LIBS})
 add_library(shm_benchmark shm_benchmark.cc)
 target_link_libraries(shm_benchmark ${IPC_BENCH_LIBS} rt pthread)
 
-# Create the main bandwidth executable
 add_executable(bandwidth bandwidth.cc)
 target_link_libraries(
   bandwidth
