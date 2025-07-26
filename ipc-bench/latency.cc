@@ -12,8 +12,10 @@
 #include "common.h"
 
 #include "atomic_benchmark.h"
+#include "condition_variable_benchmark.h"
 
-ABSL_FLAG(std::string, type, "", "Benchmark type to run (atomic)");
+ABSL_FLAG(std::string, type, "",
+          "Benchmark type to run (atomic, condition_variable)");
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
 ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
@@ -55,6 +57,11 @@ int main(int argc, char *argv[]) {
   if (type == "atomic") {
     double result = RunAtomicBenchmark(num_iterations, num_warmups, loop_size);
     std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
+  } else if (type == "condition_variable") {
+    double result =
+        RunConditionVariableBenchmark(num_iterations, num_warmups, loop_size);
+    std::cout << "Condition Variable benchmark result: " << result * 1e9
+              << " ns\n";
   } else {
     LOG(ERROR) << "Unknown benchmark type: " << type;
     return 1;

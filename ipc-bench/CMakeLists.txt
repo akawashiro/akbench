@@ -72,5 +72,9 @@ target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
 add_library(atomic_benchmark atomic_benchmark.cc)
 target_link_libraries(atomic_benchmark ${IPC_BENCH_LIBS})
 
+add_library(condition_variable_benchmark condition_variable_benchmark.cc)
+target_link_libraries(condition_variable_benchmark ${IPC_BENCH_LIBS})
+
 add_executable(latency latency.cc)
-target_link_libraries(latency atomic_benchmark ${IPC_BENCH_LIBS})
+target_link_libraries(latency atomic_benchmark condition_variable_benchmark
+                      ${IPC_BENCH_LIBS})
