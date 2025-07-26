@@ -1,15 +1,15 @@
 #include "condition_variable_latency.h"
 
-#include <algorithm>
 #include <condition_variable>
 #include <cstdint>
 #include <mutex>
-#include <numeric>
 #include <thread>
 #include <vector>
 
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+
+#include "common.h"
 
 namespace {
 
@@ -51,17 +51,6 @@ void ChildFlip(std::condition_variable *parent_cv,
   }
 }
 
-double CalculateOneTripDuration(const std::vector<double> &durations,
-                                const uint64_t loop_size) {
-  CHECK(durations.size() >= 3);
-  std::vector<double> sorted_durations = durations;
-  std::sort(sorted_durations.begin(), sorted_durations.end());
-  double average_duration = std::accumulate(sorted_durations.begin() + 1,
-                                            sorted_durations.end() - 1, 0.0) /
-                            (sorted_durations.size() - 2);
-  return average_duration / (4 * loop_size);
-}
-
 } // namespace
 
 double RunConditionVariableBenchmark(int num_iterations, int num_warmups,
@@ -91,7 +80,7 @@ double RunConditionVariableBenchmark(int num_iterations, int num_warmups,
 
     if (i >= num_warmups) {
       std::chrono::duration<double> duration = end_time - start_time;
-      durations.push_back(duration.count());
+      durations.push_back(duration.count() / 2 / loop_size);
     }
 
     // Reset state for next iteration
@@ -99,5 +88,5 @@ double RunConditionVariableBenchmark(int num_iterations, int num_warmups,
     child_ready = false;
   }
 
-  return CalculateOneTripDuration(durations, loop_size);
+  return CalculateOneTripDuration(durations);
 }

@@ -1,14 +1,14 @@
 #include "atomic_latency.h"
 
-#include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <numeric>
 #include <thread>
 #include <vector>
 
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+
+#include "common.h"
 
 namespace {
 
@@ -40,17 +40,6 @@ void ChildFlip(std::atomic<bool> *child, const std::atomic<bool> &parent,
   }
 }
 
-double CalculateOneTripDuration(const std::vector<double> &durations,
-                                const uint64_t loop_size) {
-  CHECK(durations.size() >= 3);
-  std::vector<double> sorted_durations = durations;
-  std::sort(sorted_durations.begin(), sorted_durations.end());
-  double average_duration = std::accumulate(sorted_durations.begin() + 1,
-                                            sorted_durations.end() - 1, 0.0) /
-                            (sorted_durations.size() - 2);
-  return average_duration / (4 * loop_size);
-}
-
 } // namespace
 
 double RunAtomicBenchmark(int num_iterations, int num_warmups,
@@ -76,9 +65,9 @@ double RunAtomicBenchmark(int num_iterations, int num_warmups,
 
     if (i >= num_warmups) {
       std::chrono::duration<double> duration = end_time - start_time;
-      durations.push_back(duration.count());
+      durations.push_back(duration.count() / 4 / loop_size);
     }
   }
 
-  return CalculateOneTripDuration(durations, loop_size);
+  return CalculateOneTripDuration(durations);
 }
