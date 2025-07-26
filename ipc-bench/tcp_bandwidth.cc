@@ -1,4 +1,4 @@
-#include "tcp_benchmark.h"
+#include "tcp_bandwidth.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>

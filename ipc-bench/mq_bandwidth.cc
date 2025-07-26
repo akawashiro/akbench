@@ -1,4 +1,4 @@
-#include "mq_benchmark.h"
+#include "mq_bandwidth.h"
 
 #include <fcntl.h>
 #include <mqueue.h>

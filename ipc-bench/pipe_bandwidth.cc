@@ -1,7 +1,5 @@
-#include "fifo_benchmark.h"
+#include "pipe_bandwidth.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -17,11 +15,10 @@
 
 namespace {
 
-const std::string BARRIER_ID = "/fifo_benchmark";
-const std::string FIFO_PATH = "/tmp/fifo_benchmark_pipe";
+const std::string BARRIER_ID = "/pipe_benchmark";
 
-void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                 uint64_t buffer_size) {
+void SendProcess(int write_fd, int num_warmups, int num_iterations,
+                 uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<uint8_t> data_to_send = GenerateDataToSend(data_size);
@@ -37,12 +34,6 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     } else {
       VLOG(1) << SendPrefix(iteration) << "Starting iteration " << iteration
               << "/" << num_iterations;
-    }
-
-    // Open FIFO for writing
-    int write_fd = open(FIFO_PATH.c_str(), O_WRONLY);
-    if (write_fd == -1) {
-      LOG(FATAL) << "send: open FIFO for writing: " << strerror(errno);
     }
 
     barrier.Wait();
@@ -67,8 +58,6 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
       VLOG(1) << SendPrefix(iteration)
               << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
     }
-
-    close(write_fd);
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
@@ -77,11 +66,12 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   LOG(INFO) << "Send bandwidth: " << bandwidth_gibps << GIBYTE_PER_SEC_UNIT
             << ".";
 
+  close(write_fd);
   VLOG(1) << SendPrefix(-1) << "Exiting.";
 }
 
-double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                      uint64_t buffer_size) {
+double ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
+                      uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -102,12 +92,6 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     std::vector<uint8_t> received_data;
     received_data.reserve(data_size);
 
-    // Open FIFO for reading
-    int read_fd = open(FIFO_PATH.c_str(), O_RDONLY);
-    if (read_fd == -1) {
-      LOG(FATAL) << "receive: open FIFO for reading: " << strerror(errno);
-    }
-
     barrier.Wait();
     size_t total_received = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -120,7 +104,7 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       if (bytes_read == 0) {
         if (!is_warmup) {
           VLOG(1) << ReceivePrefix(iteration)
-                  << "Sender closed the FIFO prematurely.";
+                  << "Sender closed the pipe prematurely.";
         }
         break;
       }
@@ -144,14 +128,13 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     } else {
       VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
     }
-
-    close(read_fd);
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
   LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
             << GIBYTE_PER_SEC_UNIT << ".";
 
+  close(read_fd);
   VLOG(1) << ReceivePrefix(-1) << "Exiting.";
 
   return bandwidth;
@@ -159,15 +142,15 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-double RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
+double RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
                         uint64_t buffer_size) {
-  // Remove any existing FIFO
-  unlink(FIFO_PATH.c_str());
-
-  // Create FIFO
-  if (mkfifo(FIFO_PATH.c_str(), 0666) == -1) {
-    LOG(FATAL) << "mkfifo: " << strerror(errno);
+  int pipe_fds[2];
+  if (pipe(pipe_fds) == -1) {
+    LOG(FATAL) << "pipe: " << strerror(errno);
   }
+
+  int read_fd = pipe_fds[0];
+  int write_fd = pipe_fds[1];
 
   pid_t pid = fork();
 
@@ -176,18 +159,14 @@ double RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
   }
 
   if (pid == 0) {
-    // Child process: sender
-    SendProcess(num_warmups, num_iterations, data_size, buffer_size);
+    close(read_fd);
+    SendProcess(write_fd, num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    // Parent process: receiver
-    double bandwidth =
-        ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
+    close(write_fd);
+    double bandwidth = ReceiveProcess(read_fd, num_warmups, num_iterations,
+                                      data_size, buffer_size);
     waitpid(pid, nullptr, 0);
-
-    // Clean up FIFO
-    unlink(FIFO_PATH.c_str());
-
     return bandwidth;
   }
 }
