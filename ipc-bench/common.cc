@@ -93,6 +93,16 @@ double CalculateBandwidth(std::vector<double> durations, int num_iterations,
   return bandwidth;
 }
 
+double CalculateOneTripDuration(const std::vector<double> &durations) {
+  CHECK(durations.size() >= 3);
+  std::vector<double> sorted_durations = durations;
+  std::sort(sorted_durations.begin(), sorted_durations.end());
+  double average_duration = std::accumulate(sorted_durations.begin() + 1,
+                                            sorted_durations.end() - 1, 0.0) /
+                            (sorted_durations.size() - 2);
+  return average_duration;
+}
+
 std::string ReceivePrefix(int iteration) {
   int pid = getpid();
   return absl::StrCat("Receive (PID ", pid, ", iteration ", iteration, "): ");
