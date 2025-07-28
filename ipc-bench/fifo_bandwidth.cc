@@ -159,8 +159,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-double RunFifoBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                        uint64_t buffer_size) {
+double RunFifoBandwidthBenchmark(int num_iterations, int num_warmups,
+                                 uint64_t data_size, uint64_t buffer_size) {
   // Remove any existing FIFO
   unlink(FIFO_PATH.c_str());
 

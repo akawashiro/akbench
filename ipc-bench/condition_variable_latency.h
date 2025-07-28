@@ -2,5 +2,5 @@
 
 #include <cstdint>
 
-double RunConditionVariableBenchmark(int num_iterations, int num_warmups,
-                                     uint64_t loop_size);
+double RunConditionVariableLatencyBenchmark(int num_iterations, int num_warmups,
+                                            uint64_t loop_size);

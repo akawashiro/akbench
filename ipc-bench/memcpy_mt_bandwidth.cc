@@ -60,8 +60,8 @@ double MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
   return bandwidth;
 }
 
-double RunMemcpyMtBenchmark(int num_iterations, int num_warmups,
-                            uint64_t data_size, uint64_t num_threads) {
+double RunMemcpyMtBandwidthBenchmark(int num_iterations, int num_warmups,
+                                     uint64_t data_size, uint64_t num_threads) {
   VLOG(1) << "Starting multi-threaded memcpy bandwidth test with "
           << num_threads << " threads...";
   double bandwidth =

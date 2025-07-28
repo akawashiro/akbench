@@ -174,8 +174,8 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
             << GIBYTE_PER_SEC_UNIT << ".";
 }
 
-double RunUdsBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                       uint64_t buffer_size) {
+double RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
+                                uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();

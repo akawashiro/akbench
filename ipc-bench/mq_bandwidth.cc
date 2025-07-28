@@ -169,8 +169,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-double RunMqBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                      uint64_t buffer_size) {
+double RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
+                               uint64_t data_size, uint64_t buffer_size) {
   // Remove any existing message queue
   mq_unlink(MQ_NAME.c_str());
 

@@ -181,8 +181,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-double RunShmBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                       uint64_t buffer_size) {
+double RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
+                                uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   CleanupResources();
 
