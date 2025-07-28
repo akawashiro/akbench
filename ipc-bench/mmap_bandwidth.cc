@@ -192,8 +192,8 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
 
 } // namespace
 
-double RunMmapBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                        uint64_t buffer_size) {
+double RunMmapBandwidthBenchmark(int num_iterations, int num_warmups,
+                                 uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   unlink(MMAP_FILE_PATH.c_str());
 

@@ -9,8 +9,8 @@
 
 #include "common.h"
 
-double RunMemcpyBenchmark(int num_iterations, int num_warmups,
-                          uint64_t data_size) {
+double RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
+                                   uint64_t data_size) {
   std::vector<uint8_t> src = GenerateDataToSend(data_size);
   std::vector<uint8_t> dst(data_size, 0);
   std::vector<double> durations;

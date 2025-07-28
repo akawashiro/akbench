@@ -142,8 +142,8 @@ double ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
 
 } // namespace
 
-double RunPipeBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                        uint64_t buffer_size) {
+double RunPipeBandwidthBenchmark(int num_iterations, int num_warmups,
+                                 uint64_t data_size, uint64_t buffer_size) {
   int pipe_fds[2];
   if (pipe(pipe_fds) == -1) {
     LOG(FATAL) << "pipe: " << strerror(errno);

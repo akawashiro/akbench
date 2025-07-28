@@ -91,25 +91,28 @@ int main(int argc, char *argv[]) {
   if (type == "all") {
     std::vector<std::pair<std::string, double>> results;
 
-    result = RunAtomicBenchmark(num_iterations, num_warmups, atomic_loop_size);
+    result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
+                                       atomic_loop_size);
     results.emplace_back("atomic", result);
 
-    result = RunConditionVariableBenchmark(num_iterations, num_warmups,
-                                           cv_loop_size);
+    result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
+                                                  cv_loop_size);
     results.emplace_back("condition_variable", result);
 
-    result =
-        RunSemaphoreBenchmark(num_iterations, num_warmups, semaphore_loop_size);
+    result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
+                                          semaphore_loop_size);
     results.emplace_back("semaphore", result);
 
-    result = RunStatfsBenchmark(num_iterations, num_warmups, statfs_loop_size);
+    result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
+                                       statfs_loop_size);
     results.emplace_back("statfs", result);
 
-    result =
-        RunFstatfsBenchmark(num_iterations, num_warmups, fstatfs_loop_size);
+    result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
+                                        fstatfs_loop_size);
     results.emplace_back("fstatfs", result);
 
-    result = RunGetpidBenchmark(num_iterations, num_warmups, getpid_loop_size);
+    result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
+                                       getpid_loop_size);
     results.emplace_back("getpid", result);
 
     // Output all results at the end
@@ -120,26 +123,29 @@ int main(int argc, char *argv[]) {
 
     return 0;
   } else if (type == "atomic") {
-    result = RunAtomicBenchmark(num_iterations, num_warmups, atomic_loop_size);
+    result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
+                                       atomic_loop_size);
     std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "condition_variable") {
-    result = RunConditionVariableBenchmark(num_iterations, num_warmups,
-                                           cv_loop_size);
+    result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
+                                                  cv_loop_size);
     std::cout << "Condition Variable benchmark result: " << result * 1e9
               << " ns\n";
   } else if (type == "semaphore") {
-    result =
-        RunSemaphoreBenchmark(num_iterations, num_warmups, semaphore_loop_size);
+    result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
+                                          semaphore_loop_size);
     std::cout << "Semaphore benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "statfs") {
-    result = RunStatfsBenchmark(num_iterations, num_warmups, statfs_loop_size);
+    result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
+                                       statfs_loop_size);
     std::cout << "Statfs benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "fstatfs") {
-    result =
-        RunFstatfsBenchmark(num_iterations, num_warmups, fstatfs_loop_size);
+    result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
+                                        fstatfs_loop_size);
     std::cout << "Fstatfs benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "getpid") {
-    result = RunGetpidBenchmark(num_iterations, num_warmups, getpid_loop_size);
+    result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
+                                       getpid_loop_size);
     std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
   } else {
     LOG(ERROR)

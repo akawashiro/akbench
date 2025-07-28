@@ -233,8 +233,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
 } // namespace
 
-double RunTcpBenchmark(int num_iterations, int num_warmups, uint64_t data_size,
-                       uint64_t buffer_size) {
+double RunTcpBandwidthBenchmark(int num_iterations, int num_warmups,
+                                uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();

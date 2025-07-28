@@ -11,8 +11,8 @@
 
 #include "common.h"
 
-double RunStatfsBenchmark(int num_iterations, int num_warmups,
-                          uint64_t loop_size) {
+double RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
+                                 uint64_t loop_size) {
   VLOG(1) << "Running statfs benchmark with " << num_iterations
           << " iterations, " << num_warmups << " warmups, and " << loop_size
           << " operations per iteration";
@@ -39,8 +39,8 @@ double RunStatfsBenchmark(int num_iterations, int num_warmups,
   return CalculateOneTripDuration(durations);
 }
 
-double RunFstatfsBenchmark(int num_iterations, int num_warmups,
-                           uint64_t loop_size) {
+double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
+                                  uint64_t loop_size) {
   VLOG(1) << "Running fstatfs benchmark with " << num_iterations
           << " iterations, " << num_warmups << " warmups, and " << loop_size
           << " operations per iteration";
@@ -72,8 +72,8 @@ double RunFstatfsBenchmark(int num_iterations, int num_warmups,
   return CalculateOneTripDuration(durations);
 }
 
-double RunGetpidBenchmark(int num_iterations, int num_warmups,
-                          uint64_t loop_size) {
+double RunGetpidLatencyBenchmark(int num_iterations, int num_warmups,
+                                 uint64_t loop_size) {
   VLOG(1) << "Running getpid benchmark with " << num_iterations
           << " iterations, " << num_warmups << " warmups, and " << loop_size
           << " operations per iteration";
