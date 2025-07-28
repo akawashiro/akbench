@@ -19,7 +19,8 @@
 #include "syscall_latency.h"
 
 ABSL_FLAG(std::string, type, "",
-          "Benchmark type to run (atomic, condition_variable, semaphore, statfs, fstatfs, "
+          "Benchmark type to run (atomic, condition_variable, semaphore, "
+          "statfs, fstatfs, "
           "getpid, all)");
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
@@ -41,12 +42,9 @@ int main(int argc, char *argv[]) {
   const std::optional<uint64_t> loop_size_opt = absl::GetFlag(FLAGS_loop_size);
 
   const std::map<std::string, uint64_t> default_loop_sizes = {
-      {"atomic", 1e6},
-      {"condition_variable", 1e5},
-      {"semaphore", 1e5},
-      {"statfs", 1e6},
-      {"fstatfs", 1e6},
-      {"getpid", 1e6}};
+      {"atomic", 1e6},    {"condition_variable", 1e5},
+      {"semaphore", 1e5}, {"statfs", 1e6},
+      {"fstatfs", 1e6},   {"getpid", 1e6}};
 
   const uint64_t atomic_loop_size = loop_size_opt.has_value()
                                         ? *loop_size_opt
@@ -54,9 +52,9 @@ int main(int argc, char *argv[]) {
   const uint64_t cv_loop_size =
       loop_size_opt.has_value() ? *loop_size_opt
                                 : default_loop_sizes.at("condition_variable");
-  const uint64_t semaphore_loop_size =
-      loop_size_opt.has_value() ? *loop_size_opt
-                                : default_loop_sizes.at("semaphore");
+  const uint64_t semaphore_loop_size = loop_size_opt.has_value()
+                                           ? *loop_size_opt
+                                           : default_loop_sizes.at("semaphore");
   const uint64_t statfs_loop_size = loop_size_opt.has_value()
                                         ? *loop_size_opt
                                         : default_loop_sizes.at("statfs");
@@ -100,8 +98,8 @@ int main(int argc, char *argv[]) {
                                            cv_loop_size);
     results.emplace_back("condition_variable", result);
 
-    result = RunSemaphoreBenchmark(num_iterations, num_warmups,
-                                   semaphore_loop_size);
+    result =
+        RunSemaphoreBenchmark(num_iterations, num_warmups, semaphore_loop_size);
     results.emplace_back("semaphore", result);
 
     result = RunStatfsBenchmark(num_iterations, num_warmups, statfs_loop_size);
@@ -130,8 +128,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Condition Variable benchmark result: " << result * 1e9
               << " ns\n";
   } else if (type == "semaphore") {
-    result = RunSemaphoreBenchmark(num_iterations, num_warmups,
-                                   semaphore_loop_size);
+    result =
+        RunSemaphoreBenchmark(num_iterations, num_warmups, semaphore_loop_size);
     std::cout << "Semaphore benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "statfs") {
     result = RunStatfsBenchmark(num_iterations, num_warmups, statfs_loop_size);
@@ -144,9 +142,10 @@ int main(int argc, char *argv[]) {
     result = RunGetpidBenchmark(num_iterations, num_warmups, getpid_loop_size);
     std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
   } else {
-    LOG(ERROR) << "Unknown benchmark type: " << type
-               << ". Available types: atomic, condition_variable, semaphore, statfs, "
-                  "fstatfs, getpid, all";
+    LOG(ERROR)
+        << "Unknown benchmark type: " << type
+        << ". Available types: atomic, condition_variable, semaphore, statfs, "
+           "fstatfs, getpid, all";
     return 1;
   }
 
