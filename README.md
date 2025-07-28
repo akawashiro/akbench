@@ -25,11 +25,13 @@ shm: 10.5029 GiByte/sec
 
 ```
 $ ./build/ipc-bench/latency --type=all
-atomic: 39.1009 ns
-condition_variable: 3885.55 ns
-statfs: 1247.57 ns
-fstatfs: 830.662 ns
-getpid: 121.154 ns
+atomic: 36.8307 ns
+barrier: 958.837 ns
+condition_variable: 4019.54 ns
+semaphore: 3687.24 ns
+statfs: 1274.74 ns
+fstatfs: 837.631 ns
+getpid: 122.122 ns
 ```
 
 ## Machine information which was used to run the benchmark below
