@@ -75,9 +75,12 @@ target_link_libraries(atomic_latency ${IPC_BENCH_LIBS})
 add_library(condition_variable_latency condition_variable_latency.cc)
 target_link_libraries(condition_variable_latency ${IPC_BENCH_LIBS})
 
+add_library(semaphore_latency semaphore_latency.cc)
+target_link_libraries(semaphore_latency ${IPC_BENCH_LIBS})
+
 add_library(syscall_latency syscall_latency.cc)
 target_link_libraries(syscall_latency ${IPC_BENCH_LIBS})
 
 add_executable(latency latency.cc)
 target_link_libraries(latency atomic_latency condition_variable_latency
-                      syscall_latency ${IPC_BENCH_LIBS})
+                      semaphore_latency syscall_latency ${IPC_BENCH_LIBS})
