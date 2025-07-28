@@ -14,14 +14,16 @@
 #include "common.h"
 
 #include "atomic_latency.h"
+#include "barrier_latency.h"
 #include "condition_variable_latency.h"
 #include "semaphore_latency.h"
 #include "syscall_latency.h"
 
-ABSL_FLAG(std::string, type, "",
-          "Benchmark type to run (atomic, condition_variable, semaphore, "
-          "statfs, fstatfs, "
-          "getpid, all)");
+ABSL_FLAG(
+    std::string, type, "",
+    "Benchmark type to run (atomic, barrier, condition_variable, semaphore, "
+    "statfs, fstatfs, "
+    "getpid, all)");
 ABSL_FLAG(int, num_iterations, 10,
           "Number of measurement iterations (minimum 3)");
 ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
@@ -42,13 +44,16 @@ int main(int argc, char *argv[]) {
   const std::optional<uint64_t> loop_size_opt = absl::GetFlag(FLAGS_loop_size);
 
   const std::map<std::string, uint64_t> default_loop_sizes = {
-      {"atomic", 1e6},    {"condition_variable", 1e5},
-      {"semaphore", 1e5}, {"statfs", 1e6},
-      {"fstatfs", 1e6},   {"getpid", 1e6}};
+      {"atomic", 1e6},    {"barrier", 1e3}, {"condition_variable", 1e5},
+      {"semaphore", 1e5}, {"statfs", 1e6},  {"fstatfs", 1e6},
+      {"getpid", 1e6}};
 
   const uint64_t atomic_loop_size = loop_size_opt.has_value()
                                         ? *loop_size_opt
                                         : default_loop_sizes.at("atomic");
+  const uint64_t barrier_loop_size = loop_size_opt.has_value()
+                                         ? *loop_size_opt
+                                         : default_loop_sizes.at("barrier");
   const uint64_t cv_loop_size =
       loop_size_opt.has_value() ? *loop_size_opt
                                 : default_loop_sizes.at("condition_variable");
@@ -66,7 +71,7 @@ int main(int argc, char *argv[]) {
                                         : default_loop_sizes.at("getpid");
 
   if (type.empty()) {
-    LOG(ERROR) << "Must specify --type. Available types: atomic, "
+    LOG(ERROR) << "Must specify --type. Available types: atomic, barrier, "
                   "condition_variable, semaphore, statfs, fstatfs, getpid, all";
     return 1;
   }
@@ -94,6 +99,10 @@ int main(int argc, char *argv[]) {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
     results.emplace_back("atomic", result);
+
+    result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
+                                        barrier_loop_size);
+    results.emplace_back("barrier", result);
 
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
@@ -126,6 +135,10 @@ int main(int argc, char *argv[]) {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
     std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
+  } else if (type == "barrier") {
+    result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
+                                        barrier_loop_size);
+    std::cout << "Barrier benchmark result: " << result * 1e9 << " ns\n";
   } else if (type == "condition_variable") {
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
@@ -148,10 +161,10 @@ int main(int argc, char *argv[]) {
                                        getpid_loop_size);
     std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
   } else {
-    LOG(ERROR)
-        << "Unknown benchmark type: " << type
-        << ". Available types: atomic, condition_variable, semaphore, statfs, "
-           "fstatfs, getpid, all";
+    LOG(ERROR) << "Unknown benchmark type: " << type
+               << ". Available types: atomic, barrier, condition_variable, "
+                  "semaphore, statfs, "
+                  "fstatfs, getpid, all";
     return 1;
   }
 

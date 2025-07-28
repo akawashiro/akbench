@@ -72,6 +72,9 @@ target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${IPC_BENCH_LIBS})
 add_library(atomic_latency atomic_latency.cc)
 target_link_libraries(atomic_latency ${IPC_BENCH_LIBS})
 
+add_library(barrier_latency barrier_latency.cc)
+target_link_libraries(barrier_latency ${IPC_BENCH_LIBS})
+
 add_library(condition_variable_latency condition_variable_latency.cc)
 target_link_libraries(condition_variable_latency ${IPC_BENCH_LIBS})
 
@@ -82,5 +85,11 @@ add_library(syscall_latency syscall_latency.cc)
 target_link_libraries(syscall_latency ${IPC_BENCH_LIBS})
 
 add_executable(latency latency.cc)
-target_link_libraries(latency atomic_latency condition_variable_latency
-                      semaphore_latency syscall_latency ${IPC_BENCH_LIBS})
+target_link_libraries(
+  latency
+  atomic_latency
+  barrier_latency
+  condition_variable_latency
+  semaphore_latency
+  syscall_latency
+  ${IPC_BENCH_LIBS})
