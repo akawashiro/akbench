@@ -35,6 +35,8 @@ ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
           "threads)");
 ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
           "Show VLOG messages lower than this level.");
+ABSL_FLAG(std::string, log_level, "WARNING",
+          "Log level (INFO, DEBUG, WARNING, ERROR)");
 
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
 
@@ -115,7 +117,22 @@ int main(int argc, char *argv[]) {
     absl::SetGlobalVLogLevel(v);
   }
 
-  absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
+  std::string log_level = absl::GetFlag(FLAGS_log_level);
+  absl::LogSeverityAtLeast threshold = absl::LogSeverityAtLeast::kWarning;
+
+  if (log_level == "INFO") {
+    threshold = absl::LogSeverityAtLeast::kInfo;
+  } else if (log_level == "WARNING") {
+    threshold = absl::LogSeverityAtLeast::kWarning;
+  } else if (log_level == "ERROR") {
+    threshold = absl::LogSeverityAtLeast::kError;
+  } else {
+    LOG(ERROR) << "Invalid log level: " << log_level
+               << ". Available levels: INFO, DEBUG, WARNING, ERROR";
+    return 1;
+  }
+
+  absl::SetStderrThreshold(threshold);
   absl::InitializeLog();
 
   // Run the appropriate benchmark

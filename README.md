@@ -8,7 +8,6 @@ $ ./scripts/build.sh
 ## How to run
 ```bash
 $ ./build/ipc-bench/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
-...
 memcpy: 16.7302 GiByte/sec
 memcpy_mt (1 threads): 16.5431 GiByte/sec
 memcpy_mt (2 threads): 17.3747 GiByte/sec
