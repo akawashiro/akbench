@@ -302,7 +302,8 @@ int main(int argc, char *argv[]) {
     TestWaitWithoutSleep(num_processes, num_iterations);
   } else {
     LOG(ERROR) << "Unknown test type: " << test_type
-               << ". Available types: constructor, wait_with_random_sleep, wait_without_sleep";
+               << ". Available types: constructor, wait_with_random_sleep, "
+                  "wait_without_sleep";
     return 1;
   }
 
