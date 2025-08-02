@@ -10,8 +10,6 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/globals.h"
-#include "absl/log/initialize.h"
 #include "aklog.h"
 #include "common.h"
 
@@ -42,9 +40,6 @@ int main(int argc, char **argv) {
   const int num_iterations = absl::GetFlag(FLAGS_num_iterations);
   const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
   const uint64_t data_size = absl::GetFlag(FLAGS_data_size);
-
-  absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
-  absl::InitializeLog();
 
   if (num_iterations < 3) {
     if (rank == 0) {

@@ -5,8 +5,6 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/globals.h"
-#include "absl/log/initialize.h"
 #include "aklog.h"
 
 #include "common.h"
@@ -121,14 +119,15 @@ int main(int argc, char *argv[]) {
   }
 
   std::string log_level = absl::GetFlag(FLAGS_log_level);
-  absl::LogSeverityAtLeast threshold = absl::LogSeverityAtLeast::kWarning;
 
   if (log_level == "INFO") {
-    threshold = absl::LogSeverityAtLeast::kInfo;
+    aklog::setLogLevel(aklog::LogLevel::INFO);
+  } else if (log_level == "DEBUG") {
+    aklog::setLogLevel(aklog::LogLevel::DEBUG);
   } else if (log_level == "WARNING") {
-    threshold = absl::LogSeverityAtLeast::kWarning;
+    aklog::setLogLevel(aklog::LogLevel::WARNING);
   } else if (log_level == "ERROR") {
-    threshold = absl::LogSeverityAtLeast::kError;
+    aklog::setLogLevel(aklog::LogLevel::ERROR);
   } else {
     AKLOG(aklog::LogLevel::ERROR,
           std::format("Invalid log level: {}. Available levels: INFO, DEBUG, "
@@ -136,9 +135,6 @@ int main(int argc, char *argv[]) {
                       log_level));
     return 1;
   }
-
-  absl::SetStderrThreshold(threshold);
-  absl::InitializeLog();
 
   // Run the appropriate benchmark
   double bandwidth = 0.0;
