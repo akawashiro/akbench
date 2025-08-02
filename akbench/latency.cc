@@ -1,7 +1,7 @@
 #include <format>
 #include <map>
-#include <print>
 #include <optional>
+#include <print>
 #include <vector>
 
 #include "absl/flags/flag.h"
@@ -137,7 +137,8 @@ int main(int argc, char *argv[]) {
 
     // Output all results at the end
     for (const auto &benchmark_result : results) {
-      std::println("{}: {} ns", benchmark_result.first, benchmark_result.second * 1e9);
+      std::println("{}: {} ns", benchmark_result.first,
+                   benchmark_result.second * 1e9);
     }
 
     return 0;

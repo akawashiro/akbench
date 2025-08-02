@@ -1,7 +1,7 @@
 #include <format>
 #include <map>
-#include <print>
 #include <optional>
+#include <print>
 #include <vector>
 
 #include "absl/flags/flag.h"
@@ -123,7 +123,8 @@ void RunLatencyBenchmarks(
 
     // Output all results at the end
     for (const auto &benchmark_result : results) {
-      std::println("{}: {} ns", benchmark_result.first, benchmark_result.second * 1e9);
+      std::println("{}: {} ns", benchmark_result.first,
+                   benchmark_result.second * 1e9);
     }
   } else if (type == "latency_atomic") {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
@@ -209,54 +210,65 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
 
     // Output all results at the end
     for (const auto &result : results) {
-      std::println("{}: {}{}", result.first, result.second / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+      std::println("{}: {}{}", result.first, result.second / (1ULL << 30),
+                   GIBYTE_PER_SEC_UNIT);
     }
   } else if (type == "bandwidth_memcpy") {
     bandwidth =
         RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
-    std::println("bandwidth_memcpy: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_memcpy: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_memcpy_mt") {
     if (num_threads_opt.has_value()) {
       // Run with specified number of threads
       bandwidth = RunMemcpyMtBandwidthBenchmark(
           num_iterations, num_warmups, data_size, num_threads_opt.value());
-      std::println("bandwidth_memcpy_mt: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+      std::println("bandwidth_memcpy_mt: {}{}", bandwidth / (1ULL << 30),
+                   GIBYTE_PER_SEC_UNIT);
     } else {
       // Run with 1-4 threads for compatibility
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         bandwidth = RunMemcpyMtBandwidthBenchmark(num_iterations, num_warmups,
                                                   data_size, n_threads);
-        std::println("bandwidth_memcpy_mt ({} threads): {}{}", n_threads, bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+        std::println("bandwidth_memcpy_mt ({} threads): {}{}", n_threads,
+                     bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
       }
     }
   } else if (type == "bandwidth_tcp") {
     bandwidth = RunTcpBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_tcp: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_tcp: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_uds") {
     bandwidth = RunUdsBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_uds: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_uds: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_pipe") {
     bandwidth = RunPipeBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_pipe: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_pipe: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_fifo") {
     bandwidth = RunFifoBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_fifo: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_fifo: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mq") {
     bandwidth = RunMqBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                         buffer_size);
-    std::println("bandwidth_mq: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_mq: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mmap") {
     bandwidth = RunMmapBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_mmap: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_mmap: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_shm") {
     bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_shm: {}{}", bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    std::println("bandwidth_shm: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   }
 }
 
