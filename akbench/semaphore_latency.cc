@@ -7,11 +7,11 @@
 
 #include <chrono>
 #include <cstring>
+#include <format>
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -30,16 +30,17 @@ std::vector<double> ParentProcess(int num_iterations, int num_warmups,
   std::vector<double> durations;
 
   sem_t *parent_sem = sem_open(SEM_NAME_PARENT.c_str(), 0);
-  CHECK(parent_sem != SEM_FAILED)
-      << "Failed to open parent semaphore: " << strerror(errno);
+  AKCHECK(parent_sem != SEM_FAILED,
+          std::format("Failed to open parent semaphore: {}", strerror(errno)));
 
   sem_t *child_sem = sem_open(SEM_NAME_CHILD.c_str(), 0);
-  CHECK(child_sem != SEM_FAILED)
-      << "Failed to open child semaphore: " << strerror(errno);
+  AKCHECK(child_sem != SEM_FAILED,
+          std::format("Failed to open child semaphore: {}", strerror(errno)));
 
   for (int i = 0; i < num_iterations + num_warmups; ++i) {
-    VLOG(1) << "Parent: Starting iteration " << i + 1 << "/"
-            << (num_iterations + num_warmups);
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("Parent: Starting iteration {}/{}", i + 1,
+                      (num_iterations + num_warmups)));
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -53,8 +54,9 @@ std::vector<double> ParentProcess(int num_iterations, int num_warmups,
     if (i >= num_warmups) {
       std::chrono::duration<double> duration = end_time - start_time;
       durations.push_back(duration.count() / 2 / loop_size);
-      VLOG(1) << "Parent: Iteration " << i + 1 << " takes " << duration.count()
-              << " seconds.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("Parent: Iteration {} takes {} seconds.", i + 1,
+                        duration.count()));
     }
   }
 
@@ -66,15 +68,16 @@ std::vector<double> ParentProcess(int num_iterations, int num_warmups,
 
 void ChildProcess(uint64_t loop_size, int total_iterations) {
   sem_t *parent_sem = sem_open(SEM_NAME_PARENT.c_str(), 0);
-  CHECK(parent_sem != SEM_FAILED)
-      << "Failed to open parent semaphore: " << strerror(errno);
+  AKCHECK(parent_sem != SEM_FAILED,
+          std::format("Failed to open parent semaphore: {}", strerror(errno)));
 
   sem_t *child_sem = sem_open(SEM_NAME_CHILD.c_str(), 0);
-  CHECK(child_sem != SEM_FAILED)
-      << "Failed to open child semaphore: " << strerror(errno);
+  AKCHECK(child_sem != SEM_FAILED,
+          std::format("Failed to open child semaphore: {}", strerror(errno)));
 
   for (int i = 0; i < total_iterations; ++i) {
-    VLOG(1) << "Child: Starting iteration " << i + 1 << "/" << total_iterations;
+    AKLOG(aklog::LogLevel::DEBUG, std::format("Child: Starting iteration {}/{}",
+                                              i + 1, total_iterations));
 
     for (uint64_t j = 0; j < loop_size; ++j) {
       sem_wait(child_sem);
@@ -94,12 +97,13 @@ double RunSemaphoreLatencyBenchmark(int num_iterations, int num_warmups,
 
   // Create semaphores before forking
   sem_t *parent_sem = sem_open(SEM_NAME_PARENT.c_str(), O_CREAT, 0644, 0);
-  CHECK(parent_sem != SEM_FAILED)
-      << "Failed to create parent semaphore: " << strerror(errno);
+  AKCHECK(
+      parent_sem != SEM_FAILED,
+      std::format("Failed to create parent semaphore: {}", strerror(errno)));
 
   sem_t *child_sem = sem_open(SEM_NAME_CHILD.c_str(), O_CREAT, 0644, 0);
-  CHECK(child_sem != SEM_FAILED)
-      << "Failed to create child semaphore: " << strerror(errno);
+  AKCHECK(child_sem != SEM_FAILED,
+          std::format("Failed to create child semaphore: {}", strerror(errno)));
 
   sem_close(parent_sem);
   sem_close(child_sem);
@@ -107,7 +111,8 @@ double RunSemaphoreLatencyBenchmark(int num_iterations, int num_warmups,
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(FATAL) << "Fork failed: " << strerror(errno);
+    AKLOG(aklog::LogLevel::FATAL,
+          std::format("Fork failed: {}", strerror(errno)));
   }
 
   if (pid == 0) {

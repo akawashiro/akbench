@@ -3,7 +3,7 @@ add_subdirectory(abseil-cpp)
 add_library(aklog aklog.cc)
 
 add_library(barrier barrier.cc)
-target_link_libraries(barrier absl::log)
+target_link_libraries(barrier aklog absl::log)
 set(AKBENCH_LIBS
     aklog
     absl::log

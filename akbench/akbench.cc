@@ -56,8 +56,6 @@ ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
           "Number of threads for bandwidth_memcpy_mt benchmark (default: run "
           "with 1-4 "
           "threads)");
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, log_level, "WARNING",
           "Log level (INFO, DEBUG, WARNING, ERROR)");
 

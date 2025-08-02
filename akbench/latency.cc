@@ -28,8 +28,6 @@ ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
 ABSL_FLAG(std::optional<uint64_t>, loop_size, std::nullopt,
           "number of iterations in each "
           "measurement loop. Use type-specific default if not specified.");
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, log_level, "WARNING",
           "Log level (INFO, DEBUG, WARNING, ERROR)");
 

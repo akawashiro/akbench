@@ -33,8 +33,6 @@ ABSL_FLAG(std::optional<uint64_t>, buffer_size, std::nullopt,
 ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
           "Number of threads for memcpy_mt benchmark (default: run with 1-4 "
           "threads)");
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, log_level, "WARNING",
           "Log level (INFO, DEBUG, WARNING, ERROR)");
 
@@ -120,12 +118,6 @@ int main(int argc, char *argv[]) {
         std::format("data_size must be larger than CHECKSUM_SIZE ({}), got: {}",
                     CHECKSUM_SIZE, data_size));
     return 1;
-  }
-
-  std::optional<int> vlog = absl::GetFlag(FLAGS_vlog);
-  if (vlog.has_value()) {
-    int v = *vlog;
-    absl::SetGlobalVLogLevel(v);
   }
 
   std::string log_level = absl::GetFlag(FLAGS_log_level);

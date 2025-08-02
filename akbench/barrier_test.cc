@@ -266,8 +266,6 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
 
 } // namespace
 
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, test_type, "constructor",
           "Type of test to run. Available types: constructor, "
           "wait_with_random_sleep, wait_without_sleep");
@@ -279,11 +277,6 @@ ABSL_FLAG(int, num_iterations, 20,
 int main(int argc, char *argv[]) {
   absl::SetProgramUsageMessage("Sense Reversing Barrier Test");
   absl::ParseCommandLine(argc, argv);
-  const std::optional<int> vlog = absl::GetFlag(FLAGS_vlog);
-  if (vlog.has_value()) {
-    int v = *vlog;
-    absl::SetGlobalVLogLevel(v);
-  }
   const std::string test_type = absl::GetFlag(FLAGS_test_type);
   absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
   absl::InitializeLog();
