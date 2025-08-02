@@ -72,6 +72,30 @@ Only one test currently exists: `barrier_test`
 - Uses **Abseil flags** for command-line argument parsing
 - Consistent measurement methodology with warmup iterations
 
+## Coding Style Guidelines
+
+### Functional Programming Style
+
+This project follows functional programming principles where possible:
+
+- **Pure functions**: Prefer functions without side effects that return consistent outputs for the same inputs
+- **Const correctness**: Use `const` arguments and member functions extensively
+- **Immutable data**: Prefer immutable data structures and avoid modifying parameters
+- **Pass by const reference**: Use `const T&` for complex types to avoid unnecessary copies
+- **Const member functions**: Mark member functions `const` when they don't modify object state
+
+Example:
+```cpp
+// Good: pure function with const parameters
+auto calculate_bandwidth(const std::vector<uint8_t>& data, 
+                        const std::chrono::duration<double>& elapsed) const -> double {
+    return static_cast<double>(data.size()) / elapsed.count();
+}
+
+// Avoid: non-const parameters and side effects
+void process_data(std::vector<uint8_t>& data, bool& success);
+```
+
 ## Adding New Benchmarks
 
 1. Create `new_benchmark.{cc,h}` in `akbench/`
