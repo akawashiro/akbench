@@ -13,3 +13,4 @@ double CalculateOneTripDuration(const std::vector<double> &durations);
 std::string ReceivePrefix(int iteration);
 std::string SendPrefix(int iteration);
 std::string GenerateUniqueBarrierId(const std::string &base_name);
+std::string GenerateUniqueResourcePath(const std::string &base_path);

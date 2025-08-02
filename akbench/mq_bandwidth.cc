@@ -20,7 +20,7 @@
 namespace {
 
 const std::string BARRIER_ID = GenerateUniqueBarrierId("/mq_benchmark");
-const std::string MQ_NAME = "/mq_benchmark_queue";
+const std::string MQ_NAME = GenerateUniqueBarrierId("/mq_benchmark_queue");
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
                  uint64_t buffer_size) {

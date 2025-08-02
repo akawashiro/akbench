@@ -17,7 +17,8 @@
 #include "barrier.h"
 #include "common.h"
 
-const std::string SOCKET_PATH = "/tmp/unix_domain_socket_test.sock";
+const std::string SOCKET_PATH =
+    GenerateUniqueResourcePath("/tmp/unix_domain_socket_test.sock");
 constexpr size_t DEFAULT_BUFFER_SIZE = (1 << 20);
 const std::string BARRIER_ID = GenerateUniqueBarrierId("/uds_benchmark");
 

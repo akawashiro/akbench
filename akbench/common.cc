@@ -133,3 +133,23 @@ std::string GenerateUniqueBarrierId(const std::string &base_name) {
 
   return base_name + "_" + hex_suffix;
 }
+
+std::string GenerateUniqueResourcePath(const std::string &base_path) {
+  std::random_device seed_gen;
+  std::mt19937 engine(seed_gen());
+  std::uniform_int_distribution<uint32_t> dist(0, UINT32_MAX);
+
+  uint32_t random_value = dist(engine);
+  std::string hex_suffix = std::format("{:08x}", random_value);
+
+  // Find the last dot for file extension
+  size_t dot_pos = base_path.rfind('.');
+  if (dot_pos != std::string::npos) {
+    // Insert suffix before extension
+    return base_path.substr(0, dot_pos) + "_" + hex_suffix +
+           base_path.substr(dot_pos);
+  } else {
+    // No extension, just append suffix
+    return base_path + "_" + hex_suffix;
+  }
+}
