@@ -8,11 +8,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <format>
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "barrier.h"
 #include "common.h"
@@ -34,7 +34,7 @@ double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
     struct sockaddr_un addr;
 
     listen_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    CHECK(listen_fd != -1) << "Failed to create socket";
+    AKCHECK(listen_fd != -1, "Failed to create socket");
 
     remove(SOCKET_PATH.c_str());
 
@@ -45,37 +45,43 @@ double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
 
     // Bind the socket to the specified path
     if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-      LOG(FATAL) << "Failed to bind socket to " << SOCKET_PATH;
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("Failed to bind socket to {}", SOCKET_PATH));
     }
 
     // Listen for incoming connections
     if (listen(listen_fd, 0) == -1) {
-      LOG(FATAL) << "Failed to listen on socket " << SOCKET_PATH;
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("Failed to listen on socket {}", SOCKET_PATH));
     }
 
-    VLOG(1) << ReceivePrefix(iteration) << "Waiting for sender connection on "
-            << SOCKET_PATH;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Waiting for sender connection on {}",
+                      ReceivePrefix(iteration), SOCKET_PATH));
 
     conn_fd = accept(listen_fd, NULL, NULL);
-    CHECK(conn_fd != -1) << "Failed to accept connection";
+    AKCHECK(conn_fd != -1, "Failed to accept connection");
 
-    VLOG(1) << ReceivePrefix(iteration) << "Sender connected.";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Sender connected.", ReceivePrefix(iteration)));
     std::vector<uint8_t> recv_buffer(buffer_size);
     barrier.Wait();
-    VLOG(1) << ReceivePrefix(iteration) << "Begin receiving data.";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Begin receiving data.", ReceivePrefix(iteration)));
     size_t total_received = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
 
     while (total_received < data_size) {
-      VLOG(1) << ReceivePrefix(iteration)
-              << "Receiving data, total received: " << total_received
-              << " bytes.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Receiving data, total received: {} bytes.",
+                        ReceivePrefix(iteration), total_received));
       ssize_t bytes_received =
           recv(conn_fd, recv_buffer.data(), buffer_size, 0);
-      CHECK(bytes_received >= 0) << "Failed to receive data";
+      AKCHECK(bytes_received >= 0, "Failed to receive data");
       if (bytes_received == 0) {
-        VLOG(1) << ReceivePrefix(iteration)
-                << "Sender disconnected prematurely.";
+        AKLOG(aklog::LogLevel::DEBUG,
+              std::format("{}Sender disconnected prematurely.",
+                          ReceivePrefix(iteration)));
         break;
       }
       total_received += bytes_received;
@@ -88,20 +94,23 @@ double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
     close(conn_fd);
     close(listen_fd);
     remove(SOCKET_PATH.c_str());
-    VLOG(1) << ReceivePrefix(iteration) << "Finished receiving data.";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Finished receiving data.", ReceivePrefix(iteration)));
 
     VerifyDataReceived(read_data, data_size);
     if (num_warmups <= iteration) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << ReceivePrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", ReceivePrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << " Receive bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format(" Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 
   return bandwidth;
 }
@@ -119,38 +128,44 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
     struct sockaddr_un addr;
 
     sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    CHECK(sock_fd != -1) << "Failed to create socket";
+    AKCHECK(sock_fd != -1, "Failed to create socket");
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, SOCKET_PATH.c_str(), sizeof(addr.sun_path) - 1);
 
-    VLOG(1) << SendPrefix(iteration) << "Connecting to receiver on "
-            << SOCKET_PATH;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Connecting to receiver on {}", SendPrefix(iteration),
+                      SOCKET_PATH));
     while (connect(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
       if (errno == ENOENT || errno == ECONNREFUSED) {
-        VLOG(1) << SendPrefix(iteration)
-                << "Connection failed: " << strerror(errno) << ". Retrying...";
+        AKLOG(aklog::LogLevel::DEBUG,
+              std::format("{}Connection failed: {}. Retrying...",
+                          SendPrefix(iteration), strerror(errno)));
         sleep(1);
       } else {
-        LOG(FATAL) << SendPrefix(iteration)
-                   << "Unexpected error: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("{}Unexpected error: {}", SendPrefix(iteration),
+                          strerror(errno)));
       }
     }
 
     barrier.Wait();
-    VLOG(1) << SendPrefix(iteration) << "Begin data transfer.";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Begin data transfer.", SendPrefix(iteration)));
     size_t total_sent = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
 
     while (total_sent < data_size) {
-      VLOG(1) << SendPrefix(iteration)
-              << "Sending data, total sent: " << total_sent << " bytes.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Sending data, total sent: {} bytes.",
+                        SendPrefix(iteration), total_sent));
       size_t bytes_to_send = std::min(buffer_size, data_size - total_sent);
       ssize_t bytes_sent =
           send(sock_fd, data_to_send.data() + total_sent, bytes_to_send, 0);
       if (bytes_sent == -1) {
-        LOG(FATAL) << "Send: Failed to send data: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("Send: Failed to send data: {}", strerror(errno)));
         break;
       }
       total_sent += bytes_sent;
@@ -158,20 +173,23 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
 
     auto end_time = std::chrono::high_resolution_clock::now();
     barrier.Wait();
-    VLOG(1) << SendPrefix(iteration) << "Finish data transfer";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Finish data transfer", SendPrefix(iteration)));
 
     if (num_warmups <= iteration) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << SendPrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", SendPrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
     close(sock_fd);
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << " Send bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format(" Send bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 }
 
 double RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
@@ -179,7 +197,7 @@ double RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();
-  CHECK(pid != -1) << "Failed to fork process";
+  AKCHECK(pid != -1, "Failed to fork process");
 
   if (pid == 0) {
     SendProcess(buffer_size, num_warmups, num_iterations, data_size);

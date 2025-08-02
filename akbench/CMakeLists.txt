@@ -5,6 +5,7 @@ add_library(aklog aklog.cc)
 add_library(barrier barrier.cc)
 target_link_libraries(barrier absl::log)
 set(AKBENCH_LIBS
+    aklog
     absl::log
     absl::check
     absl::base

@@ -8,9 +8,10 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <format>
 #include <vector>
 
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "barrier.h"
 #include "common.h"
@@ -32,17 +33,20 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", SendPrefix(iteration), iteration,
+                        num_warmups));
     } else {
-      VLOG(1) << SendPrefix(iteration) << "Starting iteration " << iteration
-              << "/" << num_iterations;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Starting iteration {}/{}", SendPrefix(iteration),
+                        iteration, num_iterations));
     }
 
     // Open FIFO for writing
     int write_fd = open(FIFO_PATH.c_str(), O_WRONLY);
     if (write_fd == -1) {
-      LOG(FATAL) << "send: open FIFO for writing: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("send: open FIFO for writing: {}", strerror(errno)));
     }
 
     barrier.Wait();
@@ -54,7 +58,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_written =
           write(write_fd, data_to_send.data() + total_sent, bytes_to_send);
       if (bytes_written == -1) {
-        LOG(FATAL) << "send: write: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("send: write: {}", strerror(errno)));
       }
       total_sent += bytes_written;
     }
@@ -64,8 +69,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << SendPrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", SendPrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
 
     close(write_fd);
@@ -74,10 +80,11 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
 
   double bandwidth_gibps = bandwidth / (1024.0 * 1024.0 * 1024.0);
-  LOG(INFO) << "Send bandwidth: " << bandwidth_gibps << GIBYTE_PER_SEC_UNIT
-            << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Send bandwidth: {}{}.", bandwidth_gibps,
+                    GIBYTE_PER_SEC_UNIT));
 
-  VLOG(1) << SendPrefix(-1) << "Exiting.";
+  AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", SendPrefix(-1)));
 }
 
 double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -91,11 +98,13 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", ReceivePrefix(iteration), iteration,
+                        num_warmups));
     } else {
-      VLOG(1) << ReceivePrefix(iteration) << "Starting iteration " << iteration
-              << "/" << num_iterations;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Starting iteration {}/{}", ReceivePrefix(iteration),
+                        iteration, num_iterations));
     }
 
     std::vector<uint8_t> recv_buffer(buffer_size);
@@ -105,7 +114,8 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Open FIFO for reading
     int read_fd = open(FIFO_PATH.c_str(), O_RDONLY);
     if (read_fd == -1) {
-      LOG(FATAL) << "receive: open FIFO for reading: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: open FIFO for reading: {}", strerror(errno)));
     }
 
     barrier.Wait();
@@ -115,12 +125,14 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     while (total_received < data_size) {
       ssize_t bytes_read = read(read_fd, recv_buffer.data(), buffer_size);
       if (bytes_read == -1) {
-        LOG(FATAL) << "receive: read: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("receive: read: {}", strerror(errno)));
       }
       if (bytes_read == 0) {
         if (!is_warmup) {
-          VLOG(1) << ReceivePrefix(iteration)
-                  << "Sender closed the FIFO prematurely.";
+          AKLOG(aklog::LogLevel::DEBUG,
+                std::format("{}Sender closed the FIFO prematurely.",
+                            ReceivePrefix(iteration)));
         }
         break;
       }
@@ -135,24 +147,28 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << ReceivePrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", ReceivePrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
 
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
+      AKLOG(aklog::LogLevel::FATAL, std::format("{}Data verification failed!",
+                                                ReceivePrefix(iteration)));
     } else {
-      VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
+      AKLOG(aklog::LogLevel::DEBUG, std::format("{}Data verification passed.",
+                                                ReceivePrefix(iteration)));
     }
 
     close(read_fd);
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 
-  VLOG(1) << ReceivePrefix(-1) << "Exiting.";
+  AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", ReceivePrefix(-1)));
 
   return bandwidth;
 }
@@ -166,13 +182,13 @@ double RunFifoBandwidthBenchmark(int num_iterations, int num_warmups,
 
   // Create FIFO
   if (mkfifo(FIFO_PATH.c_str(), 0666) == -1) {
-    LOG(FATAL) << "mkfifo: " << strerror(errno);
+    AKLOG(aklog::LogLevel::FATAL, std::format("mkfifo: {}", strerror(errno)));
   }
 
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(FATAL) << "fork: " << strerror(errno);
+    AKLOG(aklog::LogLevel::FATAL, std::format("fork: {}", strerror(errno)));
   }
 
   if (pid == 0) {

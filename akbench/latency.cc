@@ -1,3 +1,4 @@
+#include <format>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -6,10 +7,7 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/check.h"
-#include "absl/log/globals.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -73,43 +71,37 @@ int main(int argc, char *argv[]) {
                                         : default_loop_sizes.at("getpid");
 
   if (type.empty()) {
-    LOG(ERROR) << "Must specify --type. Available types: atomic, barrier, "
-                  "condition_variable, semaphore, statfs, fstatfs, getpid, all";
+    AKLOG(aklog::LogLevel::ERROR,
+          "Must specify --type. Available types: atomic, barrier, "
+          "condition_variable, semaphore, statfs, fstatfs, getpid, all");
     return 1;
   }
 
   if (num_iterations < 3) {
-    LOG(ERROR) << "num_iterations must be at least 3, got: " << num_iterations;
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("num_iterations must be at least 3, got: {}",
+                      num_iterations));
     return 1;
-  }
-
-  std::optional<int> vlog = absl::GetFlag(FLAGS_vlog);
-  if (vlog.has_value()) {
-    int v = *vlog;
-    absl::SetGlobalVLogLevel(v);
   }
 
   // Set log level
   std::string log_level = absl::GetFlag(FLAGS_log_level);
-  absl::LogSeverityAtLeast threshold = absl::LogSeverityAtLeast::kWarning;
 
   if (log_level == "INFO") {
-    threshold = absl::LogSeverityAtLeast::kInfo;
+    aklog::setLogLevel(aklog::LogLevel::INFO);
   } else if (log_level == "DEBUG") {
-    threshold =
-        absl::LogSeverityAtLeast::kInfo; // Abseil uses INFO for DEBUG level
+    aklog::setLogLevel(aklog::LogLevel::DEBUG);
   } else if (log_level == "WARNING") {
-    threshold = absl::LogSeverityAtLeast::kWarning;
+    aklog::setLogLevel(aklog::LogLevel::WARNING);
   } else if (log_level == "ERROR") {
-    threshold = absl::LogSeverityAtLeast::kError;
+    aklog::setLogLevel(aklog::LogLevel::ERROR);
   } else {
-    LOG(ERROR) << "Invalid log level: " << log_level
-               << ". Available levels: INFO, DEBUG, WARNING, ERROR";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("Invalid log level: {}. Available levels: INFO, DEBUG, "
+                      "WARNING, ERROR",
+                      log_level));
     return 1;
   }
-
-  absl::SetStderrThreshold(threshold);
-  absl::InitializeLog();
 
   // Run the appropriate benchmark
   double result = 0.0;
@@ -182,10 +174,11 @@ int main(int argc, char *argv[]) {
                                        getpid_loop_size);
     std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
   } else {
-    LOG(ERROR) << "Unknown benchmark type: " << type
-               << ". Available types: atomic, barrier, condition_variable, "
-                  "semaphore, statfs, "
-                  "fstatfs, getpid, all";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format(
+              "Unknown benchmark type: {}. Available types: atomic, barrier, "
+              "condition_variable, semaphore, statfs, fstatfs, getpid, all",
+              type));
     return 1;
   }
 

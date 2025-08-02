@@ -10,10 +10,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <format>
 #include <string>
 #include <vector>
 
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "barrier.h"
 #include "common.h"
@@ -39,21 +40,25 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", ReceivePrefix(iteration), iteration,
+                        num_warmups));
     } else {
-      VLOG(1) << ReceivePrefix(iteration) << "Starting iteration...";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Starting iteration...", ReceivePrefix(iteration)));
     }
 
     // Create shared memory
     const size_t shared_buffer_size = sizeof(SharedBuffer) + 2 * buffer_size;
     int shm_fd = shm_open(SHM_NAME.c_str(), O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
-      LOG(FATAL) << "receive: shm_open: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: shm_open: {}", strerror(errno)));
     }
 
     if (ftruncate(shm_fd, shared_buffer_size) == -1) {
-      LOG(FATAL) << "receive: ftruncate: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: ftruncate: {}", strerror(errno)));
     }
 
     SharedBuffer *shared_buffer = static_cast<SharedBuffer *>(
@@ -61,11 +66,13 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
              shm_fd, 0));
     memset(shared_buffer, 0, shared_buffer_size);
     if (shared_buffer == MAP_FAILED) {
-      LOG(FATAL) << "receive: mmap: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: mmap: {}", strerror(errno)));
     }
 
-    VLOG(1) << ReceivePrefix(iteration)
-            << "Shared memory and semaphores initialized";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Shared memory and semaphores initialized",
+                      ReceivePrefix(iteration)));
     barrier.Wait();
 
     std::vector<uint8_t> received_data(data_size, 0);
@@ -90,15 +97,18 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << ReceivePrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", ReceivePrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
 
     // Verify received data (always, even during warmup)
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
+      AKLOG(aklog::LogLevel::FATAL, std::format("{}Data verification failed!",
+                                                ReceivePrefix(iteration)));
     } else {
-      VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
+      AKLOG(aklog::LogLevel::DEBUG, std::format("{}Data verification passed.",
+                                                ReceivePrefix(iteration)));
     }
 
     munmap(shared_buffer, shared_buffer_size);
@@ -107,8 +117,9 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 
   return bandwidth;
 }
@@ -124,10 +135,12 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", SendPrefix(iteration), iteration,
+                        num_warmups));
     } else {
-      VLOG(1) << SendPrefix(iteration) << "Starting iteration...";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Starting iteration...", SendPrefix(iteration)));
     }
 
     barrier.Wait();
@@ -135,14 +148,16 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     const size_t shared_buffer_size = sizeof(SharedBuffer) + 2 * buffer_size;
     int shm_fd = shm_open(SHM_NAME.c_str(), O_RDWR, 0666);
     if (shm_fd == -1) {
-      LOG(FATAL) << "send: shm_open: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("send: shm_open: {}", strerror(errno)));
     }
 
     SharedBuffer *shared_buffer = static_cast<SharedBuffer *>(
         mmap(NULL, shared_buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED,
              shm_fd, 0));
     if (shared_buffer == MAP_FAILED) {
-      LOG(FATAL) << "send: mmap: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("send: mmap: {}", strerror(errno)));
     }
 
     barrier.Wait();
@@ -150,7 +165,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     constexpr uint64_t PIPELINE_INDEX = 0;
     const uint64_t n_pipeline = (data_size + buffer_size - 1) / buffer_size + 1;
     auto start_time = std::chrono::high_resolution_clock::now();
-    VLOG(1) << SendPrefix(iteration) << "n_pipeline: " << n_pipeline;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}n_pipeline: {}", SendPrefix(iteration), n_pipeline));
     for (uint64_t i = 0; i < n_pipeline; ++i) {
       barrier.Wait();
       const size_t size_to_send = std::min(data_size - bytes_send, buffer_size);
@@ -166,8 +182,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << SendPrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", SendPrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
 
     munmap(shared_buffer, shared_buffer_size);
@@ -175,8 +192,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Send bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 }
 
 } // namespace
@@ -189,7 +207,8 @@ double RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
   pid_t pid = fork();
 
   if (pid == -1) {
-    LOG(FATAL) << "Fork failed: " << strerror(errno);
+    AKLOG(aklog::LogLevel::FATAL,
+          std::format("Fork failed: {}", strerror(errno)));
   }
 
   if (pid == 0) {

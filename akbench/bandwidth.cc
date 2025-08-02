@@ -1,13 +1,13 @@
+#include <format>
 #include <iostream>
 #include <optional>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/check.h"
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 #include "fifo_bandwidth.h"
@@ -55,31 +55,35 @@ int main(int argc, char *argv[]) {
 
   // Validate type
   if (type.empty()) {
-    LOG(ERROR) << "Must specify --type. Available types: memcpy, memcpy_mt, "
-                  "tcp, uds, pipe, fifo, mmap, shm, all";
+    AKLOG(aklog::LogLevel::ERROR,
+          "Must specify --type. Available types: memcpy, memcpy_mt, tcp, uds, "
+          "pipe, fifo, mmap, shm, all");
     return 1;
   }
 
   // Check if buffer_size is specified for incompatible benchmark types
   if ((type == "memcpy" || type == "memcpy_mt") &&
       buffer_size_opt.has_value()) {
-    LOG(ERROR) << "Buffer size option is not applicable to " << type
-               << " benchmark type";
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("Buffer size option is not applicable to {} benchmark type",
+                    type));
     return 1;
   }
 
   // Check if num_threads is specified for incompatible benchmark types
   if (type != "memcpy_mt" && num_threads_opt.has_value()) {
-    LOG(ERROR) << "Number of threads option is only applicable to memcpy_mt "
-                  "benchmark type";
+    AKLOG(aklog::LogLevel::ERROR, "Number of threads option is only applicable "
+                                  "to memcpy_mt benchmark type");
     return 1;
   }
 
   // Validate num_threads for memcpy_mt
   if (type == "memcpy_mt" && num_threads_opt.has_value() &&
       num_threads_opt.value() == 0) {
-    LOG(ERROR) << "num_threads must be greater than 0, got: "
-               << num_threads_opt.value();
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("num_threads must be greater than 0, got: {}",
+                      num_threads_opt.value()));
     return 1;
   }
 
@@ -88,26 +92,33 @@ int main(int argc, char *argv[]) {
 
   // Validate buffer_size
   if (buffer_size == 0) {
-    LOG(ERROR) << "buffer_size must be greater than 0, got: " << buffer_size;
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("buffer_size must be greater than 0, got: {}",
+                      buffer_size));
     return 1;
   }
 
   if (buffer_size > data_size) {
-    LOG(ERROR) << "buffer_size (" << buffer_size
-               << ") cannot be larger than data_size (" << data_size << ")";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("buffer_size ({}) cannot be larger than data_size ({})",
+                      buffer_size, data_size));
     return 1;
   }
 
   // Validate num_iterations
   if (num_iterations < 3) {
-    LOG(ERROR) << "num_iterations must be at least 3, got: " << num_iterations;
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("num_iterations must be at least 3, got: {}",
+                      num_iterations));
     return 1;
   }
 
   // Validate data_size
   if (data_size <= CHECKSUM_SIZE) {
-    LOG(ERROR) << "data_size must be larger than CHECKSUM_SIZE ("
-               << CHECKSUM_SIZE << "), got: " << data_size;
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("data_size must be larger than CHECKSUM_SIZE ({}), got: {}",
+                    CHECKSUM_SIZE, data_size));
     return 1;
   }
 
@@ -127,8 +138,10 @@ int main(int argc, char *argv[]) {
   } else if (log_level == "ERROR") {
     threshold = absl::LogSeverityAtLeast::kError;
   } else {
-    LOG(ERROR) << "Invalid log level: " << log_level
-               << ". Available levels: INFO, DEBUG, WARNING, ERROR";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("Invalid log level: {}. Available levels: INFO, DEBUG, "
+                      "WARNING, ERROR",
+                      log_level));
     return 1;
   }
 
@@ -230,9 +243,11 @@ int main(int argc, char *argv[]) {
     bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
   } else {
-    LOG(ERROR) << "Unknown benchmark type: " << type
-               << ". Available types: memcpy, memcpy_mt, tcp, udp, uds, pipe, "
-                  "fifo, mq, mmap, shm, all";
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("Unknown benchmark type: {}. Available types: memcpy, "
+                    "memcpy_mt, tcp, udp, uds, pipe, fifo, mq, mmap, shm, all",
+                    type));
     return 1;
   }
 

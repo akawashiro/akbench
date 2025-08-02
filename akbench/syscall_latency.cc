@@ -2,20 +2,22 @@
 
 #include <chrono>
 #include <fcntl.h>
+#include <format>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
 double RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
                                  uint64_t loop_size) {
-  VLOG(1) << "Running statfs benchmark with " << num_iterations
-          << " iterations, " << num_warmups << " warmups, and " << loop_size
-          << " operations per iteration";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format("Running statfs benchmark with {} iterations, {} warmups, "
+                    "and {} operations per iteration",
+                    num_iterations, num_warmups, loop_size));
 
   const char *path = ".";
 
@@ -41,13 +43,14 @@ double RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
 
 double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
                                   uint64_t loop_size) {
-  VLOG(1) << "Running fstatfs benchmark with " << num_iterations
-          << " iterations, " << num_warmups << " warmups, and " << loop_size
-          << " operations per iteration";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format("Running fstatfs benchmark with {} iterations, {} warmups, "
+                    "and {} operations per iteration",
+                    num_iterations, num_warmups, loop_size));
 
   int fd = open(".", O_RDONLY);
   if (fd == -1) {
-    LOG(ERROR) << "Failed to open current directory";
+    AKLOG(aklog::LogLevel::ERROR, "Failed to open current directory");
     return -1.0;
   }
 
@@ -74,9 +77,10 @@ double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
 
 double RunGetpidLatencyBenchmark(int num_iterations, int num_warmups,
                                  uint64_t loop_size) {
-  VLOG(1) << "Running getpid benchmark with " << num_iterations
-          << " iterations, " << num_warmups << " warmups, and " << loop_size
-          << " operations per iteration";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format("Running getpid benchmark with {} iterations, {} warmups, "
+                    "and {} operations per iteration",
+                    num_iterations, num_warmups, loop_size));
 
   std::vector<double> durations;
   for (int i = 0; i < num_iterations + num_warmups; i++) {
