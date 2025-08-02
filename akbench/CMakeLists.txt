@@ -47,20 +47,6 @@ target_link_libraries(mmap_bandwidth ${AKBENCH_LIBS})
 add_library(shm_bandwidth shm_bandwidth.cc)
 target_link_libraries(shm_bandwidth ${AKBENCH_LIBS})
 
-add_executable(bandwidth bandwidth.cc)
-target_link_libraries(
-  bandwidth
-  memcpy_bandwidth
-  memcpy_mt_bandwidth
-  tcp_bandwidth
-  uds_bandwidth
-  pipe_bandwidth
-  fifo_bandwidth
-  mq_bandwidth
-  mmap_bandwidth
-  shm_bandwidth
-  ${AKBENCH_LIBS})
-
 add_executable(barrier_test barrier_test.cc)
 target_link_libraries(barrier_test ${AKBENCH_LIBS})
 add_test(NAME barrier_test_constructor COMMAND barrier_test
@@ -93,16 +79,6 @@ target_link_libraries(semaphore_latency ${AKBENCH_LIBS})
 
 add_library(syscall_latency syscall_latency.cc)
 target_link_libraries(syscall_latency ${AKBENCH_LIBS})
-
-add_executable(latency latency.cc)
-target_link_libraries(
-  latency
-  atomic_latency
-  barrier_latency
-  condition_variable_latency
-  semaphore_latency
-  syscall_latency
-  ${AKBENCH_LIBS})
 
 add_executable(akbench akbench.cc)
 target_link_libraries(
