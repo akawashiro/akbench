@@ -15,10 +15,11 @@ int main(int argc, char *argv[]) {
   constexpr uint64_t data_size = 1024;
   constexpr uint64_t buffer_size = 1024;
 
-  const double bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups, data_size, buffer_size);
-  
+  const double bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups,
+                                                    data_size, buffer_size);
+
   AKCHECK(bandwidth >= 0.0, "Bandwidth should be non-negative");
   AKLOG(aklog::LogLevel::INFO, "shm_bandwidth test passed");
-  
+
   return 0;
 }
