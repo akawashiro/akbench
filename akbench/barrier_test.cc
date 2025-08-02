@@ -270,7 +270,7 @@ ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
           "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, test_type, "constructor",
           "Type of test to run. Available types: constructor, "
-          "wait_with_random_sleep");
+          "wait_with_random_sleep, wait_without_sleep");
 ABSL_FLAG(int, num_processes, 2,
           "Number of processes to use in the wait test.");
 ABSL_FLAG(int, num_iterations, 20,
@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
     TestWaitWithoutSleep(num_processes, num_iterations);
   } else {
     LOG(ERROR) << "Unknown test type: " << test_type
-               << ". Available types: constructor, wait";
+               << ". Available types: constructor, wait_with_random_sleep, wait_without_sleep";
     return 1;
   }
 

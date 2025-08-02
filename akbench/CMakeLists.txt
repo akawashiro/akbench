@@ -65,7 +65,9 @@ target_link_libraries(
 
 add_executable(barrier_test barrier_test.cc)
 target_link_libraries(barrier_test ${AKBENCH_LIBS})
-add_test(NAME barrier_test COMMAND barrier_test)
+add_test(NAME barrier_test_constructor COMMAND barrier_test --test_type=constructor)
+add_test(NAME barrier_test_wait_with_random_sleep COMMAND barrier_test --test_type=wait_with_random_sleep --num_iterations=3)
+add_test(NAME barrier_test_wait_without_sleep COMMAND barrier_test --test_type=wait_without_sleep --num_iterations=3)
 
 add_executable(aklog_test aklog_test.cc)
 target_link_libraries(aklog_test aklog)
