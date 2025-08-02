@@ -12,3 +12,4 @@ double CalculateBandwidth(std::vector<double> durations, int num_iterations,
 double CalculateOneTripDuration(const std::vector<double> &durations);
 std::string ReceivePrefix(int iteration);
 std::string SendPrefix(int iteration);
+std::string GenerateUniqueName(const std::string &base_name);

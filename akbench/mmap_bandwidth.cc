@@ -18,8 +18,9 @@
 #include "common.h"
 
 namespace {
-const std::string MMAP_FILE_PATH = "/tmp/mmap_bandwidth_test.dat";
-const std::string BARRIER_ID = "/mmap_benchmark";
+const std::string MMAP_FILE_PATH =
+    GenerateUniqueName("/tmp/mmap_bandwidth_test.dat");
+const std::string BARRIER_ID = GenerateUniqueName("/mmap_benchmark");
 
 struct MmapBuffer {
   size_t data_size[2];

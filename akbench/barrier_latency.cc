@@ -14,7 +14,7 @@
 
 namespace {
 
-const std::string BARRIER_ID = "/BarrierLatencyTest";
+const std::string BARRIER_ID = GenerateUniqueName("/BarrierLatencyTest");
 const int NUM_PROCESSES = 2;
 
 void ChildBarrierProcess(uint64_t loop_size) {

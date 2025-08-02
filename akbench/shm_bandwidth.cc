@@ -20,8 +20,8 @@
 #include "common.h"
 
 namespace {
-const std::string SHM_NAME = "/shm_bandwidth_test";
-const std::string BARRIER_ID = "/shm_benchmark";
+const std::string SHM_NAME = GenerateUniqueName("/shm_bandwidth_test");
+const std::string BARRIER_ID = GenerateUniqueName("/shm_benchmark");
 
 struct SharedBuffer {
   size_t data_size[2];

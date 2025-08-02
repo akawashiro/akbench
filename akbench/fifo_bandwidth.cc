@@ -18,8 +18,8 @@
 
 namespace {
 
-const std::string BARRIER_ID = "/fifo_benchmark";
-const std::string FIFO_PATH = "/tmp/fifo_benchmark_pipe";
+const std::string BARRIER_ID = GenerateUniqueName("/fifo_benchmark");
+const std::string FIFO_PATH = GenerateUniqueName("/tmp/fifo_benchmark_pipe");
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
                  uint64_t buffer_size) {
@@ -203,6 +203,7 @@ double RunFifoBandwidthBenchmark(int num_iterations, int num_warmups,
 
     // Clean up FIFO
     unlink(FIFO_PATH.c_str());
+    SenseReversingBarrier::ClearResource(BARRIER_ID);
 
     return bandwidth;
   }
