@@ -1,7 +1,7 @@
 #include <format>
-#include <iostream>
 #include <map>
 #include <optional>
+#include <print>
 #include <vector>
 
 #include "absl/flags/flag.h"
@@ -123,38 +123,37 @@ void RunLatencyBenchmarks(
 
     // Output all results at the end
     for (const auto &benchmark_result : results) {
-      std::cout << benchmark_result.first << ": "
-                << benchmark_result.second * 1e9 << " ns" << std::endl;
+      std::println("{}: {} ns", benchmark_result.first,
+                   benchmark_result.second * 1e9);
     }
   } else if (type == "latency_atomic") {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
-    std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Atomic benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_barrier") {
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
                                         barrier_loop_size);
-    std::cout << "Barrier benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Barrier benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_condition_variable") {
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
-    std::cout << "Condition Variable benchmark result: " << result * 1e9
-              << " ns\n";
+    std::println("Condition Variable benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_semaphore") {
     result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
                                           semaphore_loop_size);
-    std::cout << "Semaphore benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Semaphore benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_statfs") {
     result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
                                        statfs_loop_size);
-    std::cout << "Statfs benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Statfs benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_fstatfs") {
     result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
                                         fstatfs_loop_size);
-    std::cout << "Fstatfs benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Fstatfs benchmark result: {} ns", result * 1e9);
   } else if (type == "latency_getpid") {
     result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
                                        getpid_loop_size);
-    std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Getpid benchmark result: {} ns", result * 1e9);
   }
 }
 
@@ -211,66 +210,65 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
 
     // Output all results at the end
     for (const auto &result : results) {
-      std::cout << result.first << ": " << result.second / (1ULL << 30)
-                << GIBYTE_PER_SEC_UNIT << std::endl;
+      std::println("{}: {}{}", result.first, result.second / (1ULL << 30),
+                   GIBYTE_PER_SEC_UNIT);
     }
   } else if (type == "bandwidth_memcpy") {
     bandwidth =
         RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
-    std::cout << "bandwidth_memcpy: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_memcpy: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_memcpy_mt") {
     if (num_threads_opt.has_value()) {
       // Run with specified number of threads
       bandwidth = RunMemcpyMtBandwidthBenchmark(
           num_iterations, num_warmups, data_size, num_threads_opt.value());
-      std::cout << "bandwidth_memcpy_mt: " << bandwidth / (1ULL << 30)
-                << GIBYTE_PER_SEC_UNIT << std::endl;
+      std::println("bandwidth_memcpy_mt: {}{}", bandwidth / (1ULL << 30),
+                   GIBYTE_PER_SEC_UNIT);
     } else {
       // Run with 1-4 threads for compatibility
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         bandwidth = RunMemcpyMtBandwidthBenchmark(num_iterations, num_warmups,
                                                   data_size, n_threads);
-        std::cout << "bandwidth_memcpy_mt (" << n_threads
-                  << " threads): " << bandwidth / (1ULL << 30)
-                  << GIBYTE_PER_SEC_UNIT << std::endl;
+        std::println("bandwidth_memcpy_mt ({} threads): {}{}", n_threads,
+                     bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
       }
     }
   } else if (type == "bandwidth_tcp") {
     bandwidth = RunTcpBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::cout << "bandwidth_tcp: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_tcp: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_uds") {
     bandwidth = RunUdsBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::cout << "bandwidth_uds: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_uds: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_pipe") {
     bandwidth = RunPipeBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::cout << "bandwidth_pipe: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_pipe: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_fifo") {
     bandwidth = RunFifoBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::cout << "bandwidth_fifo: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_fifo: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mq") {
     bandwidth = RunMqBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                         buffer_size);
-    std::cout << "bandwidth_mq: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_mq: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mmap") {
     bandwidth = RunMmapBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::cout << "bandwidth_mmap: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_mmap: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_shm") {
     bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::cout << "bandwidth_shm: " << bandwidth / (1ULL << 30)
-              << GIBYTE_PER_SEC_UNIT << std::endl;
+    std::println("bandwidth_shm: {}{}", bandwidth / (1ULL << 30),
+                 GIBYTE_PER_SEC_UNIT);
   }
 }
 
@@ -394,11 +392,14 @@ int main(int argc, char *argv[]) {
 
   // Handle the "all" case which runs all tests
   if (type == "all") {
-    std::cout << "Running all latency tests:\n" << std::endl;
+    std::println("Running all latency tests:");
+    std::println("");
     RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
                          loop_size_opt, "all_latency");
 
-    std::cout << "\nRunning all bandwidth tests:\n" << std::endl;
+    std::println("");
+    std::println("Running all bandwidth tests:");
+    std::println("");
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
                            num_threads_opt, "all_bandwidth");
     return 0;

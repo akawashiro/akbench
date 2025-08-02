@@ -1,7 +1,7 @@
 #include <format>
-#include <iostream>
 #include <map>
 #include <optional>
+#include <print>
 #include <vector>
 
 #include "absl/flags/flag.h"
@@ -137,40 +137,39 @@ int main(int argc, char *argv[]) {
 
     // Output all results at the end
     for (const auto &benchmark_result : results) {
-      std::cout << benchmark_result.first << ": "
-                << benchmark_result.second * 1e9 << " ns" << std::endl;
+      std::println("{}: {} ns", benchmark_result.first,
+                   benchmark_result.second * 1e9);
     }
 
     return 0;
   } else if (type == "atomic") {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
-    std::cout << "Atomic benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Atomic benchmark result: {} ns", result * 1e9);
   } else if (type == "barrier") {
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
                                         barrier_loop_size);
-    std::cout << "Barrier benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Barrier benchmark result: {} ns", result * 1e9);
   } else if (type == "condition_variable") {
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
-    std::cout << "Condition Variable benchmark result: " << result * 1e9
-              << " ns\n";
+    std::println("Condition Variable benchmark result: {} ns", result * 1e9);
   } else if (type == "semaphore") {
     result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
                                           semaphore_loop_size);
-    std::cout << "Semaphore benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Semaphore benchmark result: {} ns", result * 1e9);
   } else if (type == "statfs") {
     result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
                                        statfs_loop_size);
-    std::cout << "Statfs benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Statfs benchmark result: {} ns", result * 1e9);
   } else if (type == "fstatfs") {
     result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
                                         fstatfs_loop_size);
-    std::cout << "Fstatfs benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Fstatfs benchmark result: {} ns", result * 1e9);
   } else if (type == "getpid") {
     result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
                                        getpid_loop_size);
-    std::cout << "Getpid benchmark result: " << result * 1e9 << " ns\n";
+    std::println("Getpid benchmark result: {} ns", result * 1e9);
   } else {
     AKLOG(aklog::LogLevel::ERROR,
           std::format(
