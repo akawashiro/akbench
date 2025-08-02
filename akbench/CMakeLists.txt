@@ -93,3 +93,24 @@ target_link_libraries(
   semaphore_latency
   syscall_latency
   ${AKBENCH_LIBS})
+
+add_executable(akbench akbench.cc)
+target_link_libraries(
+  akbench
+  # Latency libraries
+  atomic_latency
+  barrier_latency
+  condition_variable_latency
+  semaphore_latency
+  syscall_latency
+  # Bandwidth libraries
+  memcpy_bandwidth
+  memcpy_mt_bandwidth
+  tcp_bandwidth
+  uds_bandwidth
+  pipe_bandwidth
+  fifo_bandwidth
+  mq_bandwidth
+  mmap_bandwidth
+  shm_bandwidth
+  ${AKBENCH_LIBS})
