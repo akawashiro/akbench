@@ -1,6 +1,6 @@
 #include <format>
-#include <iostream>
 #include <optional>
+#include <print>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -185,8 +185,7 @@ int main(int argc, char *argv[]) {
 
     // Output all results at the end
     for (const auto &result : results) {
-      std::cout << result.first << ": " << result.second / (1ULL << 30)
-                << GIBYTE_PER_SEC_UNIT << std::endl;
+      std::println("{}: {}{}", result.first, result.second / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
     }
 
     return 0;
@@ -203,9 +202,7 @@ int main(int argc, char *argv[]) {
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         bandwidth = RunMemcpyMtBandwidthBenchmark(num_iterations, num_warmups,
                                                   data_size, n_threads);
-        std::cout << "memcpy_mt (" << n_threads
-                  << " threads): " << bandwidth / (1ULL << 30)
-                  << GIBYTE_PER_SEC_UNIT << std::endl;
+        std::println("memcpy_mt ({} threads): {}{}", n_threads, bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
       }
       return 0;
     }
@@ -240,8 +237,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Print the result to stdout
-  std::cout << type << ": " << bandwidth / (1ULL << 30) << GIBYTE_PER_SEC_UNIT
-            << std::endl;
+  std::println("{}: {}{}", type, bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
 
   return 0;
 }
