@@ -96,6 +96,11 @@ auto calculate_bandwidth(const std::vector<uint8_t>& data,
 void process_data(std::vector<uint8_t>& data, bool& success);
 ```
 
+### Header File Guidelines
+
+- **Minimize includes**: Avoid including unnecessary files in header files to reduce compilation dependencies
+- **Implementation details**: Keep implementation-specific includes (like `<stacktrace>`) in source files only
+
 ## Adding New Benchmarks
 
 1. Create `new_benchmark.{cc,h}` in `akbench/`
