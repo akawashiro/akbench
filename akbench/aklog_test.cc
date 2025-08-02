@@ -7,11 +7,15 @@
 namespace {
 
 void testLogLevelToString() {
-  assert(std::string(aklog::logLevelToString(aklog::LogLevel::DEBUG)) == "DEBUG");
+  assert(std::string(aklog::logLevelToString(aklog::LogLevel::DEBUG)) ==
+         "DEBUG");
   assert(std::string(aklog::logLevelToString(aklog::LogLevel::INFO)) == "INFO");
-  assert(std::string(aklog::logLevelToString(aklog::LogLevel::WARNING)) == "WARNING");
-  assert(std::string(aklog::logLevelToString(aklog::LogLevel::ERROR)) == "ERROR");
-  assert(std::string(aklog::logLevelToString(aklog::LogLevel::FATAL)) == "FATAL");
+  assert(std::string(aklog::logLevelToString(aklog::LogLevel::WARNING)) ==
+         "WARNING");
+  assert(std::string(aklog::logLevelToString(aklog::LogLevel::ERROR)) ==
+         "ERROR");
+  assert(std::string(aklog::logLevelToString(aklog::LogLevel::FATAL)) ==
+         "FATAL");
   std::print("testLogLevelToString passed\n");
 }
 
@@ -21,24 +25,25 @@ void testStringToLogLevel() {
   assert(aklog::stringToLogLevel("WARNING") == aklog::LogLevel::WARNING);
   assert(aklog::stringToLogLevel("ERROR") == aklog::LogLevel::ERROR);
   assert(aklog::stringToLogLevel("FATAL") == aklog::LogLevel::FATAL);
-  assert(aklog::stringToLogLevel("INVALID") == aklog::LogLevel::INFO);  // Default fallback
+  assert(aklog::stringToLogLevel("INVALID") ==
+         aklog::LogLevel::INFO); // Default fallback
   std::print("testStringToLogLevel passed\n");
 }
 
 void testSetAndGetLogLevel() {
   // Test default level is INFO
   assert(aklog::getLogLevel() == aklog::LogLevel::INFO);
-  
+
   // Test setting different levels
   aklog::setLogLevel(aklog::LogLevel::DEBUG);
   assert(aklog::getLogLevel() == aklog::LogLevel::DEBUG);
-  
+
   aklog::setLogLevel(aklog::LogLevel::WARNING);
   assert(aklog::getLogLevel() == aklog::LogLevel::WARNING);
-  
+
   aklog::setLogLevel(aklog::LogLevel::ERROR);
   assert(aklog::getLogLevel() == aklog::LogLevel::ERROR);
-  
+
   // Reset to INFO for other tests
   aklog::setLogLevel(aklog::LogLevel::INFO);
   std::print("testSetAndGetLogLevel passed\n");
@@ -47,13 +52,13 @@ void testSetAndGetLogLevel() {
 void testLogFiltering() {
   // Set log level to WARNING to filter out DEBUG and INFO
   aklog::setLogLevel(aklog::LogLevel::WARNING);
-  
+
   std::print("Testing log filtering (only WARNING and ERROR should appear):\n");
   aklog::log(aklog::LogLevel::DEBUG, "This DEBUG message should not appear");
   aklog::log(aklog::LogLevel::INFO, "This INFO message should not appear");
   aklog::log(aklog::LogLevel::WARNING, "This WARNING message should appear");
   aklog::log(aklog::LogLevel::ERROR, "This ERROR message should appear");
-  
+
   // Reset to INFO
   aklog::setLogLevel(aklog::LogLevel::INFO);
   std::print("testLogFiltering passed\n");
@@ -70,33 +75,35 @@ void testCheckSuccess() {
 void testLogMessages() {
   std::print("Testing log messages at different levels:\n");
   aklog::setLogLevel(aklog::LogLevel::DEBUG);
-  
+
   aklog::log(aklog::LogLevel::DEBUG, "Debug message for testing");
   aklog::log(aklog::LogLevel::INFO, "Info message for testing");
   aklog::log(aklog::LogLevel::WARNING, "Warning message for testing");
   aklog::log(aklog::LogLevel::ERROR, "Error message for testing");
-  
+
   // Reset to INFO
   aklog::setLogLevel(aklog::LogLevel::INFO);
   std::print("testLogMessages passed\n");
 }
 
-}  // namespace
+} // namespace
 
 int main() {
   std::print("Running aklog tests...\n");
-  
+
   testLogLevelToString();
   testStringToLogLevel();
   testSetAndGetLogLevel();
   testLogFiltering();
   testCheckSuccess();
   testLogMessages();
-  
+
   std::print("All aklog tests passed!\n");
-  
-  // Note: We cannot test FATAL logging or check failure because they abort the process
-  std::print("Note: FATAL logging and check failure tests are not run as they would abort the process.\n");
-  
+
+  // Note: We cannot test FATAL logging or check failure because they abort the
+  // process
+  std::print("Note: FATAL logging and check failure tests are not run as they "
+             "would abort the process.\n");
+
   return 0;
 }
