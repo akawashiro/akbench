@@ -143,7 +143,7 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
         AKLOG(aklog::LogLevel::DEBUG,
               std::format("{}Connection failed: {}. Retrying...",
                           SendPrefix(iteration), strerror(errno)));
-        sleep(1);
+        usleep(100000);
       } else {
         AKLOG(aklog::LogLevel::FATAL,
               std::format("{}Unexpected error: {}", SendPrefix(iteration),
