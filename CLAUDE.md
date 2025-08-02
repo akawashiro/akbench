@@ -80,6 +80,25 @@ Only one test currently exists: `barrier_test`
 4. Follow existing patterns for flag handling and measurement loops
 5. Use `common.h` utilities for data generation and verification
 
+## Pre-PR Checklist
+
+Before creating a pull request, always run:
+
+```bash
+# Build the project to ensure compilation succeeds
+./scripts/build.sh
+
+# Format all code to maintain consistent style
+./scripts/format.sh
+```
+
+These commands ensure code quality and consistency across the project.
+
+## Git Commit Guidelines
+
+- Do NOT add Claude as co-author in commit messages
+- Keep commit messages concise and descriptive
+
 ## MPI Support
 
 The project includes MPI bandwidth benchmarks (`mpi_bandwidth.cc`) which require MPI to be installed on the system.
