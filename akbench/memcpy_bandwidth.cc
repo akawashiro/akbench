@@ -2,10 +2,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
+#include <format>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -22,8 +23,8 @@ double RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
     std::memcpy(dst.data(), src.data(), data_size);
     const auto end = std::chrono::high_resolution_clock::now();
 
-    CHECK(VerifyDataReceived(src, data_size))
-        << "Data verification failed before memcpy.";
+    AKCHECK(VerifyDataReceived(src, data_size),
+            "Data verification failed before memcpy.");
     if (num_warmups <= iteration) {
       const double duration =
           std::chrono::duration<double>(end - start).count();
@@ -32,7 +33,9 @@ double RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << "Bandwidth: " << bandwidth / (1 << 30) << GIBYTE_PER_SEC_UNIT;
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Bandwidth: {}{}", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 
   return bandwidth;
 }

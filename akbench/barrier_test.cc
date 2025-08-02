@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <optional>
 #include <random>
@@ -11,11 +12,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/check.h"
-#include "absl/log/globals.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
 
+#include "aklog.h"
 #include "barrier.h"
 
 namespace {
@@ -24,7 +22,7 @@ const std::string BRRIER_ID = "/TestBarrier";
 
 void TestConstructor() {
   int pid = fork();
-  CHECK(pid >= 0) << "Fork failed: " << strerror(errno);
+  AKCHECK(pid >= 0, std::format("Fork failed: {}", strerror(errno)));
 
   if (pid == 0) {
     SenseReversingBarrier barrier(2, BRRIER_ID);
@@ -44,9 +42,10 @@ void WaitWithoutSleep(int num_processes, int num_iterations) {
   SenseReversingBarrier barrier(num_processes, BRRIER_ID);
 
   for (int j = 0; j < num_iterations; ++j) {
-    LOG(INFO) << "Waiting at barrier iteration " << j;
+    AKLOG(aklog::LogLevel::INFO,
+          std::format("Waiting at barrier iteration {}", j));
     barrier.Wait();
-    LOG(INFO) << "Passed barrier iteration " << j;
+    AKLOG(aklog::LogLevel::INFO, std::format("Passed barrier iteration {}", j));
   }
 }
 
@@ -61,13 +60,14 @@ WaitWithRandomSleep(int num_processes, int num_iterations) {
   std::vector<std::chrono::high_resolution_clock::time_point> passed_times;
 
   for (int j = 0; j < num_iterations; ++j) {
-    LOG(INFO) << "Waiting at barrier iteration " << j;
+    AKLOG(aklog::LogLevel::INFO,
+          std::format("Waiting at barrier iteration {}", j));
     double sleep_ms = dis(gen);
     std::this_thread::sleep_for(
         std::chrono::milliseconds(static_cast<int>(sleep_ms)));
     barrier.Wait();
     passed_times.push_back(std::chrono::high_resolution_clock::now());
-    LOG(INFO) << "Passed barrier iteration " << j;
+    AKLOG(aklog::LogLevel::INFO, std::format("Passed barrier iteration {}", j));
   }
   return passed_times;
 }
@@ -77,7 +77,7 @@ void TestWaitWithoutSleep(int num_processes, int num_iterations) {
 
   for (int i = 0; i < num_processes - 1; ++i) {
     int pid = fork();
-    CHECK(pid >= 0) << "Fork failed: " << strerror(errno);
+    AKCHECK(pid >= 0, std::format("Fork failed: {}", strerror(errno)));
 
     if (pid == 0) {
       WaitWithoutSleep(num_processes, num_iterations);
@@ -99,10 +99,11 @@ void TestWaitWithoutSleep(int num_processes, int num_iterations) {
                         .count() /
                     10e6;
 
-  LOG(INFO) << "Wait time: " << duration / num_iterations
-            << " ms per iteration.";
-  LOG(INFO) << "Wait time: " << duration / num_iterations / num_processes
-            << " ms per iteration per process.";
+  AKLOG(aklog::LogLevel::INFO, std::format("Wait time: {} ms per iteration.",
+                                           duration / num_iterations));
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Wait time: {} ms per iteration per process.",
+                    duration / num_iterations / num_processes));
   return;
 }
 
@@ -111,7 +112,9 @@ void RecordPassedTimesToFile(
     const std::filesystem::path &file_path) {
   std::ofstream file(file_path);
   if (!file.is_open()) {
-    LOG(ERROR) << "Failed to open file for writing: " << file_path;
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("Failed to open file for writing: {}", file_path.string()));
     return;
   }
 
@@ -129,7 +132,9 @@ ReadPassedTimesFromFile(const std::filesystem::path &file_path) {
   std::vector<std::chrono::high_resolution_clock::time_point> times;
   std::ifstream file(file_path);
   if (!file.is_open()) {
-    LOG(ERROR) << "Failed to open file for reading: " << file_path;
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("Failed to open file for reading: {}", file_path.string()));
     return times;
   }
   std::string line;
@@ -139,7 +144,8 @@ ReadPassedTimesFromFile(const std::filesystem::path &file_path) {
       times.push_back(std::chrono::high_resolution_clock::time_point(
           std::chrono::nanoseconds(nanoseconds)));
     } catch (const std::exception &e) {
-      LOG(ERROR) << "Failed to parse time from file: " << e.what();
+      AKLOG(aklog::LogLevel::ERROR,
+            std::format("Failed to parse time from file: {}", e.what()));
     }
   }
   file.close();
@@ -151,16 +157,16 @@ void AnalizeAllPassedTimes(
         std::vector<std::chrono::high_resolution_clock::time_point>>
         &all_passed_times) {
   if (all_passed_times.empty()) {
-    LOG(ERROR) << "No passed times to analyze.";
+    AKLOG(aklog::LogLevel::ERROR, "No passed times to analyze.");
     return;
   }
   const int n_iterations = all_passed_times[0].size();
   const int n_processes = all_passed_times.size();
   for (int i = 0; i < n_processes; i++) {
-    CHECK_EQ(all_passed_times[i].size(), n_iterations)
-        << "Process " << i << " has a different number of passed times ("
-        << all_passed_times[i].size() << ") than the first process ("
-        << n_iterations << ").";
+    AKCHECK(all_passed_times[i].size() == n_iterations,
+            std::format("Process {} has a different number of passed times "
+                        "({}) than expected ({})",
+                        i, all_passed_times[i].size(), n_iterations));
   }
 
   for (int iter = 0; iter < n_iterations; iter++) {
@@ -194,10 +200,11 @@ void AnalizeAllPassedTimes(
                             *std::min_element(times_duration_secs.begin(),
                                               times_duration_secs.end());
 
-    LOG(INFO) << "Iteration " << iter << ": "
-              << "Average time: " << average_time * 1000 << " ms, "
-              << "Standard deviation: " << stddev * 1000 << " ms, "
-              << "Max difference: " << max_diff * 1000 << " ms.";
+    AKLOG(aklog::LogLevel::INFO,
+          std::format("Iteration {}: Average time: {} ms, Standard deviation: "
+                      "{} ms, Max difference: {} ms.",
+                      iter, average_time * 1000, stddev * 1000,
+                      max_diff * 1000));
   }
 }
 
@@ -214,7 +221,7 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
 
   for (int i = 0; i < num_processes - 1; ++i) {
     int pid = fork();
-    CHECK(pid >= 0) << "Fork failed: " << strerror(errno);
+    AKCHECK(pid >= 0, std::format("Fork failed: {}", strerror(errno)));
 
     if (pid == 0) {
       const auto passed_times =
@@ -237,14 +244,17 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
                             temp_dir_path / "main_process_times.txt");
     const auto read_times =
         ReadPassedTimesFromFile(temp_dir_path / "main_process_times.txt");
-    CHECK_EQ(passed_times.size(), read_times.size())
-        << "Number of passed times does not match the number of read times.";
+    AKCHECK(passed_times.size() == read_times.size(),
+            "Number of passed times does not match the number of read times.");
     for (size_t i = 0; i < passed_times.size(); ++i) {
-      CHECK(passed_times[i] == read_times[i])
-          << "Passed time at index " << i
-          << " does not match the read time from file.";
+      AKCHECK(
+          passed_times[i] == read_times[i],
+          std::format(
+              "Passed time at index {} does not match the read time from file.",
+              i));
     }
-    LOG(INFO) << "All passed times match the read times from file.";
+    AKLOG(aklog::LogLevel::INFO,
+          "All passed times match the read times from file.");
 
     all_passed_times.push_back(passed_times);
   }
@@ -257,8 +267,9 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
     const auto read_times = ReadPassedTimesFromFile(
         temp_dir_path / ("process_" + std::to_string(i) + "_times.txt"));
     all_passed_times.push_back(read_times);
-    LOG(INFO) << "Read times from file for process " << i << ": "
-              << read_times.size() << " entries.";
+    AKLOG(aklog::LogLevel::INFO,
+          std::format("Read times from file for process {}: {} entries.", i,
+                      read_times.size()));
   }
   AnalizeAllPassedTimes(all_passed_times);
   return;
@@ -266,8 +277,6 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
 
 } // namespace
 
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, test_type, "constructor",
           "Type of test to run. Available types: constructor, "
           "wait_with_random_sleep, wait_without_sleep");
@@ -279,14 +288,7 @@ ABSL_FLAG(int, num_iterations, 20,
 int main(int argc, char *argv[]) {
   absl::SetProgramUsageMessage("Sense Reversing Barrier Test");
   absl::ParseCommandLine(argc, argv);
-  const std::optional<int> vlog = absl::GetFlag(FLAGS_vlog);
-  if (vlog.has_value()) {
-    int v = *vlog;
-    absl::SetGlobalVLogLevel(v);
-  }
   const std::string test_type = absl::GetFlag(FLAGS_test_type);
-  absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
-  absl::InitializeLog();
 
   SenseReversingBarrier::ClearResource(BRRIER_ID);
 
@@ -301,9 +303,10 @@ int main(int argc, char *argv[]) {
     int num_iterations = absl::GetFlag(FLAGS_num_iterations);
     TestWaitWithoutSleep(num_processes, num_iterations);
   } else {
-    LOG(ERROR) << "Unknown test type: " << test_type
-               << ". Available types: constructor, wait_with_random_sleep, "
-                  "wait_without_sleep";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("Unknown test type: {}. Available types: constructor, "
+                      "wait_with_random_sleep, wait_without_sleep",
+                      test_type));
     return 1;
   }
 

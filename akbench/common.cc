@@ -1,19 +1,19 @@
 #include "common.h"
 
 #include <algorithm>
+#include <format>
 #include <numeric>
 #include <random>
 #include <unistd.h>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
+#include "aklog.h"
 
 std::vector<uint8_t> CalcChecksum(const std::vector<uint8_t> &data,
                                   uint64_t data_size) {
-  CHECK(data_size > CHECKSUM_SIZE)
-      << "data_size (" << data_size << ") must be greater than CHECKSUM_SIZE ("
-      << CHECKSUM_SIZE << ")";
+  AKCHECK(data_size > CHECKSUM_SIZE,
+          std::format("data_size ({}) must be greater than CHECKSUM_SIZE ({})",
+                      data_size, CHECKSUM_SIZE));
   uint64_t context_size = data_size - CHECKSUM_SIZE;
   std::vector<uint8_t> checksum(CHECKSUM_SIZE, 0);
   for (size_t i = 0; i < context_size; ++i) {
@@ -23,11 +23,11 @@ std::vector<uint8_t> CalcChecksum(const std::vector<uint8_t> &data,
 }
 
 std::vector<uint8_t> GenerateDataToSend(uint64_t data_size) {
-  CHECK(data_size > CHECKSUM_SIZE)
-      << "data_size (" << data_size << ") must be greater than CHECKSUM_SIZE ("
-      << CHECKSUM_SIZE << ")";
+  AKCHECK(data_size > CHECKSUM_SIZE,
+          std::format("data_size ({}) must be greater than CHECKSUM_SIZE ({})",
+                      data_size, CHECKSUM_SIZE));
   uint64_t context_size = data_size - CHECKSUM_SIZE;
-  VLOG(1) << "Generating data to send...";
+  AKLOG(aklog::LogLevel::DEBUG, "Generating data to send...");
   std::random_device seed_gen;
   std::mt19937 engine(seed_gen());
   std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);
@@ -41,36 +41,42 @@ std::vector<uint8_t> GenerateDataToSend(uint64_t data_size) {
   for (; i < context_size; ++i) {
     data[i] = static_cast<uint8_t>(dist(engine) & 0xFF);
   }
-  VLOG(1) << "Context data generated. Size: " << context_size
-          << " bytes. Filling checksum...";
+  AKLOG(
+      aklog::LogLevel::DEBUG,
+      std::format("Context data generated. Size: {} bytes. Filling checksum...",
+                  context_size));
   const std::vector<uint8_t> checksum = CalcChecksum(data, data_size);
   for (size_t j = 0; j < CHECKSUM_SIZE; ++j) {
     data[context_size + j] = checksum[j];
   }
-  VLOG(1) << "Data generation complete. Data size: "
-          << static_cast<double>(data.size()) / (1 << 30)
-          << " GiByte, Checksum size: " << CHECKSUM_SIZE << " bytes.";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format("Data generation complete. Data size: {} GiByte, Checksum "
+                    "size: {} bytes.",
+                    static_cast<double>(data.size()) / (1 << 30),
+                    CHECKSUM_SIZE));
 
   return data;
 }
 
 bool VerifyDataReceived(const std::vector<uint8_t> &data, uint64_t data_size) {
-  CHECK(data_size > CHECKSUM_SIZE)
-      << "data_size (" << data_size << ") must be greater than CHECKSUM_SIZE ("
-      << CHECKSUM_SIZE << ")";
+  AKCHECK(data_size > CHECKSUM_SIZE,
+          std::format("data_size ({}) must be greater than CHECKSUM_SIZE ({})",
+                      data_size, CHECKSUM_SIZE));
   uint64_t context_size = data_size - CHECKSUM_SIZE;
   if (data.size() != data_size) {
-    LOG(ERROR) << "Data size mismatch: expected " << data_size << ", got "
-               << data.size();
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("Data size mismatch: expected {}, got {}", data_size,
+                      data.size()));
     return false;
   }
 
   std::vector<uint8_t> checksum = CalcChecksum(data, data_size);
   for (size_t i = 0; i < CHECKSUM_SIZE; ++i) {
     if (data[context_size + i] != checksum[i]) {
-      LOG(ERROR) << "Checksum mismatch at index " << i << ": expected "
-                 << static_cast<int>(checksum[i]) << ", got "
-                 << static_cast<int>(data[context_size + i]);
+      AKLOG(aklog::LogLevel::ERROR,
+            std::format("Checksum mismatch at index {}: expected {}, got {}", i,
+                        static_cast<int>(checksum[i]),
+                        static_cast<int>(data[context_size + i])));
       return false;
     }
   }
@@ -79,10 +85,12 @@ bool VerifyDataReceived(const std::vector<uint8_t> &data, uint64_t data_size) {
 
 double CalculateBandwidth(std::vector<double> durations, int num_iterations,
                           uint64_t data_size) {
-  CHECK(durations.size() == num_iterations);
+  AKCHECK(durations.size() == num_iterations,
+          std::format("durations.size() ({}) must equal num_iterations ({})",
+                      durations.size(), num_iterations));
   std::sort(durations.begin(), durations.end());
   // Ensure we have at least 3 iterations to remove min and max
-  CHECK(num_iterations >= 3) << "num_iterations must be at least 3";
+  AKCHECK(num_iterations >= 3, "num_iterations must be at least 3");
   std::vector<double> filtered_durations(durations.begin() + 1,
                                          durations.end() - 1);
 
@@ -94,7 +102,9 @@ double CalculateBandwidth(std::vector<double> durations, int num_iterations,
 }
 
 double CalculateOneTripDuration(const std::vector<double> &durations) {
-  CHECK(durations.size() >= 3);
+  AKCHECK(durations.size() >= 3,
+          std::format("durations.size() ({}) must be at least 3",
+                      durations.size()));
   std::vector<double> sorted_durations = durations;
   std::sort(sorted_durations.begin(), sorted_durations.end());
   double average_duration = std::accumulate(sorted_durations.begin() + 1,

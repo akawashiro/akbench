@@ -2,12 +2,12 @@
 
 #include <condition_variable>
 #include <cstdint>
+#include <format>
 #include <mutex>
 #include <thread>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -61,8 +61,8 @@ double RunConditionVariableLatencyBenchmark(int num_iterations, int num_warmups,
 
   std::vector<double> durations;
   for (int i = 0; i < num_iterations + num_warmups; i++) {
-    VLOG(1) << "Starting iteration " << i + 1 << "/"
-            << (num_iterations + num_warmups);
+    AKLOG(aklog::LogLevel::DEBUG, std::format("Starting iteration {}/{}", i + 1,
+                                              (num_iterations + num_warmups)));
     std::thread child_thread([&]() {
       ChildFlip(&parent_cv, &child_cv, &parent_mutex, &child_mutex,
                 &parent_ready, &child_ready, loop_size);
@@ -74,9 +74,10 @@ double RunConditionVariableLatencyBenchmark(int num_iterations, int num_warmups,
     auto end_time = std::chrono::high_resolution_clock::now();
 
     child_thread.join();
-    VLOG(1) << "Iteration " << i + 1 << " takes "
-            << std::chrono::duration<double>(end_time - start_time).count()
-            << " seconds.";
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format(
+              "Iteration {} takes {} seconds.", i + 1,
+              std::chrono::duration<double>(end_time - start_time).count()));
 
     if (i >= num_warmups) {
       std::chrono::duration<double> duration = end_time - start_time;

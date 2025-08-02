@@ -2,11 +2,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
+#include <format>
 #include <thread>
 #include <vector>
 
-#include "absl/log/globals.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -44,26 +45,31 @@ double MemcpyInMultiThread(uint64_t n_threads, int num_warmups,
 
       // Verify copied data
       if (!VerifyDataReceived(dst, data_size)) {
-        LOG(ERROR) << "Data verification failed for iteration "
-                   << (i - num_warmups + 1);
+        AKLOG(aklog::LogLevel::ERROR,
+              std::format("Data verification failed for iteration {}",
+                          i - num_warmups + 1));
       } else {
-        VLOG(1) << "Data verification passed for iteration "
-                << (i - num_warmups + 1);
+        AKLOG(aklog::LogLevel::DEBUG,
+              std::format("Data verification passed for iteration {}",
+                          i - num_warmups + 1));
       }
     }
   }
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
-  LOG(INFO) << n_threads << " threads bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("{} threads bandwidth: {}{}.", n_threads,
+                    bandwidth / (1 << 30), GIBYTE_PER_SEC_UNIT));
 
   return bandwidth;
 }
 
 double RunMemcpyMtBandwidthBenchmark(int num_iterations, int num_warmups,
                                      uint64_t data_size, uint64_t num_threads) {
-  VLOG(1) << "Starting multi-threaded memcpy bandwidth test with "
-          << num_threads << " threads...";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format(
+            "Starting multi-threaded memcpy bandwidth test with {} threads...",
+            num_threads));
   double bandwidth =
       MemcpyInMultiThread(num_threads, num_warmups, num_iterations, data_size);
 

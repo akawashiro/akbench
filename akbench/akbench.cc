@@ -1,3 +1,4 @@
+#include <format>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -6,10 +7,7 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/check.h"
-#include "absl/log/globals.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "common.h"
 
@@ -58,8 +56,6 @@ ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
           "Number of threads for bandwidth_memcpy_mt benchmark (default: run "
           "with 1-4 "
           "threads)");
-ABSL_FLAG(std::optional<int>, vlog, std::nullopt,
-          "Show VLOG messages lower than this level.");
 ABSL_FLAG(std::string, log_level, "WARNING",
           "Log level (INFO, DEBUG, WARNING, ERROR)");
 
@@ -294,46 +290,47 @@ int main(int argc, char *argv[]) {
       absl::GetFlag(FLAGS_num_threads);
 
   if (type.empty()) {
-    LOG(ERROR) << "Must specify --type. Available types:\n"
-               << "Latency tests: latency_atomic, latency_barrier, "
-                  "latency_condition_variable, "
-               << "latency_semaphore, latency_statfs, latency_fstatfs, "
-                  "latency_getpid, all_latency\n"
-               << "Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt, "
-                  "bandwidth_tcp, "
-               << "bandwidth_uds, bandwidth_pipe, bandwidth_fifo, "
-                  "bandwidth_mq, bandwidth_mmap, "
-               << "bandwidth_shm, all_bandwidth\n"
-               << "Combined: all";
+    AKLOG(aklog::LogLevel::ERROR,
+          "Must specify --type. Available types:\nLatency tests: "
+          "latency_atomic, latency_barrier, latency_condition_variable, "
+          "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
+          "all_latency\nBandwidth tests: bandwidth_memcpy, "
+          "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, bandwidth_pipe, "
+          "bandwidth_fifo, bandwidth_mq, bandwidth_mmap, bandwidth_shm, "
+          "all_bandwidth\nCombined: all");
     return 1;
   }
 
   if (num_iterations < 3) {
-    LOG(ERROR) << "num_iterations must be at least 3, got: " << num_iterations;
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("num_iterations must be at least 3, got: {}",
+                      num_iterations));
     return 1;
   }
 
   // Check if buffer_size is specified for incompatible benchmark types
   if ((type == "bandwidth_memcpy" || type == "bandwidth_memcpy_mt") &&
       buffer_size_opt.has_value()) {
-    LOG(ERROR) << "Buffer size option is not applicable to " << type
-               << " benchmark type";
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        std::format("Buffer size option is not applicable to {} benchmark type",
+                    type));
     return 1;
   }
 
   // Check if num_threads is specified for incompatible benchmark types
   if (type != "bandwidth_memcpy_mt" && num_threads_opt.has_value()) {
-    LOG(ERROR)
-        << "Number of threads option is only applicable to bandwidth_memcpy_mt "
-           "benchmark type";
+    AKLOG(aklog::LogLevel::ERROR, "Number of threads option is only applicable "
+                                  "to bandwidth_memcpy_mt benchmark type");
     return 1;
   }
 
   // Validate num_threads for memcpy_mt
   if (type == "bandwidth_memcpy_mt" && num_threads_opt.has_value() &&
       num_threads_opt.value() == 0) {
-    LOG(ERROR) << "num_threads must be greater than 0, got: "
-               << num_threads_opt.value();
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("num_threads must be greater than 0, got: {}",
+                      num_threads_opt.value()));
     return 1;
   }
 
@@ -344,13 +341,16 @@ int main(int argc, char *argv[]) {
   if (type.find("bandwidth_") == 0 && type != "bandwidth_memcpy" &&
       type != "bandwidth_memcpy_mt") {
     if (buffer_size == 0) {
-      LOG(ERROR) << "buffer_size must be greater than 0, got: " << buffer_size;
+      AKLOG(aklog::LogLevel::ERROR,
+            std::format("buffer_size must be greater than 0, got: {}",
+                        buffer_size));
       return 1;
     }
 
     if (buffer_size > data_size) {
-      LOG(ERROR) << "buffer_size (" << buffer_size
-                 << ") cannot be larger than data_size (" << data_size << ")";
+      AKLOG(aklog::LogLevel::ERROR,
+            std::format("buffer_size ({}) cannot be larger than data_size ({})",
+                        buffer_size, data_size));
       return 1;
     }
   }
@@ -359,39 +359,32 @@ int main(int argc, char *argv[]) {
   if (type.find("bandwidth_") == 0 || type == "all_bandwidth" ||
       type == "all") {
     if (data_size <= CHECKSUM_SIZE) {
-      LOG(ERROR) << "data_size must be larger than CHECKSUM_SIZE ("
-                 << CHECKSUM_SIZE << "), got: " << data_size;
+      AKLOG(aklog::LogLevel::ERROR,
+            std::format(
+                "data_size must be larger than CHECKSUM_SIZE ({}), got: {}",
+                CHECKSUM_SIZE, data_size));
       return 1;
     }
   }
 
-  std::optional<int> vlog = absl::GetFlag(FLAGS_vlog);
-  if (vlog.has_value()) {
-    int v = *vlog;
-    absl::SetGlobalVLogLevel(v);
-  }
-
   // Set log level
   std::string log_level = absl::GetFlag(FLAGS_log_level);
-  absl::LogSeverityAtLeast threshold = absl::LogSeverityAtLeast::kWarning;
 
   if (log_level == "INFO") {
-    threshold = absl::LogSeverityAtLeast::kInfo;
+    aklog::setLogLevel(aklog::LogLevel::INFO);
   } else if (log_level == "DEBUG") {
-    threshold =
-        absl::LogSeverityAtLeast::kInfo; // Abseil uses INFO for DEBUG level
+    aklog::setLogLevel(aklog::LogLevel::DEBUG);
   } else if (log_level == "WARNING") {
-    threshold = absl::LogSeverityAtLeast::kWarning;
+    aklog::setLogLevel(aklog::LogLevel::WARNING);
   } else if (log_level == "ERROR") {
-    threshold = absl::LogSeverityAtLeast::kError;
+    aklog::setLogLevel(aklog::LogLevel::ERROR);
   } else {
-    LOG(ERROR) << "Invalid log level: " << log_level
-               << ". Available levels: INFO, DEBUG, WARNING, ERROR";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format("Invalid log level: {}. Available levels: INFO, DEBUG, "
+                      "WARNING, ERROR",
+                      log_level));
     return 1;
   }
-
-  absl::SetStderrThreshold(threshold);
-  absl::InitializeLog();
 
   // Define default loop sizes for latency tests
   const std::map<std::string, uint64_t> default_loop_sizes = {
@@ -421,17 +414,16 @@ int main(int argc, char *argv[]) {
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
                            num_threads_opt, type);
   } else {
-    LOG(ERROR) << "Unknown benchmark type: " << type << ". Available types:\n"
-               << "Latency tests: latency_atomic, latency_barrier, "
-                  "latency_condition_variable, "
-               << "latency_semaphore, latency_statfs, latency_fstatfs, "
-                  "latency_getpid, all_latency\n"
-               << "Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt, "
-                  "bandwidth_tcp, "
-               << "bandwidth_uds, bandwidth_pipe, bandwidth_fifo, "
-                  "bandwidth_mq, bandwidth_mmap, "
-               << "bandwidth_shm, all_bandwidth\n"
-               << "Combined: all";
+    AKLOG(aklog::LogLevel::ERROR,
+          std::format(
+              "Unknown benchmark type: {}. Available types:\nLatency tests: "
+              "latency_atomic, latency_barrier, latency_condition_variable, "
+              "latency_semaphore, latency_statfs, latency_fstatfs, "
+              "latency_getpid, all_latency\nBandwidth tests: bandwidth_memcpy, "
+              "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, "
+              "bandwidth_pipe, bandwidth_fifo, bandwidth_mq, bandwidth_mmap, "
+              "bandwidth_shm, all_bandwidth\nCombined: all",
+              type));
     return 1;
   }
 

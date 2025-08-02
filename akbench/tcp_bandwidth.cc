@@ -9,10 +9,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <format>
 #include <string>
 #include <vector>
 
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "barrier.h"
 #include "common.h"
@@ -37,21 +38,25 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << ReceivePrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", ReceivePrefix(iteration), iteration,
+                        num_warmups));
     }
 
     // Create a TCP socket for each iteration
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd == -1) {
-      LOG(FATAL) << "receive: socket: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: socket: {}", strerror(errno)));
     }
 
     // Allow immediate reuse of the port after the program exits
     int optval = 1;
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
                    sizeof(optval)) == -1) {
-      LOG(FATAL) << "receive: setsockopt SO_REUSEADDR: " << strerror(errno);
+      AKLOG(
+          aklog::LogLevel::FATAL,
+          std::format("receive: setsockopt SO_REUSEADDR: {}", strerror(errno)));
     }
 
     // Configure receive address
@@ -63,28 +68,33 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Bind the socket to the specified IP address and port
     if (bind(listen_fd, (struct sockaddr *)&receive_addr,
              sizeof(receive_addr)) == -1) {
-      LOG(FATAL) << "receive: bind: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: bind: {}", strerror(errno)));
     }
 
     // Listen for incoming connections
     if (listen(listen_fd, 5) == -1) {
-      LOG(FATAL) << "receive: listen: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: listen: {}", strerror(errno)));
     }
 
     barrier.Wait();
-    VLOG(1) << ReceivePrefix(iteration) << "Listening on " << LOOPBACK_IP << ":"
-            << PORT;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("{}Listening on {}:{}", ReceivePrefix(iteration),
+                      LOOPBACK_IP, PORT));
 
     // Accept a sender connection for this iteration
     conn_fd = accept(listen_fd, (struct sockaddr *)&send_addr, &send_len);
     if (conn_fd == -1) {
-      LOG(FATAL) << "receive: accept: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("receive: accept: {}", strerror(errno)));
     }
 
     if (!is_warmup) {
-      VLOG(1) << ReceivePrefix(iteration) << "Sender connected from "
-              << inet_ntoa(send_addr.sin_addr) << ":"
-              << ntohs(send_addr.sin_port) << ". Receiving data...";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Sender connected from {}:{}. Receiving data...",
+                        ReceivePrefix(iteration), inet_ntoa(send_addr.sin_addr),
+                        ntohs(send_addr.sin_port)));
     }
 
     std::vector<uint8_t> recv_buffer(buffer_size);
@@ -100,12 +110,14 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_received =
           recv(conn_fd, recv_buffer.data(), buffer_size, 0);
       if (bytes_received == -1) {
-        LOG(FATAL) << "receive: recv: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("receive: recv: {}", strerror(errno)));
       }
       if (bytes_received == 0) {
         if (!is_warmup) {
-          LOG(INFO) << ReceivePrefix(iteration)
-                    << "Sender disconnected prematurely.";
+          AKLOG(aklog::LogLevel::INFO,
+                std::format("{}Sender disconnected prematurely.",
+                            ReceivePrefix(iteration)));
         }
         break;
       }
@@ -121,16 +133,20 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
 
-      VLOG(1) << ReceivePrefix(iteration) << "Received "
-              << total_received / (1024.0 * 1024.0 * 1024.0)
-              << " GiB of data in " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Received {} GiB of data in {} ms.",
+                        ReceivePrefix(iteration),
+                        total_received / (1024.0 * 1024.0 * 1024.0),
+                        elapsed_time.count() * 1000));
     }
 
     // Verify received data (always, even during warmup)
     if (!VerifyDataReceived(received_data, data_size)) {
-      LOG(FATAL) << ReceivePrefix(iteration) << "Data verification failed!";
+      AKLOG(aklog::LogLevel::FATAL, std::format("{}Data verification failed!",
+                                                ReceivePrefix(iteration)));
     } else {
-      VLOG(1) << ReceivePrefix(iteration) << "Data verification passed.";
+      AKLOG(aklog::LogLevel::DEBUG, std::format("{}Data verification passed.",
+                                                ReceivePrefix(iteration)));
     }
 
     // Close connection and listening socket for this iteration
@@ -140,8 +156,9 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
 
-  LOG(INFO) << "Receive bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 
   return bandwidth;
 }
@@ -158,11 +175,13 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     bool is_warmup = iteration < num_warmups;
 
     if (is_warmup) {
-      VLOG(1) << SendPrefix(iteration) << "Warm-up " << iteration << "/"
-              << num_warmups;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Warm-up {}/{}", SendPrefix(iteration), iteration,
+                        num_warmups));
     } else {
-      VLOG(1) << SendPrefix(iteration) << "Connecting to receiver at "
-              << LOOPBACK_IP << ":" << PORT;
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Connecting to receiver at {}:{}",
+                        SendPrefix(iteration), LOOPBACK_IP, PORT));
     }
 
     int sock_fd;
@@ -171,7 +190,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     // Create a TCP socket
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd == -1) {
-      LOG(FATAL) << "send: socket: " << strerror(errno);
+      AKLOG(aklog::LogLevel::FATAL,
+            std::format("send: socket: {}", strerror(errno)));
     }
 
     // Configure receive address to connect to
@@ -186,15 +206,17 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     while (connect(sock_fd, (struct sockaddr *)&receive_addr,
                    sizeof(receive_addr)) == -1) {
       if (!is_warmup) {
-        LOG(ERROR) << "send: connect (retrying in 1 second): "
-                   << strerror(errno);
+        AKLOG(aklog::LogLevel::ERROR,
+              std::format("send: connect (retrying in 1 second): {}",
+                          strerror(errno)));
       }
       sleep(1);
     }
 
     if (!is_warmup) {
-      VLOG(1) << SendPrefix(iteration)
-              << "Connected to receiver. Sending data...";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Connected to receiver. Sending data...",
+                        SendPrefix(iteration)));
     }
 
     barrier.Wait();
@@ -206,7 +228,8 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
       ssize_t bytes_sent =
           send(sock_fd, data_to_send.data() + total_sent, bytes_to_send, 0);
       if (bytes_sent == -1) {
-        LOG(FATAL) << "send: send: " << strerror(errno);
+        AKLOG(aklog::LogLevel::FATAL,
+              std::format("send: send: {}", strerror(errno)));
       }
       total_sent += bytes_sent;
     }
@@ -218,8 +241,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     if (!is_warmup) {
       std::chrono::duration<double> elapsed_time = end_time - start_time;
       durations.push_back(elapsed_time.count());
-      VLOG(1) << SendPrefix(iteration)
-              << "Time taken: " << elapsed_time.count() * 1000 << " ms.";
+      AKLOG(aklog::LogLevel::DEBUG,
+            std::format("{}Time taken: {} ms.", SendPrefix(iteration),
+                        elapsed_time.count() * 1000));
     }
 
     close(sock_fd);
@@ -227,8 +251,9 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
 
   double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
 
-  LOG(INFO) << "Send bandwidth: " << bandwidth / (1 << 30)
-            << GIBYTE_PER_SEC_UNIT << ".";
+  AKLOG(aklog::LogLevel::INFO,
+        std::format("Send bandwidth: {}{}.", bandwidth / (1 << 30),
+                    GIBYTE_PER_SEC_UNIT));
 }
 
 } // namespace
@@ -239,7 +264,7 @@ double RunTcpBandwidthBenchmark(int num_iterations, int num_warmups,
 
   pid_t pid = fork();
   if (pid == -1) {
-    LOG(FATAL) << "fork: " << strerror(errno);
+    AKLOG(aklog::LogLevel::FATAL, std::format("fork: {}", strerror(errno)));
   }
 
   if (pid == 0) {

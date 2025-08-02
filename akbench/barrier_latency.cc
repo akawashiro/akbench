@@ -1,12 +1,13 @@
 #include "barrier_latency.h"
 
 #include <chrono>
+#include <cstring>
+#include <format>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "aklog.h"
 
 #include "barrier.h"
 #include "common.h"
@@ -31,8 +32,11 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
   // Clear any existing barrier resources
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
-  VLOG(1) << "Running barrier latency benchmark with " << NUM_PROCESSES
-          << " processes, " << loop_size << " iterations";
+  AKLOG(
+      aklog::LogLevel::DEBUG,
+      std::format(
+          "Running barrier latency benchmark with {} processes, {} iterations",
+          NUM_PROCESSES, loop_size));
 
   auto run_single_benchmark = [&]() -> double {
     std::vector<int> pids;
@@ -40,7 +44,7 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
     // Fork child processes (only 1 child process for 2-process barrier)
     for (int i = 0; i < NUM_PROCESSES - 1; ++i) {
       int pid = fork();
-      CHECK(pid >= 0) << "Fork failed: " << strerror(errno);
+      AKCHECK(pid >= 0, std::format("Fork failed: {}", strerror(errno)));
 
       if (pid == 0) {
         // Child process
@@ -77,7 +81,8 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
 
   // Run warmup iterations
   for (int i = 0; i < num_warmups; ++i) {
-    VLOG(2) << "Warmup iteration " << (i + 1) << "/" << num_warmups;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("Warmup iteration {}/{}", i + 1, num_warmups));
     run_single_benchmark();
     SenseReversingBarrier::ClearResource(BARRIER_ID);
   }
@@ -85,7 +90,8 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
   // Run actual measurement iterations
   std::vector<double> measurements;
   for (int i = 0; i < num_iterations; ++i) {
-    VLOG(2) << "Measurement iteration " << (i + 1) << "/" << num_iterations;
+    AKLOG(aklog::LogLevel::DEBUG,
+          std::format("Measurement iteration {}/{}", i + 1, num_iterations));
     double latency_ns = run_single_benchmark();
     measurements.push_back(latency_ns);
     SenseReversingBarrier::ClearResource(BARRIER_ID);
@@ -93,7 +99,8 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
 
   // Calculate and return median latency in seconds
   double median_latency_ns = CalculateOneTripDuration(measurements);
-  VLOG(1) << "Barrier latency (median): " << median_latency_ns << " ns";
+  AKLOG(aklog::LogLevel::DEBUG,
+        std::format("Barrier latency (median): {} ns", median_latency_ns));
 
   return median_latency_ns / 1e9; // Convert to seconds
 }
