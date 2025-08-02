@@ -28,9 +28,12 @@ void TestConstructor() {
 
   if (pid == 0) {
     SenseReversingBarrier barrier(2, BRRIER_ID);
+    barrier.Wait();
     return;
   } else {
     SenseReversingBarrier barrier(2, BRRIER_ID);
+    barrier.Wait();
+    return;
     waitpid(pid, nullptr, 0);
     return;
   }

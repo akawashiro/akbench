@@ -1,5 +1,7 @@
 add_subdirectory(abseil-cpp)
 
+add_library(aklog aklog.cc)
+
 add_library(barrier barrier.cc)
 target_link_libraries(barrier absl::log)
 set(AKBENCH_LIBS
@@ -64,6 +66,10 @@ target_link_libraries(
 add_executable(barrier_test barrier_test.cc)
 target_link_libraries(barrier_test ${AKBENCH_LIBS})
 add_test(NAME barrier_test COMMAND barrier_test)
+
+add_executable(aklog_test aklog_test.cc)
+target_link_libraries(aklog_test aklog)
+add_test(NAME aklog_test COMMAND aklog_test)
 
 find_package(MPI REQUIRED COMPONENTS CXX)
 add_executable(mpi_bandwidth mpi_bandwidth.cc)
