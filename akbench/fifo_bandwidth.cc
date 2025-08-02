@@ -18,9 +18,8 @@
 
 namespace {
 
-const std::string BARRIER_ID = GenerateUniqueBarrierId("/fifo_benchmark");
-const std::string FIFO_PATH =
-    GenerateUniqueResourcePath("/tmp/fifo_benchmark_pipe");
+const std::string BARRIER_ID = GenerateUniqueName("/fifo_benchmark");
+const std::string FIFO_PATH = GenerateUniqueName("/tmp/fifo_benchmark_pipe");
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
                  uint64_t buffer_size) {

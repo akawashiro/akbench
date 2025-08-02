@@ -21,7 +21,7 @@
 namespace {
 const int PORT = 12345;
 const std::string LOOPBACK_IP = "127.0.0.1";
-const std::string BARRIER_ID = GenerateUniqueBarrierId("/tcp_benchmark");
+const std::string BARRIER_ID = GenerateUniqueName("/tcp_benchmark");
 
 double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
                       uint64_t buffer_size) {

@@ -16,7 +16,7 @@
 
 namespace {
 
-const std::string BARRIER_ID = GenerateUniqueBarrierId("/pipe_benchmark");
+const std::string BARRIER_ID = GenerateUniqueName("/pipe_benchmark");
 
 void SendProcess(int write_fd, int num_warmups, int num_iterations,
                  uint64_t data_size, uint64_t buffer_size) {

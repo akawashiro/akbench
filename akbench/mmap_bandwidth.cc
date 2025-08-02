@@ -19,8 +19,8 @@
 
 namespace {
 const std::string MMAP_FILE_PATH =
-    GenerateUniqueResourcePath("/tmp/mmap_bandwidth_test.dat");
-const std::string BARRIER_ID = GenerateUniqueBarrierId("/mmap_benchmark");
+    GenerateUniqueName("/tmp/mmap_bandwidth_test.dat");
+const std::string BARRIER_ID = GenerateUniqueName("/mmap_benchmark");
 
 struct MmapBuffer {
   size_t data_size[2];

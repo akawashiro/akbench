@@ -17,10 +17,8 @@
 
 namespace {
 
-const std::string SEM_NAME_PARENT =
-    GenerateUniqueBarrierId("/sem_latency_parent");
-const std::string SEM_NAME_CHILD =
-    GenerateUniqueBarrierId("/sem_latency_child");
+const std::string SEM_NAME_PARENT = GenerateUniqueName("/sem_latency_parent");
+const std::string SEM_NAME_CHILD = GenerateUniqueName("/sem_latency_child");
 
 void CleanupSemaphores() {
   sem_unlink(SEM_NAME_PARENT.c_str());
