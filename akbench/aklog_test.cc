@@ -54,10 +54,10 @@ void testLogFiltering() {
   aklog::setLogLevel(aklog::LogLevel::WARNING);
 
   std::print("Testing log filtering (only WARNING and ERROR should appear):\n");
-  aklog::log(aklog::LogLevel::DEBUG, "This DEBUG message should not appear");
-  aklog::log(aklog::LogLevel::INFO, "This INFO message should not appear");
-  aklog::log(aklog::LogLevel::WARNING, "This WARNING message should appear");
-  aklog::log(aklog::LogLevel::ERROR, "This ERROR message should appear");
+  AKLOG(aklog::LogLevel::DEBUG, "This DEBUG message should not appear");
+  AKLOG(aklog::LogLevel::INFO, "This INFO message should not appear");
+  AKLOG(aklog::LogLevel::WARNING, "This WARNING message should appear");
+  AKLOG(aklog::LogLevel::ERROR, "This ERROR message should appear");
 
   // Reset to INFO
   aklog::setLogLevel(aklog::LogLevel::INFO);
@@ -66,9 +66,9 @@ void testLogFiltering() {
 
 void testCheckSuccess() {
   // Test check with true condition (should not abort)
-  aklog::check(true, "This check should pass");
-  aklog::check(1 == 1, "Math still works");
-  aklog::check(!false, "Logic still works");
+  AKCHECK(true, "This check should pass");
+  AKCHECK(1 == 1, "Math still works");
+  AKCHECK(!false, "Logic still works");
   std::print("testCheckSuccess passed\n");
 }
 
@@ -76,10 +76,10 @@ void testLogMessages() {
   std::print("Testing log messages at different levels:\n");
   aklog::setLogLevel(aklog::LogLevel::DEBUG);
 
-  aklog::log(aklog::LogLevel::DEBUG, "Debug message for testing");
-  aklog::log(aklog::LogLevel::INFO, "Info message for testing");
-  aklog::log(aklog::LogLevel::WARNING, "Warning message for testing");
-  aklog::log(aklog::LogLevel::ERROR, "Error message for testing");
+  AKLOG(aklog::LogLevel::DEBUG, "Debug message for testing");
+  AKLOG(aklog::LogLevel::INFO, "Info message for testing");
+  AKLOG(aklog::LogLevel::WARNING, "Warning message for testing");
+  AKLOG(aklog::LogLevel::ERROR, "Error message for testing");
 
   // Reset to INFO
   aklog::setLogLevel(aklog::LogLevel::INFO);
