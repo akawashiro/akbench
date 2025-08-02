@@ -106,8 +106,14 @@ void process_data(std::vector<uint8_t>& data, bool& success);
 
 ## Pre-PR Checklist
 
-Before creating a pull request, always run:
+Before creating a pull request, always:
 
+1. **Create a new branch** for your work:
+```bash
+git checkout -b your-feature-branch-name
+```
+
+2. **Build and format** to ensure code quality:
 ```bash
 # Build the project to ensure compilation succeeds
 ./scripts/build.sh
@@ -116,7 +122,7 @@ Before creating a pull request, always run:
 ./scripts/format.sh
 ```
 
-These commands ensure code quality and consistency across the project.
+These steps ensure code quality and consistency across the project.
 
 ## Git Commit Guidelines
 
