@@ -14,4 +14,5 @@ cmake -S "$SCR_DIR" \
     -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -G Ninja
 cmake --build build -j
+ctest --test-dir build
 ln -sf "$BUILD_DIR"/compile_commands.json "$SCR_DIR"/compile_commands.json
