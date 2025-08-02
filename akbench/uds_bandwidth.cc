@@ -19,7 +19,7 @@
 
 const std::string SOCKET_PATH = "/tmp/unix_domain_socket_test.sock";
 constexpr size_t DEFAULT_BUFFER_SIZE = (1 << 20);
-const std::string BARRIER_ID = "/uds_benchmark";
+const std::string BARRIER_ID = GenerateUniqueBarrierId("/uds_benchmark");
 
 double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
                       uint64_t data_size) {

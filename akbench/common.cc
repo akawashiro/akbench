@@ -122,3 +122,14 @@ std::string SendPrefix(int iteration) {
   int pid = getpid();
   return absl::StrCat("Send (PID ", pid, ", iteration ", iteration, "): ");
 }
+
+std::string GenerateUniqueBarrierId(const std::string &base_name) {
+  std::random_device seed_gen;
+  std::mt19937 engine(seed_gen());
+  std::uniform_int_distribution<uint32_t> dist(0, UINT32_MAX);
+
+  uint32_t random_value = dist(engine);
+  std::string hex_suffix = std::format("{:08x}", random_value);
+
+  return base_name + "_" + hex_suffix;
+}

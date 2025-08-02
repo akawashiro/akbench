@@ -19,7 +19,7 @@
 
 namespace {
 
-const std::string BARRIER_ID = "/mq_benchmark";
+const std::string BARRIER_ID = GenerateUniqueBarrierId("/mq_benchmark");
 const std::string MQ_NAME = "/mq_benchmark_queue";
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -227,6 +227,7 @@ double RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
 
     // Clean up message queue
     mq_unlink(MQ_NAME.c_str());
+    SenseReversingBarrier::ClearResource(BARRIER_ID);
 
     return bandwidth;
   }
