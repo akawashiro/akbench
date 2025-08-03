@@ -1,16 +1,18 @@
 # akbench
 
-## How to build
+## How to build and install
 ```bash
 git clone https://github.com/akawashiro/akbench.git
 cd akbench
 cmake -S . -B build
 cmake --build build
+cmake --install build
 ```
 
 ## How to run
 ```bash
-$ ./build/akbench/akbench all
+$ If you haven't installed it, ./build/akbench/akbench all
+$ akbench all
 Running all latency tests:
 
 latency_atomic: 33.579 ns
