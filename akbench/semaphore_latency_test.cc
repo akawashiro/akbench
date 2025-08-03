@@ -2,13 +2,9 @@
 
 #include <cstdint>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-
 #include "aklog.h"
 
 int main(int argc, char *argv[]) {
-  absl::ParseCommandLine(argc, argv);
 
   constexpr int num_iterations = 3;
   constexpr int num_warmups = 0;

@@ -1,15 +1,15 @@
+#include <cstdlib>
 #include <format>
+#include <getopt.h>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <print>
 #include <vector>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "aklog.h"
-
 #include "common.h"
+#include "getopt_utils.h"
 
 // Latency benchmark headers
 #include "atomic_latency.h"
@@ -29,37 +29,58 @@
 #include "tcp_bandwidth.h"
 #include "uds_bandwidth.h"
 
-ABSL_FLAG(
-    std::string, type, "",
-    "Benchmark type to run:\n"
-    "Latency tests: latency_atomic, latency_barrier, "
-    "latency_condition_variable, "
-    "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
-    "all_latency\n"
-    "Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt, bandwidth_tcp, "
-    "bandwidth_uds, bandwidth_pipe, bandwidth_fifo, bandwidth_mq, "
-    "bandwidth_mmap, "
-    "bandwidth_shm, all_bandwidth\n"
-    "Combined: all");
-ABSL_FLAG(int, num_iterations, 10,
-          "Number of measurement iterations (minimum 3)");
-ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
-ABSL_FLAG(std::optional<uint64_t>, loop_size, std::nullopt,
-          "Number of iterations in each measurement loop for latency tests. "
-          "Use type-specific default if not specified.");
-ABSL_FLAG(uint64_t, data_size, (1 << 30),
-          "Size of data to transfer in bytes for bandwidth tests");
-ABSL_FLAG(std::optional<uint64_t>, buffer_size, std::nullopt,
-          "Buffer size for I/O operations in bytes for bandwidth tests "
-          "(default: 1 MiByte, not applicable to memcpy benchmarks)");
-ABSL_FLAG(std::optional<uint64_t>, num_threads, std::nullopt,
-          "Number of threads for bandwidth_memcpy_mt benchmark (default: run "
-          "with 1-4 "
-          "threads)");
-ABSL_FLAG(std::string, log_level, "WARNING",
-          "Log level (INFO, DEBUG, WARNING, ERROR)");
+// Command line option variables
+static std::string g_type = "";
+static int g_num_iterations = 10;
+static int g_num_warmups = 3;
+static std::optional<uint64_t> g_loop_size = std::nullopt;
+static uint64_t g_data_size = (1ULL << 30); // 1GB default
+static std::optional<uint64_t> g_buffer_size = std::nullopt;
+static std::optional<uint64_t> g_num_threads = std::nullopt;
+static std::string g_log_level = "WARNING";
 
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
+
+void print_usage(const char *program_name) {
+  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
+  std::cout << "\nUnified benchmark tool for measuring system performance.\n\n";
+  std::cout << "Options:\n";
+  std::cout
+      << "  -t, --type=TYPE              Benchmark type to run (required)\n";
+  std::cout << "      Latency tests: latency_atomic, latency_barrier,\n";
+  std::cout << "                     latency_condition_variable, "
+               "latency_semaphore,\n";
+  std::cout << "                     latency_statfs, latency_fstatfs, "
+               "latency_getpid,\n";
+  std::cout << "                     all_latency\n";
+  std::cout
+      << "      Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt,\n";
+  std::cout << "                       bandwidth_tcp, bandwidth_uds, "
+               "bandwidth_pipe,\n";
+  std::cout << "                       bandwidth_fifo, bandwidth_mq, "
+               "bandwidth_mmap,\n";
+  std::cout << "                       bandwidth_shm, all_bandwidth\n";
+  std::cout << "      Combined: all\n";
+  std::cout << "  -i, --num-iterations=N       Number of measurement "
+               "iterations (min 3, default: 10)\n";
+  std::cout << "  -w, --num-warmups=N          Number of warmup iterations "
+               "(default: 3)\n";
+  std::cout << "  -l, --loop-size=N            Loop size for latency tests "
+               "(optional)\n";
+  std::cout << "  -d, --data-size=SIZE         Data size for bandwidth tests "
+               "(default: 1GB)\n";
+  std::cout << "                               Can use expressions like "
+               "\"1<<30\" for 1GB\n";
+  std::cout << "  -b, --buffer-size=SIZE       Buffer size for I/O operations "
+               "(default: 1MB)\n";
+  std::cout
+      << "                               Not applicable to memcpy benchmarks\n";
+  std::cout << "  -n, --num-threads=N          Number of threads for "
+               "bandwidth_memcpy_mt\n";
+  std::cout << "      --log-level=LEVEL        Log level: INFO, DEBUG, "
+               "WARNING, ERROR (default: WARNING)\n";
+  std::cout << "  -h, --help                   Display this help message\n";
+}
 
 void RunLatencyBenchmarks(
     int num_iterations, int num_warmups,
@@ -273,19 +294,80 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
 }
 
 int main(int argc, char *argv[]) {
-  absl::SetProgramUsageMessage(
-      "Unified benchmark tool. Use --type to specify benchmark type.");
-  absl::ParseCommandLine(argc, argv);
+  const char *program_name = argv[0];
 
-  const std::string type = absl::GetFlag(FLAGS_type);
-  const int num_iterations = absl::GetFlag(FLAGS_num_iterations);
-  const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
-  const std::optional<uint64_t> loop_size_opt = absl::GetFlag(FLAGS_loop_size);
-  const uint64_t data_size = absl::GetFlag(FLAGS_data_size);
-  const std::optional<uint64_t> buffer_size_opt =
-      absl::GetFlag(FLAGS_buffer_size);
-  const std::optional<uint64_t> num_threads_opt =
-      absl::GetFlag(FLAGS_num_threads);
+  // Define long options
+  static struct option long_options[] = {
+      {"type", required_argument, nullptr, 't'},
+      {"num-iterations", required_argument, nullptr, 'i'},
+      {"num-warmups", required_argument, nullptr, 'w'},
+      {"loop-size", required_argument, nullptr, 'l'},
+      {"data-size", required_argument, nullptr, 'd'},
+      {"buffer-size", required_argument, nullptr, 'b'},
+      {"num-threads", required_argument, nullptr, 'n'},
+      {"log-level", required_argument, nullptr, 256}, // No short option
+      {"help", no_argument, nullptr, 'h'},
+      {nullptr, 0, nullptr, 0}};
+
+  // Parse command line options
+  int opt;
+  int option_index = 0;
+  while ((opt = getopt_long(argc, argv, "t:i:w:l:d:b:n:h", long_options,
+                            &option_index)) != -1) {
+    try {
+      switch (opt) {
+      case 't':
+        g_type = optarg;
+        break;
+      case 'i':
+        g_num_iterations = parse_int(optarg);
+        break;
+      case 'w':
+        g_num_warmups = parse_int(optarg);
+        break;
+      case 'l':
+        g_loop_size = parse_uint64(optarg);
+        break;
+      case 'd':
+        g_data_size = parse_uint64(optarg).value();
+        break;
+      case 'b':
+        g_buffer_size = parse_uint64(optarg);
+        break;
+      case 'n':
+        g_num_threads = parse_uint64(optarg);
+        break;
+      case 256: // --log-level
+        g_log_level = optarg;
+        break;
+      case 'h':
+        print_usage(program_name);
+        return 0;
+      case '?':
+        // getopt_long already printed an error message
+        return 1;
+      default:
+        print_error_and_exit(program_name, "Unknown option");
+      }
+    } catch (const std::exception &e) {
+      print_error_and_exit(program_name, e.what());
+    }
+  }
+
+  // Check for extra arguments
+  if (optind < argc) {
+    print_error_and_exit(program_name,
+                         "Unexpected argument: " + std::string(argv[optind]));
+  }
+
+  // Use parsed values
+  const std::string &type = g_type;
+  const int num_iterations = g_num_iterations;
+  const int num_warmups = g_num_warmups;
+  const std::optional<uint64_t> &loop_size_opt = g_loop_size;
+  const uint64_t data_size = g_data_size;
+  const std::optional<uint64_t> &buffer_size_opt = g_buffer_size;
+  const std::optional<uint64_t> &num_threads_opt = g_num_threads;
 
   if (type.empty()) {
     AKLOG(aklog::LogLevel::ERROR,
@@ -366,7 +448,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Set log level
-  std::string log_level = absl::GetFlag(FLAGS_log_level);
+  const std::string &log_level = g_log_level;
 
   if (log_level == "INFO") {
     aklog::setLogLevel(aklog::LogLevel::INFO);

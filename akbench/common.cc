@@ -6,7 +6,6 @@
 #include <random>
 #include <unistd.h>
 
-#include "absl/strings/str_cat.h"
 #include "aklog.h"
 
 std::vector<uint8_t> CalcChecksum(const std::vector<uint8_t> &data,
@@ -115,12 +114,12 @@ double CalculateOneTripDuration(const std::vector<double> &durations) {
 
 std::string ReceivePrefix(int iteration) {
   int pid = getpid();
-  return absl::StrCat("Receive (PID ", pid, ", iteration ", iteration, "): ");
+  return std::format("Receive (PID {}, iteration {}): ", pid, iteration);
 }
 
 std::string SendPrefix(int iteration) {
   int pid = getpid();
-  return absl::StrCat("Send (PID ", pid, ", iteration ", iteration, "): ");
+  return std::format("Send (PID {}, iteration {}): ", pid, iteration);
 }
 
 std::string GenerateUniqueName(const std::string &base_name) {

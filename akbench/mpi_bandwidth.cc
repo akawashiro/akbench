@@ -1,5 +1,7 @@
 #include <chrono>
+#include <cstdlib>
 #include <format>
+#include <getopt.h>
 #include <iomanip>
 #include <iostream>
 #include <mpi.h>
@@ -7,21 +9,70 @@
 #include <optional>
 #include <vector>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "aklog.h"
 #include "common.h"
+#include "getopt_utils.h"
 
-ABSL_FLAG(int, num_iterations, 10,
-          "Number of measurement iterations (minimum 3)");
-ABSL_FLAG(int, num_warmups, 3, "Number of warmup iterations");
-ABSL_FLAG(uint64_t, data_size, 1024 * 1024, "Maximum message size in bytes");
+// Command line option variables
+static int g_num_iterations = 10;
+static int g_num_warmups = 3;
+static uint64_t g_data_size = 1024 * 1024; // 1MB default
+
+void print_usage(const char *program_name) {
+  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
+  std::cout << "\nPing-pong benchmark tool for measuring MPI bandwidth.\n\n";
+  std::cout << "Options:\n";
+  std::cout << "  -i, --num-iterations=N   Number of measurement iterations "
+               "(min 3, default: 10)\n";
+  std::cout << "  -w, --num-warmups=N      Number of warmup iterations "
+               "(default: 3)\n";
+  std::cout << "  -d, --data-size=SIZE     Maximum message size in bytes "
+               "(default: 1MB)\n";
+  std::cout << "  -h, --help               Display this help message\n";
+}
 
 int main(int argc, char **argv) {
-  absl::SetProgramUsageMessage(
-      "ping-pong benchmark tool for measuring MPI bandwidth.");
-  absl::ParseCommandLine(argc, argv);
+  const char *program_name = argv[0];
+
+  // Define long options
+  static struct option long_options[] = {
+      {"num-iterations", required_argument, nullptr, 'i'},
+      {"num-warmups", required_argument, nullptr, 'w'},
+      {"data-size", required_argument, nullptr, 'd'},
+      {"help", no_argument, nullptr, 'h'},
+      {nullptr, 0, nullptr, 0}};
+
+  // Parse command line options before MPI_Init
+  int opt;
+  int option_index = 0;
+  while ((opt = getopt_long(argc, argv, "i:w:d:h", long_options,
+                            &option_index)) != -1) {
+    try {
+      switch (opt) {
+      case 'i':
+        g_num_iterations = parse_int(optarg);
+        break;
+      case 'w':
+        g_num_warmups = parse_int(optarg);
+        break;
+      case 'd':
+        g_data_size = parse_uint64(optarg).value();
+        break;
+      case 'h':
+        print_usage(program_name);
+        return 0;
+      case '?':
+        // getopt_long already printed an error message
+        return 1;
+      default:
+        print_error_and_exit(program_name, "Unknown option");
+      }
+    } catch (const std::exception &e) {
+      print_error_and_exit(program_name, e.what());
+    }
+  }
+
+  // Initialize MPI after parsing arguments
   MPI_Init(&argc, &argv);
 
   int rank, size;
@@ -37,9 +88,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  const int num_iterations = absl::GetFlag(FLAGS_num_iterations);
-  const int num_warmups = absl::GetFlag(FLAGS_num_warmups);
-  const uint64_t data_size = absl::GetFlag(FLAGS_data_size);
+  const int num_iterations = g_num_iterations;
+  const int num_warmups = g_num_warmups;
+  const uint64_t data_size = g_data_size;
 
   if (num_iterations < 3) {
     if (rank == 0) {

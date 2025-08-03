@@ -1,20 +1,21 @@
+#include <getopt.h>
 #include <string>
 #include <sys/wait.h>
 
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <iostream>
 #include <optional>
 #include <random>
 #include <thread>
 #include <vector>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-
 #include "aklog.h"
 #include "barrier.h"
+#include "getopt_utils.h"
 
 namespace {
 
@@ -277,30 +278,87 @@ void TestWaitWithRandomSleep(int num_processes, int num_iterations) {
 
 } // namespace
 
-ABSL_FLAG(std::string, test_type, "constructor",
-          "Type of test to run. Available types: constructor, "
-          "wait_with_random_sleep, wait_without_sleep");
-ABSL_FLAG(int, num_processes, 2,
-          "Number of processes to use in the wait test.");
-ABSL_FLAG(int, num_iterations, 20,
-          "Number of iterations to run in the wait test.");
+// Command line option variables
+static std::string g_test_type = "constructor";
+static int g_num_processes = 2;
+static int g_num_iterations = 20;
+
+void print_usage(const char *program_name) {
+  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
+  std::cout << "\nSense Reversing Barrier Test\n\n";
+  std::cout << "Options:\n";
+  std::cout << "  -t, --test-type=TYPE     Type of test to run (default: "
+               "constructor)\n";
+  std::cout << "                           Available types: constructor,\n";
+  std::cout << "                           wait_with_random_sleep, "
+               "wait_without_sleep\n";
+  std::cout << "  -p, --num-processes=N    Number of processes for wait test "
+               "(default: 2)\n";
+  std::cout << "  -i, --num-iterations=N   Number of iterations for wait test "
+               "(default: 20)\n";
+  std::cout << "  -h, --help               Display this help message\n";
+}
 
 int main(int argc, char *argv[]) {
-  absl::SetProgramUsageMessage("Sense Reversing Barrier Test");
-  absl::ParseCommandLine(argc, argv);
-  const std::string test_type = absl::GetFlag(FLAGS_test_type);
+  const char *program_name = argv[0];
+
+  // Define long options
+  static struct option long_options[] = {
+      {"test-type", required_argument, nullptr, 't'},
+      {"num-processes", required_argument, nullptr, 'p'},
+      {"num-iterations", required_argument, nullptr, 'i'},
+      {"help", no_argument, nullptr, 'h'},
+      {nullptr, 0, nullptr, 0}};
+
+  // Parse command line options
+  int opt;
+  int option_index = 0;
+  while ((opt = getopt_long(argc, argv, "t:p:i:h", long_options,
+                            &option_index)) != -1) {
+    try {
+      switch (opt) {
+      case 't':
+        g_test_type = optarg;
+        break;
+      case 'p':
+        g_num_processes = parse_int(optarg);
+        break;
+      case 'i':
+        g_num_iterations = parse_int(optarg);
+        break;
+      case 'h':
+        print_usage(program_name);
+        return 0;
+      case '?':
+        // getopt_long already printed an error message
+        return 1;
+      default:
+        print_error_and_exit(program_name, "Unknown option");
+      }
+    } catch (const std::exception &e) {
+      print_error_and_exit(program_name, e.what());
+    }
+  }
+
+  // Check for extra arguments
+  if (optind < argc) {
+    print_error_and_exit(program_name,
+                         "Unexpected argument: " + std::string(argv[optind]));
+  }
+
+  const std::string &test_type = g_test_type;
 
   SenseReversingBarrier::ClearResource(BRRIER_ID);
 
   if (test_type == "constructor") {
     TestConstructor();
   } else if (test_type == "wait_with_random_sleep") {
-    int num_processes = absl::GetFlag(FLAGS_num_processes);
-    int num_iterations = absl::GetFlag(FLAGS_num_iterations);
+    int num_processes = g_num_processes;
+    int num_iterations = g_num_iterations;
     TestWaitWithRandomSleep(num_processes, num_iterations);
   } else if (test_type == "wait_without_sleep") {
-    int num_processes = absl::GetFlag(FLAGS_num_processes);
-    int num_iterations = absl::GetFlag(FLAGS_num_iterations);
+    int num_processes = g_num_processes;
+    int num_iterations = g_num_iterations;
     TestWaitWithoutSleep(num_processes, num_iterations);
   } else {
     AKLOG(aklog::LogLevel::ERROR,
