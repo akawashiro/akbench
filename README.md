@@ -7,30 +7,30 @@ $ ./scripts/build.sh
 
 ## How to run
 ```bash
-$ ./build/ipc-bench/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
-memcpy: 16.7302 GiByte/sec
-memcpy_mt (1 threads): 16.5431 GiByte/sec
-memcpy_mt (2 threads): 17.3747 GiByte/sec
-memcpy_mt (3 threads): 18.4483 GiByte/sec
-memcpy_mt (4 threads): 17.9042 GiByte/sec
-tcp: 5.5369 GiByte/sec
-uds: 6.15441 GiByte/sec
-pipe: 2.09526 GiByte/sec
-fifo: 2.06931 GiByte/sec
-mq: 1.77624 GiByte/sec
-mmap: 10.5466 GiByte/sec
-shm: 10.5029 GiByte/sec
+$ ./build/akbench/akbench all_bandwidth --data-size=$((1 << 30)) --num-iterations=10 --num-warmups=3
+bandwidth_memcpy: 16.730 GiByte/sec
+bandwidth_memcpy_mt (1 threads): 16.543 GiByte/sec
+bandwidth_memcpy_mt (2 threads): 17.375 GiByte/sec
+bandwidth_memcpy_mt (3 threads): 18.448 GiByte/sec
+bandwidth_memcpy_mt (4 threads): 17.904 GiByte/sec
+bandwidth_tcp: 5.537 GiByte/sec
+bandwidth_uds: 6.154 GiByte/sec
+bandwidth_pipe: 2.095 GiByte/sec
+bandwidth_fifo: 2.069 GiByte/sec
+bandwidth_mq: 1.776 GiByte/sec
+bandwidth_mmap: 10.547 GiByte/sec
+bandwidth_shm: 10.503 GiByte/sec
 ```
 
 ```
-$ ./build/ipc-bench/latency --type=all
-atomic: 36.8307 ns
-barrier: 958.837 ns
-condition_variable: 4019.54 ns
-semaphore: 3687.24 ns
-statfs: 1274.74 ns
-fstatfs: 837.631 ns
-getpid: 122.122 ns
+$ ./build/akbench/akbench all_latency
+latency_atomic: 36.831 ns
+latency_barrier: 958.837 ns
+latency_condition_variable: 4019.540 ns
+latency_semaphore: 3687.240 ns
+latency_statfs: 1274.740 ns
+latency_fstatfs: 837.631 ns
+latency_getpid: 122.122 ns
 ```
 
 ## Machine information which was used to run the benchmark below
