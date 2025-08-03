@@ -4,15 +4,7 @@ add_library(aklog aklog.cc)
 
 add_library(barrier barrier.cc)
 target_link_libraries(barrier aklog)
-set(AKBENCH_LIBS
-    aklog
-    absl::base
-    absl::synchronization
-    absl::flags
-    absl::flags_parse
-    barrier
-    rt
-    pthread)
+set(AKBENCH_LIBS aklog absl::base absl::synchronization barrier rt pthread)
 
 add_library(common common.cc)
 target_link_libraries(common ${AKBENCH_LIBS})
@@ -50,12 +42,12 @@ target_link_libraries(shm_bandwidth ${AKBENCH_LIBS})
 add_executable(barrier_test barrier_test.cc)
 target_link_libraries(barrier_test ${AKBENCH_LIBS})
 add_test(NAME barrier_test_constructor COMMAND barrier_test
-                                               --test_type=constructor)
+                                               --test-type=constructor)
 add_test(NAME barrier_test_wait_with_random_sleep
-         COMMAND barrier_test --test_type=wait_with_random_sleep
-                 --num_iterations=3)
+         COMMAND barrier_test --test-type=wait_with_random_sleep
+                 --num-iterations=3)
 add_test(NAME barrier_test_wait_without_sleep
-         COMMAND barrier_test --test_type=wait_without_sleep --num_iterations=3)
+         COMMAND barrier_test --test-type=wait_without_sleep --num-iterations=3)
 
 add_executable(aklog_test aklog_test.cc)
 target_link_libraries(aklog_test aklog)
