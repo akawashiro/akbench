@@ -4,11 +4,11 @@
 You need `cmake`, `git`, and clang++ (upper than 18) or g++ (upper than 14) to build this project.
 
 ```bash
-git clone https://github.com/akawashiro/akbench.git
-cd akbench
-cmake -S . -B build -D CMAKE_CXX_COMPILER=clang++
-cmake --build build
-cmake --install build
+$ git clone https://github.com/akawashiro/akbench.git
+$ cd akbench
+$ cmake -S . -B build -D CMAKE_CXX_COMPILER=clang++
+$ cmake --build build
+$ cmake --install build
 ```
 
 ## How to run
