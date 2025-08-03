@@ -50,10 +50,10 @@ Only one test currently exists: `barrier_test`
 ### Run Benchmarks
 ```bash
 # Bandwidth benchmarks (1GB data, 10 iterations, 3 warmups)
-./build/akbench/akbench --type=all_bandwidth --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
+./build/akbench/akbench --type=bandwidth_all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
 
 # Latency benchmarks 
-./build/akbench/akbench --type=all_latency
+./build/akbench/akbench --type=latency_all
 
 # Run everything
 ./build/akbench/akbench --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3

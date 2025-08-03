@@ -7,7 +7,7 @@ $ ./scripts/build.sh
 
 ## How to run
 ```bash
-$ ./build/akbench/akbench all_bandwidth --data-size=$((1 << 30)) --num-iterations=10 --num-warmups=3
+$ ./build/akbench/akbench bandwidth_all --data-size=$((1 << 30)) --num-iterations=10 --num-warmups=3
 bandwidth_memcpy: 16.730 GiByte/sec
 bandwidth_memcpy_mt (1 threads): 16.543 GiByte/sec
 bandwidth_memcpy_mt (2 threads): 17.375 GiByte/sec
@@ -23,7 +23,7 @@ bandwidth_shm: 10.503 GiByte/sec
 ```
 
 ```
-$ ./build/akbench/akbench all_latency
+$ ./build/akbench/akbench latency_all
 latency_atomic: 36.831 ns
 latency_barrier: 958.837 ns
 latency_condition_variable: 4019.540 ns
