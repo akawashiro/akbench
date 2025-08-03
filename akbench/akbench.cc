@@ -42,11 +42,11 @@ static std::string g_log_level = "WARNING";
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
 
 void print_usage(const char *program_name) {
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
+  std::cout << "Usage: " << program_name << " <TYPE> [OPTIONS]\n";
   std::cout << "\nUnified benchmark tool for measuring system performance.\n\n";
-  std::cout << "Options:\n";
+  std::cout << "Arguments:\n";
   std::cout
-      << "  -t, --type=TYPE              Benchmark type to run (required)\n";
+      << "  TYPE                         Benchmark type to run (required)\n";
   std::cout << "      Latency tests: latency_atomic, latency_barrier,\n";
   std::cout << "                     latency_condition_variable, "
                "latency_semaphore,\n";
@@ -60,7 +60,8 @@ void print_usage(const char *program_name) {
   std::cout << "                       bandwidth_fifo, bandwidth_mq, "
                "bandwidth_mmap,\n";
   std::cout << "                       bandwidth_shm, all_bandwidth\n";
-  std::cout << "      Combined: all\n";
+  std::cout << "      Combined: all\n\n";
+  std::cout << "Options:\n";
   std::cout << "  -i, --num-iterations=N       Number of measurement "
                "iterations (min 3, default: 10)\n";
   std::cout << "  -w, --num-warmups=N          Number of warmup iterations "
@@ -298,7 +299,6 @@ int main(int argc, char *argv[]) {
 
   // Define long options
   static struct option long_options[] = {
-      {"type", required_argument, nullptr, 't'},
       {"num-iterations", required_argument, nullptr, 'i'},
       {"num-warmups", required_argument, nullptr, 'w'},
       {"loop-size", required_argument, nullptr, 'l'},
@@ -312,13 +312,10 @@ int main(int argc, char *argv[]) {
   // Parse command line options
   int opt;
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "t:i:w:l:d:b:n:h", long_options,
+  while ((opt = getopt_long(argc, argv, "i:w:l:d:b:n:h", long_options,
                             &option_index)) != -1) {
     try {
       switch (opt) {
-      case 't':
-        g_type = optarg;
-        break;
       case 'i':
         g_num_iterations = parse_int(optarg);
         break;
@@ -354,11 +351,19 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Check for extra arguments
-  if (optind < argc) {
-    print_error_and_exit(program_name,
-                         "Unexpected argument: " + std::string(argv[optind]));
+  // Check for exactly one positional argument (the benchmark type)
+  if (optind >= argc) {
+    print_error_and_exit(program_name, "Missing required argument: TYPE");
   }
+
+  if (optind + 1 < argc) {
+    print_error_and_exit(program_name,
+                         "Too many arguments. Expected only TYPE, got: " +
+                             std::string(argv[optind + 1]));
+  }
+
+  // Get the benchmark type from the positional argument
+  g_type = argv[optind];
 
   // Use parsed values
   const std::string &type = g_type;
@@ -370,14 +375,15 @@ int main(int argc, char *argv[]) {
   const std::optional<uint64_t> &num_threads_opt = g_num_threads;
 
   if (type.empty()) {
-    AKLOG(aklog::LogLevel::ERROR,
-          "Must specify --type. Available types:\nLatency tests: "
-          "latency_atomic, latency_barrier, latency_condition_variable, "
-          "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
-          "all_latency\nBandwidth tests: bandwidth_memcpy, "
-          "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, bandwidth_pipe, "
-          "bandwidth_fifo, bandwidth_mq, bandwidth_mmap, bandwidth_shm, "
-          "all_bandwidth\nCombined: all");
+    AKLOG(
+        aklog::LogLevel::ERROR,
+        "Must specify TYPE as first argument. Available types:\nLatency tests: "
+        "latency_atomic, latency_barrier, latency_condition_variable, "
+        "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
+        "all_latency\nBandwidth tests: bandwidth_memcpy, "
+        "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, bandwidth_pipe, "
+        "bandwidth_fifo, bandwidth_mq, bandwidth_mmap, bandwidth_shm, "
+        "all_bandwidth\nCombined: all");
     return 1;
   }
 
