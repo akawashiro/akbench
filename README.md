@@ -7,30 +7,31 @@ $ ./scripts/build.sh
 
 ## How to run
 ```bash
-$ ./build/ipc-bench/bandwidth --type=all --data_size=$((1 << 30)) --num_iterations=10 --num_warmups=3
-memcpy: 16.7302 GiByte/sec
-memcpy_mt (1 threads): 16.5431 GiByte/sec
-memcpy_mt (2 threads): 17.3747 GiByte/sec
-memcpy_mt (3 threads): 18.4483 GiByte/sec
-memcpy_mt (4 threads): 17.9042 GiByte/sec
-tcp: 5.5369 GiByte/sec
-uds: 6.15441 GiByte/sec
-pipe: 2.09526 GiByte/sec
-fifo: 2.06931 GiByte/sec
-mq: 1.77624 GiByte/sec
-mmap: 10.5466 GiByte/sec
-shm: 10.5029 GiByte/sec
-```
+$ ./build/akbench/akbench all
+Running all latency tests:
 
-```
-$ ./build/ipc-bench/latency --type=all
-atomic: 36.8307 ns
-barrier: 958.837 ns
-condition_variable: 4019.54 ns
-semaphore: 3687.24 ns
-statfs: 1274.74 ns
-fstatfs: 837.631 ns
-getpid: 122.122 ns
+latency_atomic: 33.579 ns
+latency_barrier: 1330.162 ns
+latency_condition_variable: 4032.889 ns
+latency_semaphore: 3711.238 ns
+latency_statfs: 1268.495 ns
+latency_fstatfs: 843.146 ns
+latency_getpid: 122.230 ns
+
+Running all bandwidth tests:
+
+bandwidth_memcpy: 17.264 GiByte/sec
+bandwidth_memcpy_mt (1 threads): 17.324 GiByte/sec
+bandwidth_memcpy_mt (2 threads): 17.719 GiByte/sec
+bandwidth_memcpy_mt (3 threads): 18.491 GiByte/sec
+bandwidth_memcpy_mt (4 threads): 18.263 GiByte/sec
+bandwidth_tcp: 4.651 GiByte/sec
+bandwidth_uds: 6.320 GiByte/sec
+bandwidth_pipe: 2.041 GiByte/sec
+bandwidth_fifo: 2.049 GiByte/sec
+bandwidth_mq: 1.676 GiByte/sec
+bandwidth_mmap: 10.446 GiByte/sec
+bandwidth_shm: 10.452 GiByte/sec
 ```
 
 ## Machine information which was used to run the benchmark below

@@ -46,21 +46,39 @@ void print_usage(const char *program_name) {
   std::cout << "\nUnified benchmark tool for measuring system performance.\n\n";
   std::cout << "Arguments:\n";
   std::cout
-      << "  TYPE                         Benchmark type to run (required)\n";
-  std::cout << "      Latency tests: latency_atomic, latency_barrier,\n";
-  std::cout << "                     latency_condition_variable, "
-               "latency_semaphore,\n";
-  std::cout << "                     latency_statfs, latency_fstatfs, "
-               "latency_getpid,\n";
-  std::cout << "                     all_latency\n";
+      << "  TYPE                         Benchmark type to run (required)\n\n";
+  std::cout << "Latency Tests (measure operation latency in nanoseconds):\n";
+  std::cout << "  latency_atomic               Atomic variable synchronization "
+               "between threads\n";
   std::cout
-      << "      Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt,\n";
-  std::cout << "                       bandwidth_tcp, bandwidth_uds, "
-               "bandwidth_pipe,\n";
-  std::cout << "                       bandwidth_fifo, bandwidth_mq, "
-               "bandwidth_mmap,\n";
-  std::cout << "                       bandwidth_shm, all_bandwidth\n";
-  std::cout << "      Combined: all\n\n";
+      << "  latency_barrier              Thread barrier synchronization\n";
+  std::cout << "  latency_condition_variable   Condition variable wait/notify "
+               "operations\n";
+  std::cout
+      << "  latency_semaphore            Semaphore wait/post operations\n";
+  std::cout << "  latency_statfs               statfs() filesystem syscall\n";
+  std::cout << "  latency_fstatfs              fstatfs() filesystem syscall\n";
+  std::cout << "  latency_getpid               getpid() syscall\n";
+  std::cout << "  latency_all                  Run all latency benchmarks\n\n";
+  std::cout << "Bandwidth Tests (measure data transfer rate in GiByte/sec):\n";
+  std::cout << "  bandwidth_memcpy             Memory copy using memcpy()\n";
+  std::cout << "  bandwidth_memcpy_mt          Multi-threaded memory copy\n";
+  std::cout << "  bandwidth_tcp                TCP socket communication\n";
+  std::cout
+      << "  bandwidth_uds                Unix domain socket communication\n";
+  std::cout << "  bandwidth_pipe               Anonymous pipe communication\n";
+  std::cout
+      << "  bandwidth_fifo               Named pipe (FIFO) communication\n";
+  std::cout
+      << "  bandwidth_mq                 POSIX message queue communication\n";
+  std::cout
+      << "  bandwidth_mmap               Memory-mapped file communication\n";
+  std::cout << "  bandwidth_shm                Shared memory communication\n";
+  std::cout
+      << "  bandwidth_all                Run all bandwidth benchmarks\n\n";
+  std::cout << "Combined:\n";
+  std::cout << "  all                          Run all latency and bandwidth "
+               "benchmarks\n\n";
   std::cout << "Options:\n";
   std::cout << "  -i, --num-iterations=N       Number of measurement "
                "iterations (min 3, default: 10)\n";
@@ -112,7 +130,7 @@ void RunLatencyBenchmarks(
 
   double result = 0.0;
 
-  if (type == "all_latency") {
+  if (type == "latency_all") {
     std::vector<std::pair<std::string, double>> results;
 
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
@@ -145,37 +163,38 @@ void RunLatencyBenchmarks(
 
     // Output all results at the end
     for (const auto &benchmark_result : results) {
-      std::println("{}: {} ns", benchmark_result.first,
+      std::println("{}: {:.3f} ns", benchmark_result.first,
                    benchmark_result.second * 1e9);
     }
   } else if (type == "latency_atomic") {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
-    std::println("Atomic benchmark result: {} ns", result * 1e9);
+    std::println("Atomic benchmark result: {:.3f} ns", result * 1e9);
   } else if (type == "latency_barrier") {
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
                                         barrier_loop_size);
-    std::println("Barrier benchmark result: {} ns", result * 1e9);
+    std::println("Barrier benchmark result: {:.3f} ns", result * 1e9);
   } else if (type == "latency_condition_variable") {
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
-    std::println("Condition Variable benchmark result: {} ns", result * 1e9);
+    std::println("Condition Variable benchmark result: {:.3f} ns",
+                 result * 1e9);
   } else if (type == "latency_semaphore") {
     result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
                                           semaphore_loop_size);
-    std::println("Semaphore benchmark result: {} ns", result * 1e9);
+    std::println("Semaphore benchmark result: {:.3f} ns", result * 1e9);
   } else if (type == "latency_statfs") {
     result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
                                        statfs_loop_size);
-    std::println("Statfs benchmark result: {} ns", result * 1e9);
+    std::println("Statfs benchmark result: {:.3f} ns", result * 1e9);
   } else if (type == "latency_fstatfs") {
     result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
                                         fstatfs_loop_size);
-    std::println("Fstatfs benchmark result: {} ns", result * 1e9);
+    std::println("Fstatfs benchmark result: {:.3f} ns", result * 1e9);
   } else if (type == "latency_getpid") {
     result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
                                        getpid_loop_size);
-    std::println("Getpid benchmark result: {} ns", result * 1e9);
+    std::println("Getpid benchmark result: {:.3f} ns", result * 1e9);
   }
 }
 
@@ -185,7 +204,7 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
                             const std::string &type) {
   double bandwidth = 0.0;
 
-  if (type == "all_bandwidth") {
+  if (type == "bandwidth_all") {
     // Collect all benchmark results first, then output at the end
     std::vector<std::pair<std::string, double>> results;
 
@@ -193,7 +212,7 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
         RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
     results.emplace_back("bandwidth_memcpy", bandwidth);
 
-    // Run memcpy_mt with 1-4 threads for "all_bandwidth" case
+    // Run memcpy_mt with 1-4 threads for "bandwidth_all" case
     for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
       bandwidth = RunMemcpyMtBandwidthBenchmark(num_iterations, num_warmups,
                                                 data_size, n_threads);
@@ -232,64 +251,64 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
 
     // Output all results at the end
     for (const auto &result : results) {
-      std::println("{}: {}{}", result.first, result.second / (1ULL << 30),
+      std::println("{}: {:.3f}{}", result.first, result.second / (1ULL << 30),
                    GIBYTE_PER_SEC_UNIT);
     }
   } else if (type == "bandwidth_memcpy") {
     bandwidth =
         RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
-    std::println("bandwidth_memcpy: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_memcpy: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_memcpy_mt") {
     if (num_threads_opt.has_value()) {
       // Run with specified number of threads
       bandwidth = RunMemcpyMtBandwidthBenchmark(
           num_iterations, num_warmups, data_size, num_threads_opt.value());
-      std::println("bandwidth_memcpy_mt: {}{}", bandwidth / (1ULL << 30),
+      std::println("bandwidth_memcpy_mt: {:.3f}{}", bandwidth / (1ULL << 30),
                    GIBYTE_PER_SEC_UNIT);
     } else {
       // Run with 1-4 threads for compatibility
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         bandwidth = RunMemcpyMtBandwidthBenchmark(num_iterations, num_warmups,
                                                   data_size, n_threads);
-        std::println("bandwidth_memcpy_mt ({} threads): {}{}", n_threads,
+        std::println("bandwidth_memcpy_mt ({} threads): {:.3f}{}", n_threads,
                      bandwidth / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
       }
     }
   } else if (type == "bandwidth_tcp") {
     bandwidth = RunTcpBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_tcp: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_tcp: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_uds") {
     bandwidth = RunUdsBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_uds: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_uds: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_pipe") {
     bandwidth = RunPipeBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_pipe: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_pipe: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_fifo") {
     bandwidth = RunFifoBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_fifo: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_fifo: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mq") {
     bandwidth = RunMqBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                         buffer_size);
-    std::println("bandwidth_mq: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_mq: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_mmap") {
     bandwidth = RunMmapBandwidthBenchmark(num_iterations, num_warmups,
                                           data_size, buffer_size);
-    std::println("bandwidth_mmap: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_mmap: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   } else if (type == "bandwidth_shm") {
     bandwidth = RunShmBandwidthBenchmark(num_iterations, num_warmups, data_size,
                                          buffer_size);
-    std::println("bandwidth_shm: {}{}", bandwidth / (1ULL << 30),
+    std::println("bandwidth_shm: {:.3f}{}", bandwidth / (1ULL << 30),
                  GIBYTE_PER_SEC_UNIT);
   }
 }
@@ -380,10 +399,10 @@ int main(int argc, char *argv[]) {
         "Must specify TYPE as first argument. Available types:\nLatency tests: "
         "latency_atomic, latency_barrier, latency_condition_variable, "
         "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
-        "all_latency\nBandwidth tests: bandwidth_memcpy, "
+        "latency_all\nBandwidth tests: bandwidth_memcpy, "
         "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, bandwidth_pipe, "
         "bandwidth_fifo, bandwidth_mq, bandwidth_mmap, bandwidth_shm, "
-        "all_bandwidth\nCombined: all");
+        "bandwidth_all\nCombined: all");
     return 1;
   }
 
@@ -442,7 +461,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Validate data_size for bandwidth tests
-  if (type.find("bandwidth_") == 0 || type == "all_bandwidth" ||
+  if (type.find("bandwidth_") == 0 || type == "bandwidth_all" ||
       type == "all") {
     if (data_size <= CHECKSUM_SIZE) {
       AKLOG(aklog::LogLevel::ERROR,
@@ -483,23 +502,23 @@ int main(int argc, char *argv[]) {
     std::println("Running all latency tests:");
     std::println("");
     RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
-                         loop_size_opt, "all_latency");
+                         loop_size_opt, "latency_all");
 
     std::println("");
     std::println("Running all bandwidth tests:");
     std::println("");
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
-                           num_threads_opt, "all_bandwidth");
+                           num_threads_opt, "bandwidth_all");
     return 0;
   }
 
   // Handle latency tests
-  if (type.find("latency_") == 0 || type == "all_latency") {
+  if (type.find("latency_") == 0 || type == "latency_all") {
     RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
                          loop_size_opt, type);
   }
   // Handle bandwidth tests
-  else if (type.find("bandwidth_") == 0 || type == "all_bandwidth") {
+  else if (type.find("bandwidth_") == 0 || type == "bandwidth_all") {
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
                            num_threads_opt, type);
   } else {
@@ -508,10 +527,10 @@ int main(int argc, char *argv[]) {
               "Unknown benchmark type: {}. Available types:\nLatency tests: "
               "latency_atomic, latency_barrier, latency_condition_variable, "
               "latency_semaphore, latency_statfs, latency_fstatfs, "
-              "latency_getpid, all_latency\nBandwidth tests: bandwidth_memcpy, "
+              "latency_getpid, latency_all\nBandwidth tests: bandwidth_memcpy, "
               "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, "
               "bandwidth_pipe, bandwidth_fifo, bandwidth_mq, bandwidth_mmap, "
-              "bandwidth_shm, all_bandwidth\nCombined: all",
+              "bandwidth_shm, bandwidth_all\nCombined: all",
               type));
     return 1;
   }
