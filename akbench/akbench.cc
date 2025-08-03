@@ -46,21 +46,39 @@ void print_usage(const char *program_name) {
   std::cout << "\nUnified benchmark tool for measuring system performance.\n\n";
   std::cout << "Arguments:\n";
   std::cout
-      << "  TYPE                         Benchmark type to run (required)\n";
-  std::cout << "      Latency tests: latency_atomic, latency_barrier,\n";
-  std::cout << "                     latency_condition_variable, "
-               "latency_semaphore,\n";
-  std::cout << "                     latency_statfs, latency_fstatfs, "
-               "latency_getpid,\n";
-  std::cout << "                     latency_all\n";
+      << "  TYPE                         Benchmark type to run (required)\n\n";
+  std::cout << "Latency Tests (measure operation latency in nanoseconds):\n";
+  std::cout << "  latency_atomic               Atomic variable synchronization "
+               "between threads\n";
   std::cout
-      << "      Bandwidth tests: bandwidth_memcpy, bandwidth_memcpy_mt,\n";
-  std::cout << "                       bandwidth_tcp, bandwidth_uds, "
-               "bandwidth_pipe,\n";
-  std::cout << "                       bandwidth_fifo, bandwidth_mq, "
-               "bandwidth_mmap,\n";
-  std::cout << "                       bandwidth_shm, bandwidth_all\n";
-  std::cout << "      Combined: all\n\n";
+      << "  latency_barrier              Thread barrier synchronization\n";
+  std::cout << "  latency_condition_variable   Condition variable wait/notify "
+               "operations\n";
+  std::cout
+      << "  latency_semaphore            Semaphore wait/post operations\n";
+  std::cout << "  latency_statfs               statfs() filesystem syscall\n";
+  std::cout << "  latency_fstatfs              fstatfs() filesystem syscall\n";
+  std::cout << "  latency_getpid               getpid() syscall\n";
+  std::cout << "  latency_all                  Run all latency benchmarks\n\n";
+  std::cout << "Bandwidth Tests (measure data transfer rate in GiByte/sec):\n";
+  std::cout << "  bandwidth_memcpy             Memory copy using memcpy()\n";
+  std::cout << "  bandwidth_memcpy_mt          Multi-threaded memory copy\n";
+  std::cout << "  bandwidth_tcp                TCP socket communication\n";
+  std::cout
+      << "  bandwidth_uds                Unix domain socket communication\n";
+  std::cout << "  bandwidth_pipe               Anonymous pipe communication\n";
+  std::cout
+      << "  bandwidth_fifo               Named pipe (FIFO) communication\n";
+  std::cout
+      << "  bandwidth_mq                 POSIX message queue communication\n";
+  std::cout
+      << "  bandwidth_mmap               Memory-mapped file communication\n";
+  std::cout << "  bandwidth_shm                Shared memory communication\n";
+  std::cout
+      << "  bandwidth_all                Run all bandwidth benchmarks\n\n";
+  std::cout << "Combined:\n";
+  std::cout << "  all                          Run all latency and bandwidth "
+               "benchmarks\n\n";
   std::cout << "Options:\n";
   std::cout << "  -i, --num-iterations=N       Number of measurement "
                "iterations (min 3, default: 10)\n";
