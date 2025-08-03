@@ -37,3 +37,30 @@ jobs:
         sudo apt-get install -y gcc cmake git openmpi-bin libopenmpi-dev ccache
     - name: Build
       run: ./scripts/build.sh
+  install-test:
+    name: Install Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc cmake git openmpi-bin libopenmpi-dev ccache
+    - name: Follow README build and install instructions
+      run: |
+        # Follow the exact commands from README.md
+        cmake -S . -B build
+        cmake --build build
+        # Install to custom prefix to avoid permission issues
+        cmake --install build --prefix /tmp/akbench_install
+    - name: Verify installation
+      run: |
+        # Check that binary was installed
+        test -f /tmp/akbench_install/bin/akbench
+        # Test that installed binary works
+        /tmp/akbench_install/bin/akbench --help
+        # Run a quick benchmark to ensure functionality
+        /tmp/akbench_install/bin/akbench latency_atomic --num-iterations=3 --num-warmups=1
