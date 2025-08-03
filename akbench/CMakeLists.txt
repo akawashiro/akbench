@@ -1,10 +1,8 @@
-add_subdirectory(abseil-cpp)
-
 add_library(aklog aklog.cc)
 
 add_library(barrier barrier.cc)
 target_link_libraries(barrier aklog)
-set(AKBENCH_LIBS aklog absl::base absl::synchronization barrier rt pthread)
+set(AKBENCH_LIBS aklog barrier rt pthread)
 
 add_library(common common.cc)
 target_link_libraries(common ${AKBENCH_LIBS})
