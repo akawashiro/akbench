@@ -12,6 +12,7 @@ cmake -S "$SCR_DIR" \
     -D CMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -D CMAKE_BUILD_TYPE=RelWithDebInfo \
     -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -D AKBENCH_ENABLE_MPI=ON \
     -G Ninja
 cmake --build build -j
 ctest --test-dir build

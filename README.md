@@ -1,8 +1,11 @@
-# IPC benchmark
+# akbench
 
 ## How to build
 ```bash
-$ ./scripts/build.sh
+git clone https://github.com/akawashiro/akbench.git
+cd akbench
+cmake -S . -B build
+cmake --build build
 ```
 
 ## How to run
