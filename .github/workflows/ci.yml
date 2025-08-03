@@ -48,7 +48,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc cmake git openmpi-bin libopenmpi-dev ccache
+        sudo apt-get install -y gcc cmake git
     - name: Follow README build and install instructions
       run: |
         # Follow the exact commands from README.md

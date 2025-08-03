@@ -1,6 +1,8 @@
 # akbench
 
 ## How to build and install
+You need `cmake`, `git`, and C++ compiler to build this project.
+
 ```bash
 git clone https://github.com/akawashiro/akbench.git
 cd akbench
