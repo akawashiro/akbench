@@ -1,16 +1,20 @@
 # akbench
 
-## How to build
+## How to build and install
+You need `cmake`, `git`, and clang++ (upper than 18) or g++ (upper than 14) to build this project.
+
 ```bash
 git clone https://github.com/akawashiro/akbench.git
 cd akbench
-cmake -S . -B build
+cmake -S . -B build -D CMAKE_CXX_COMPILER=clang++
 cmake --build build
+cmake --install build
 ```
 
 ## How to run
 ```bash
-$ ./build/akbench/akbench all
+$ If you haven't installed it, ./build/akbench/akbench all
+$ akbench all
 Running all latency tests:
 
 latency_atomic: 33.579 ns

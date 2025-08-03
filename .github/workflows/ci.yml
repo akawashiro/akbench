@@ -24,7 +24,7 @@ jobs:
         ./scripts/format.sh
         git diff --exit-code
   build:
-    name: Build
+    name: Unit tests
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -37,3 +37,25 @@ jobs:
         sudo apt-get install -y gcc cmake git openmpi-bin libopenmpi-dev ccache
     - name: Build
       run: ./scripts/build.sh
+  install-test:
+    name: Install
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc cmake git
+    - name: Follow README build and install instructions
+      run: |
+        cmake -S . -B build -D CMAKE_CXX_COMPILER=clang++
+        cmake --build build
+        cmake --install build --prefix /tmp/akbench_install
+    - name: Verify installation
+      run: |
+        test -f /tmp/akbench_install/bin/akbench
+        /tmp/akbench_install/bin/akbench --help
+        /tmp/akbench_install/bin/akbench latency_atomic --num-iterations=3 --num-warmups=1
