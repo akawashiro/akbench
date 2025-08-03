@@ -156,3 +156,5 @@ target_link_libraries(
   mmap_bandwidth
   shm_bandwidth
   ${AKBENCH_LIBS})
+
+install(TARGETS akbench DESTINATION ${CMAKE_INSTALL_BINDIR})
