@@ -83,27 +83,23 @@ bool VerifyDataReceived(const std::vector<uint8_t> &data, uint64_t data_size) {
   return true;
 }
 
-BenchmarkResult CalculateBandwidth(std::vector<double> durations,
+BenchmarkResult CalculateBandwidth(const std::vector<double> &durations,
                                    int num_iterations, uint64_t data_size) {
   AKCHECK(durations.size() == num_iterations,
           std::format("durations.size() ({}) must equal num_iterations ({})",
                       durations.size(), num_iterations));
-  std::sort(durations.begin(), durations.end());
-  // Ensure we have at least 3 iterations to remove min and max
-  AKCHECK(num_iterations >= 3, "num_iterations must be at least 3");
-  std::vector<double> filtered_durations(durations.begin() + 1,
-                                         durations.end() - 1);
+  AKCHECK(num_iterations >= 1, "num_iterations must be at least 1");
 
-  double average_duration = std::accumulate(filtered_durations.begin(),
-                                            filtered_durations.end(), 0.0) /
-                            filtered_durations.size();
+  double average_duration =
+      std::accumulate(durations.begin(), durations.end(), 0.0) /
+      durations.size();
 
   // Calculate standard deviation
   double variance = 0.0;
-  for (const auto &duration : filtered_durations) {
+  for (const auto &duration : durations) {
     variance += std::pow(duration - average_duration, 2);
   }
-  variance /= filtered_durations.size();
+  variance /= durations.size();
   double stddev_duration = std::sqrt(variance);
 
   double bandwidth = data_size / average_duration;
@@ -114,23 +110,20 @@ BenchmarkResult CalculateBandwidth(std::vector<double> durations,
 }
 
 BenchmarkResult CalculateOneTripDuration(const std::vector<double> &durations) {
-  AKCHECK(durations.size() >= 3,
-          std::format("durations.size() ({}) must be at least 3",
+  AKCHECK(durations.size() >= 1,
+          std::format("durations.size() ({}) must be at least 1",
                       durations.size()));
-  std::vector<double> sorted_durations = durations;
-  std::sort(sorted_durations.begin(), sorted_durations.end());
-
   // Calculate average of filtered durations
-  double average_duration = std::accumulate(sorted_durations.begin() + 1,
-                                            sorted_durations.end() - 1, 0.0) /
-                            (sorted_durations.size() - 2);
+  double average_duration =
+      std::accumulate(durations.begin() + 1, durations.end() - 1, 0.0) /
+      durations.size();
 
   // Calculate standard deviation of filtered durations
   double variance = 0.0;
-  for (size_t i = 1; i < sorted_durations.size() - 1; ++i) {
-    variance += std::pow(sorted_durations[i] - average_duration, 2);
+  for (size_t i = 1; i < durations.size() - 1; ++i) {
+    variance += std::pow(durations[i] - average_duration, 2);
   }
-  variance /= (sorted_durations.size() - 2);
+  variance /= durations.size();
   double stddev_duration = std::sqrt(variance);
 
   return BenchmarkResult{average_duration, stddev_duration};
