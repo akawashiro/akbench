@@ -94,6 +94,11 @@ add_executable(atomic_latency_test atomic_latency_test.cc)
 target_link_libraries(atomic_latency_test atomic_latency ${AKBENCH_LIBS})
 add_test(NAME atomic_latency_test COMMAND atomic_latency_test)
 
+add_executable(atomic_rel_acq_latency_test atomic_rel_acq_latency_test.cc)
+target_link_libraries(atomic_rel_acq_latency_test atomic_rel_acq_latency
+                      ${AKBENCH_LIBS})
+add_test(NAME atomic_rel_acq_latency_test COMMAND atomic_rel_acq_latency_test)
+
 add_executable(barrier_latency_test barrier_latency_test.cc)
 target_link_libraries(barrier_latency_test barrier_latency ${AKBENCH_LIBS})
 add_test(NAME barrier_latency_test COMMAND barrier_latency_test)
@@ -124,6 +129,9 @@ endif()
 add_library(atomic_latency atomic_latency.cc)
 target_link_libraries(atomic_latency ${AKBENCH_LIBS})
 
+add_library(atomic_rel_acq_latency atomic_rel_acq_latency.cc)
+target_link_libraries(atomic_rel_acq_latency ${AKBENCH_LIBS})
+
 add_library(barrier_latency barrier_latency.cc)
 target_link_libraries(barrier_latency ${AKBENCH_LIBS})
 
@@ -141,6 +149,7 @@ target_link_libraries(
   akbench
   # Latency libraries
   atomic_latency
+  atomic_rel_acq_latency
   barrier_latency
   condition_variable_latency
   semaphore_latency

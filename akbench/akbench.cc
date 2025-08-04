@@ -13,6 +13,7 @@
 
 // Latency benchmark headers
 #include "atomic_latency.h"
+#include "atomic_rel_acq_latency.h"
 #include "barrier_latency.h"
 #include "condition_variable_latency.h"
 #include "semaphore_latency.h"
@@ -51,6 +52,7 @@ Arguments:
 
 Latency Tests (measure operation latency in nanoseconds):
   latency_atomic               Atomic variable synchronization between threads
+  latency_atomic_rel_acq       Atomic operations with relaxed-acquire memory ordering
   latency_barrier              Thread barrier synchronization
   latency_condition_variable   Condition variable wait/notify operations
   latency_semaphore            Semaphore wait/post operations
@@ -96,6 +98,9 @@ void RunLatencyBenchmarks(
   const uint64_t atomic_loop_size = loop_size_opt.has_value()
                                         ? *loop_size_opt
                                         : default_loop_sizes.at("atomic");
+  const uint64_t atomic_rel_acq_loop_size =
+      loop_size_opt.has_value() ? *loop_size_opt
+                                : default_loop_sizes.at("atomic");
   const uint64_t barrier_loop_size = loop_size_opt.has_value()
                                          ? *loop_size_opt
                                          : default_loop_sizes.at("barrier");
@@ -123,6 +128,10 @@ void RunLatencyBenchmarks(
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
     results.emplace_back("latency_atomic", result);
+
+    result = RunAtomicRelAcqLatencyBenchmark(num_iterations, num_warmups,
+                                             atomic_rel_acq_loop_size);
+    results.emplace_back("latency_atomic_rel_acq", result);
 
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
                                         barrier_loop_size);
@@ -158,6 +167,11 @@ void RunLatencyBenchmarks(
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
     std::println("Atomic benchmark result: {:.3f} ± {:.3f} ns",
+                 result.average * 1e9, result.stddev * 1e9);
+  } else if (type == "latency_atomic_rel_acq") {
+    result = RunAtomicRelAcqLatencyBenchmark(num_iterations, num_warmups,
+                                             atomic_rel_acq_loop_size);
+    std::println("Atomic RelAcq benchmark result: {:.3f} ± {:.3f} ns",
                  result.average * 1e9, result.stddev * 1e9);
   } else if (type == "latency_barrier") {
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
@@ -403,7 +417,8 @@ int main(int argc, char *argv[]) {
     AKLOG(
         aklog::LogLevel::ERROR,
         "Must specify TYPE as first argument. Available types:\nLatency tests: "
-        "latency_atomic, latency_barrier, latency_condition_variable, "
+        "latency_atomic, latency_atomic_rel_acq, latency_barrier, "
+        "latency_condition_variable, "
         "latency_semaphore, latency_statfs, latency_fstatfs, latency_getpid, "
         "latency_all\nBandwidth tests: bandwidth_memcpy, "
         "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, bandwidth_pipe, "
@@ -531,7 +546,8 @@ int main(int argc, char *argv[]) {
     AKLOG(aklog::LogLevel::ERROR,
           std::format(
               "Unknown benchmark type: {}. Available types:\nLatency tests: "
-              "latency_atomic, latency_barrier, latency_condition_variable, "
+              "latency_atomic, latency_atomic_rel_acq, latency_barrier, "
+              "latency_condition_variable, "
               "latency_semaphore, latency_statfs, latency_fstatfs, "
               "latency_getpid, latency_all\nBandwidth tests: bandwidth_memcpy, "
               "bandwidth_memcpy_mt, bandwidth_tcp, bandwidth_uds, "
