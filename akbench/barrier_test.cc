@@ -283,7 +283,7 @@ static std::string g_test_type = "constructor";
 static int g_num_processes = 2;
 static int g_num_iterations = 20;
 
-void print_usage(const char *program_name) {
+void PrintUsage(const char *program_name) {
   std::cout << R"(Usage: )" << program_name << R"( [OPTIONS]
 
 Sense Reversing Barrier Test
@@ -320,29 +320,29 @@ int main(int argc, char *argv[]) {
         g_test_type = optarg;
         break;
       case 'p':
-        g_num_processes = parse_int(optarg);
+        g_num_processes = ParseInt(optarg);
         break;
       case 'i':
-        g_num_iterations = parse_int(optarg);
+        g_num_iterations = ParseInt(optarg);
         break;
       case 'h':
-        print_usage(program_name);
+        PrintUsage(program_name);
         return 0;
       case '?':
         // getopt_long already printed an error message
         return 1;
       default:
-        print_error_and_exit(program_name, "Unknown option");
+        PrintErrorAndExit(program_name, "Unknown option");
       }
     } catch (const std::exception &e) {
-      print_error_and_exit(program_name, e.what());
+      PrintErrorAndExit(program_name, e.what());
     }
   }
 
   // Check for extra arguments
   if (optind < argc) {
-    print_error_and_exit(program_name,
-                         "Unexpected argument: " + std::string(argv[optind]));
+    PrintErrorAndExit(program_name,
+                      "Unexpected argument: " + std::string(argv[optind]));
   }
 
   const std::string &test_type = g_test_type;

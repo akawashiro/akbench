@@ -42,7 +42,7 @@ static std::string g_log_level = "WARNING";
 
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
 
-void print_usage(const char *program_name) {
+void PrintUsage(const char *program_name) {
   std::cout << R"(Usage: )" << program_name << R"( <TYPE> [OPTIONS]
 
 Unified benchmark tool for measuring system performance.
@@ -356,49 +356,49 @@ int main(int argc, char *argv[]) {
     try {
       switch (opt) {
       case 'i':
-        g_num_iterations = parse_int(optarg);
+        g_num_iterations = ParseInt(optarg);
         break;
       case 'w':
-        g_num_warmups = parse_int(optarg);
+        g_num_warmups = ParseInt(optarg);
         break;
       case 'l':
-        g_loop_size = parse_uint64(optarg);
+        g_loop_size = ParseUint64(optarg);
         break;
       case 'd':
-        g_data_size = parse_uint64(optarg).value();
+        g_data_size = ParseUint64(optarg).value();
         break;
       case 'b':
-        g_buffer_size = parse_uint64(optarg);
+        g_buffer_size = ParseUint64(optarg);
         break;
       case 'n':
-        g_num_threads = parse_uint64(optarg);
+        g_num_threads = ParseUint64(optarg);
         break;
       case 256: // --log-level
         g_log_level = optarg;
         break;
       case 'h':
-        print_usage(program_name);
+        PrintUsage(program_name);
         return 0;
       case '?':
         // getopt_long already printed an error message
         return 1;
       default:
-        print_error_and_exit(program_name, "Unknown option");
+        PrintErrorAndExit(program_name, "Unknown option");
       }
     } catch (const std::exception &e) {
-      print_error_and_exit(program_name, e.what());
+      PrintErrorAndExit(program_name, e.what());
     }
   }
 
   // Check for exactly one positional argument (the benchmark type)
   if (optind >= argc) {
-    print_error_and_exit(program_name, "Missing required argument: TYPE");
+    PrintErrorAndExit(program_name, "Missing required argument: TYPE");
   }
 
   if (optind + 1 < argc) {
-    print_error_and_exit(program_name,
-                         "Too many arguments. Expected only TYPE, got: " +
-                             std::string(argv[optind + 1]));
+    PrintErrorAndExit(program_name,
+                      "Too many arguments. Expected only TYPE, got: " +
+                          std::string(argv[optind + 1]));
   }
 
   // Get the benchmark type from the positional argument

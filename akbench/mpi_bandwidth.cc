@@ -18,7 +18,7 @@ static int g_num_iterations = 10;
 static int g_num_warmups = 3;
 static uint64_t g_data_size = 1024 * 1024; // 1MB default
 
-void print_usage(const char *program_name) {
+void PrintUsage(const char *program_name) {
   std::cout << R"(Usage: )" << program_name << R"( [OPTIONS]
 
 Ping-pong benchmark tool for measuring MPI bandwidth.
@@ -50,25 +50,25 @@ int main(int argc, char **argv) {
     try {
       switch (opt) {
       case 'i':
-        g_num_iterations = parse_int(optarg);
+        g_num_iterations = ParseInt(optarg);
         break;
       case 'w':
-        g_num_warmups = parse_int(optarg);
+        g_num_warmups = ParseInt(optarg);
         break;
       case 'd':
-        g_data_size = parse_uint64(optarg).value();
+        g_data_size = ParseUint64(optarg).value();
         break;
       case 'h':
-        print_usage(program_name);
+        PrintUsage(program_name);
         return 0;
       case '?':
         // getopt_long already printed an error message
         return 1;
       default:
-        print_error_and_exit(program_name, "Unknown option");
+        PrintErrorAndExit(program_name, "Unknown option");
       }
     } catch (const std::exception &e) {
-      print_error_and_exit(program_name, e.what());
+      PrintErrorAndExit(program_name, e.what());
     }
   }
 
