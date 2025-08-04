@@ -38,7 +38,7 @@ BenchmarkResult RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
           "Running barrier latency benchmark with {} processes, {} iterations",
           NUM_PROCESSES, loop_size));
 
-  auto run_single_benchmark = [&]() -> double {
+  auto RunSingleBenchmark = [&]() -> double {
     std::vector<int> pids;
 
     // Fork child processes (only 1 child process for 2-process barrier)
@@ -83,7 +83,7 @@ BenchmarkResult RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
   for (int i = 0; i < num_warmups; ++i) {
     AKLOG(aklog::LogLevel::DEBUG,
           std::format("Warmup iteration {}/{}", i + 1, num_warmups));
-    run_single_benchmark();
+    RunSingleBenchmark();
     SenseReversingBarrier::ClearResource(BARRIER_ID);
   }
 
@@ -92,7 +92,7 @@ BenchmarkResult RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
   for (int i = 0; i < num_iterations; ++i) {
     AKLOG(aklog::LogLevel::DEBUG,
           std::format("Measurement iteration {}/{}", i + 1, num_iterations));
-    double latency_ns = run_single_benchmark();
+    double latency_ns = RunSingleBenchmark();
     measurements.push_back(latency_ns);
     SenseReversingBarrier::ClearResource(BARRIER_ID);
   }

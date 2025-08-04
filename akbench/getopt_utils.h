@@ -10,7 +10,7 @@
 // Helper functions for parsing command line arguments with getopt_long
 
 // Parse a string to uint64_t
-inline std::optional<uint64_t> parse_uint64(const std::string &str) {
+inline std::optional<uint64_t> ParseUint64(const std::string &str) {
   if (str.empty()) {
     return std::nullopt;
   }
@@ -51,7 +51,7 @@ inline std::optional<uint64_t> parse_uint64(const std::string &str) {
 }
 
 // Parse a string to int
-inline int parse_int(const std::string &str) {
+inline int ParseInt(const std::string &str) {
   if (str.empty()) {
     throw std::invalid_argument("Empty string cannot be parsed as int");
   }
@@ -67,8 +67,8 @@ inline int parse_int(const std::string &str) {
 }
 
 // Helper to print an error message and exit
-inline void print_error_and_exit(const std::string &program_name,
-                                 const std::string &error_msg) {
+inline void PrintErrorAndExit(const std::string &program_name,
+                              const std::string &error_msg) {
   std::fprintf(stderr, "%s: %s\n", program_name.c_str(), error_msg.c_str());
   std::fprintf(stderr, "Try '%s --help' for more information.\n",
                program_name.c_str());
