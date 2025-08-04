@@ -81,18 +81,19 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     mq_close(mq);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
 
-  double bandwidth_gibps = bandwidth / (1024.0 * 1024.0 * 1024.0);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Send bandwidth: {}{}.", bandwidth_gibps,
+        std::format("Send bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", SendPrefix(-1)));
 }
 
-double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                      uint64_t buffer_size) {
+BenchmarkResult ReceiveProcess(int num_warmups, int num_iterations,
+                               uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -173,20 +174,23 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     mq_close(mq);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Receive bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", ReceivePrefix(-1)));
 
-  return bandwidth;
+  return result;
 }
 
 } // namespace
 
-double RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
-                               uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
+                                        uint64_t data_size,
+                                        uint64_t buffer_size) {
   // Remove any existing message queue
   mq_unlink(MQ_NAME.c_str());
 
@@ -221,7 +225,7 @@ double RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
     exit(0);
   } else {
     // Parent process: receiver
-    double bandwidth =
+    BenchmarkResult result =
         ReceiveProcess(num_warmups, num_iterations, data_size, max_msg_size);
     waitpid(pid, nullptr, 0);
 
@@ -229,6 +233,6 @@ double RunMqBandwidthBenchmark(int num_iterations, int num_warmups,
     mq_unlink(MQ_NAME.c_str());
     SenseReversingBarrier::ClearResource(BARRIER_ID);
 
-    return bandwidth;
+    return result;
   }
 }

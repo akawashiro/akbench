@@ -65,19 +65,20 @@ void SendProcess(int write_fd, int num_warmups, int num_iterations,
     }
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
 
-  double bandwidth_gibps = bandwidth / (1024.0 * 1024.0 * 1024.0);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Send bandwidth: {}{}.", bandwidth_gibps,
+        std::format("Send bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   close(write_fd);
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", SendPrefix(-1)));
 }
 
-double ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
-                      uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
+                               uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -143,21 +144,24 @@ double ReceiveProcess(int read_fd, int num_warmups, int num_iterations,
     }
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Receive bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   close(read_fd);
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", ReceivePrefix(-1)));
 
-  return bandwidth;
+  return result;
 }
 
 } // namespace
 
-double RunPipeBandwidthBenchmark(int num_iterations, int num_warmups,
-                                 uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult RunPipeBandwidthBenchmark(int num_iterations, int num_warmups,
+                                          uint64_t data_size,
+                                          uint64_t buffer_size) {
   int pipe_fds[2];
   if (pipe(pipe_fds) == -1) {
     AKLOG(aklog::LogLevel::FATAL, std::format("pipe: {}", strerror(errno)));
@@ -178,10 +182,10 @@ double RunPipeBandwidthBenchmark(int num_iterations, int num_warmups,
     exit(0);
   } else {
     close(write_fd);
-    double bandwidth = ReceiveProcess(read_fd, num_warmups, num_iterations,
-                                      data_size, buffer_size);
+    BenchmarkResult result = ReceiveProcess(
+        read_fd, num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
     SenseReversingBarrier::ClearResource(BARRIER_ID);
-    return bandwidth;
+    return result;
   }
 }

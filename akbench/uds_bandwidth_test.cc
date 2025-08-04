@@ -11,10 +11,10 @@ int main(int argc, char *argv[]) {
   constexpr uint64_t data_size = 256;
   constexpr uint64_t buffer_size = 256;
 
-  const double bandwidth = RunUdsBandwidthBenchmark(num_iterations, num_warmups,
-                                                    data_size, buffer_size);
+  const BenchmarkResult result = RunUdsBandwidthBenchmark(
+      num_iterations, num_warmups, data_size, buffer_size);
 
-  AKCHECK(bandwidth >= 0.0, "Bandwidth should be non-negative");
+  AKCHECK(result.average >= 0.0, "Bandwidth should be non-negative");
   AKLOG(aklog::LogLevel::INFO, "uds_bandwidth test passed");
 
   return 0;

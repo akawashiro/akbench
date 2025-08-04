@@ -1,6 +1,9 @@
 #pragma once
 
+#include "common.h"
 #include <cstdint>
 
-double RunMemcpyMtBandwidthBenchmark(int num_iterations, int num_warmups,
-                                     uint64_t data_size, uint64_t num_threads);
+BenchmarkResult RunMemcpyMtBandwidthBenchmark(int num_iterations,
+                                              int num_warmups,
+                                              uint64_t data_size,
+                                              uint64_t num_threads);

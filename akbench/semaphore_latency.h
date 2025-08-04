@@ -2,5 +2,8 @@
 
 #include <cstdint>
 
-double RunSemaphoreLatencyBenchmark(int num_iterations, int num_warmups,
-                                    uint64_t loop_size);
+#include "common.h"
+
+BenchmarkResult RunSemaphoreLatencyBenchmark(int num_iterations,
+                                             int num_warmups,
+                                             uint64_t loop_size);

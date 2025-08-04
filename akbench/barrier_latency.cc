@@ -27,8 +27,8 @@ void ChildBarrierProcess(uint64_t loop_size) {
 
 } // namespace
 
-double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
-                                  uint64_t loop_size) {
+BenchmarkResult RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
+                                           uint64_t loop_size) {
   // Clear any existing barrier resources
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
@@ -97,10 +97,14 @@ double RunBarrierLatencyBenchmark(int num_iterations, int num_warmups,
     SenseReversingBarrier::ClearResource(BARRIER_ID);
   }
 
-  // Calculate and return median latency in seconds
-  double median_latency_ns = CalculateOneTripDuration(measurements);
+  // Calculate and return latency statistics
+  BenchmarkResult result = CalculateOneTripDuration(measurements);
   AKLOG(aklog::LogLevel::DEBUG,
-        std::format("Barrier latency (median): {} ns", median_latency_ns));
+        std::format("Barrier latency (average): {} ns", result.average));
 
-  return median_latency_ns / 1e9; // Convert to seconds
+  // Convert from nanoseconds to seconds
+  result.average /= 1e9;
+  result.stddev /= 1e9;
+
+  return result;
 }

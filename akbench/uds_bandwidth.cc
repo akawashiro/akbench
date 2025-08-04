@@ -22,8 +22,8 @@ const std::string SOCKET_PATH =
 constexpr size_t DEFAULT_BUFFER_SIZE = (1 << 20);
 const std::string BARRIER_ID = GenerateUniqueName("/uds_benchmark");
 
-double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
-                      uint64_t data_size) {
+BenchmarkResult ReceiveProcess(uint64_t buffer_size, int num_warmups,
+                               int num_iterations, uint64_t data_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
 
   std::vector<double> durations;
@@ -108,12 +108,14 @@ double ReceiveProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
     }
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format(" Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format(" Receive bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
-  return bandwidth;
+  return result;
 }
 
 void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
@@ -187,14 +189,17 @@ void SendProcess(uint64_t buffer_size, int num_warmups, int num_iterations,
     close(sock_fd);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format(" Send bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format(" Send bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 }
 
-double RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
-                                uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
+                                         uint64_t data_size,
+                                         uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
 
   pid_t pid = fork();
@@ -204,9 +209,9 @@ double RunUdsBandwidthBenchmark(int num_iterations, int num_warmups,
     SendProcess(buffer_size, num_warmups, num_iterations, data_size);
     exit(0);
   } else {
-    double bandwidth =
+    BenchmarkResult result =
         ReceiveProcess(buffer_size, num_warmups, num_iterations, data_size);
     waitpid(pid, nullptr, 0);
-    return bandwidth;
+    return result;
   }
 }

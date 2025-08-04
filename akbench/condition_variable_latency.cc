@@ -53,8 +53,9 @@ void ChildFlip(std::condition_variable *parent_cv,
 
 } // namespace
 
-double RunConditionVariableLatencyBenchmark(int num_iterations, int num_warmups,
-                                            uint64_t loop_size) {
+BenchmarkResult RunConditionVariableLatencyBenchmark(int num_iterations,
+                                                     int num_warmups,
+                                                     uint64_t loop_size) {
   std::condition_variable parent_cv, child_cv;
   std::mutex parent_mutex, child_mutex;
   bool parent_ready = false, child_ready = false;

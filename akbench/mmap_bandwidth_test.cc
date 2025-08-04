@@ -11,10 +11,10 @@ int main(int argc, char *argv[]) {
   constexpr uint64_t data_size = 1024;
   constexpr uint64_t buffer_size = 1024;
 
-  const double bandwidth = RunMmapBandwidthBenchmark(
+  const BenchmarkResult result = RunMmapBandwidthBenchmark(
       num_iterations, num_warmups, data_size, buffer_size);
 
-  AKCHECK(bandwidth >= 0.0, "Bandwidth should be non-negative");
+  AKCHECK(result.average >= 0.0, "Bandwidth should be non-negative");
   AKLOG(aklog::LogLevel::INFO, "mmap_bandwidth test passed");
 
   return 0;
