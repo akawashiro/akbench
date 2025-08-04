@@ -42,63 +42,50 @@ static std::string g_log_level = "WARNING";
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
 
 void print_usage(const char *program_name) {
-  std::cout << "Usage: " << program_name << " <TYPE> [OPTIONS]\n";
-  std::cout << "\nUnified benchmark tool for measuring system performance.\n\n";
-  std::cout << "Arguments:\n";
-  std::cout
-      << "  TYPE                         Benchmark type to run (required)\n\n";
-  std::cout << "Latency Tests (measure operation latency in nanoseconds):\n";
-  std::cout << "  latency_atomic               Atomic variable synchronization "
-               "between threads\n";
-  std::cout
-      << "  latency_barrier              Thread barrier synchronization\n";
-  std::cout << "  latency_condition_variable   Condition variable wait/notify "
-               "operations\n";
-  std::cout
-      << "  latency_semaphore            Semaphore wait/post operations\n";
-  std::cout << "  latency_statfs               statfs() filesystem syscall\n";
-  std::cout << "  latency_fstatfs              fstatfs() filesystem syscall\n";
-  std::cout << "  latency_getpid               getpid() syscall\n";
-  std::cout << "  latency_all                  Run all latency benchmarks\n\n";
-  std::cout << "Bandwidth Tests (measure data transfer rate in GiByte/sec):\n";
-  std::cout << "  bandwidth_memcpy             Memory copy using memcpy()\n";
-  std::cout << "  bandwidth_memcpy_mt          Multi-threaded memory copy\n";
-  std::cout << "  bandwidth_tcp                TCP socket communication\n";
-  std::cout
-      << "  bandwidth_uds                Unix domain socket communication\n";
-  std::cout << "  bandwidth_pipe               Anonymous pipe communication\n";
-  std::cout
-      << "  bandwidth_fifo               Named pipe (FIFO) communication\n";
-  std::cout
-      << "  bandwidth_mq                 POSIX message queue communication\n";
-  std::cout
-      << "  bandwidth_mmap               Memory-mapped file communication\n";
-  std::cout << "  bandwidth_shm                Shared memory communication\n";
-  std::cout
-      << "  bandwidth_all                Run all bandwidth benchmarks\n\n";
-  std::cout << "Combined:\n";
-  std::cout << "  all                          Run all latency and bandwidth "
-               "benchmarks\n\n";
-  std::cout << "Options:\n";
-  std::cout << "  -i, --num-iterations=N       Number of measurement "
-               "iterations (min 3, default: 10)\n";
-  std::cout << "  -w, --num-warmups=N          Number of warmup iterations "
-               "(default: 3)\n";
-  std::cout << "  -l, --loop-size=N            Loop size for latency tests "
-               "(optional)\n";
-  std::cout << "  -d, --data-size=SIZE         Data size for bandwidth tests "
-               "(default: 1GB)\n";
-  std::cout << "                               Can use expressions like "
-               "\"1<<30\" for 1GB\n";
-  std::cout << "  -b, --buffer-size=SIZE       Buffer size for I/O operations "
-               "(default: 1MB)\n";
-  std::cout
-      << "                               Not applicable to memcpy benchmarks\n";
-  std::cout << "  -n, --num-threads=N          Number of threads for "
-               "bandwidth_memcpy_mt\n";
-  std::cout << "      --log-level=LEVEL        Log level: INFO, DEBUG, "
-               "WARNING, ERROR (default: WARNING)\n";
-  std::cout << "  -h, --help                   Display this help message\n";
+  std::cout << R"(Usage: )" << program_name << R"( <TYPE> [OPTIONS]
+
+Unified benchmark tool for measuring system performance.
+
+Arguments:
+  TYPE                         Benchmark type to run (required)
+
+Latency Tests (measure operation latency in nanoseconds):
+  latency_atomic               Atomic variable synchronization between threads
+  latency_barrier              Thread barrier synchronization
+  latency_condition_variable   Condition variable wait/notify operations
+  latency_semaphore            Semaphore wait/post operations
+  latency_statfs               statfs() filesystem syscall
+  latency_fstatfs              fstatfs() filesystem syscall
+  latency_getpid               getpid() syscall
+  latency_all                  Run all latency benchmarks
+
+Bandwidth Tests (measure data transfer rate in GiByte/sec):
+  bandwidth_memcpy             Memory copy using memcpy()
+  bandwidth_memcpy_mt          Multi-threaded memory copy
+  bandwidth_tcp                TCP socket communication
+  bandwidth_uds                Unix domain socket communication
+  bandwidth_pipe               Anonymous pipe communication
+  bandwidth_fifo               Named pipe (FIFO) communication
+  bandwidth_mq                 POSIX message queue communication
+  bandwidth_mmap               Memory-mapped file communication
+  bandwidth_shm                Shared memory communication
+  bandwidth_all                Run all bandwidth benchmarks
+
+Combined:
+  all                          Run all latency and bandwidth benchmarks
+
+Options:
+  -i, --num-iterations=N       Number of measurement iterations (min 3, default: 10)
+  -w, --num-warmups=N          Number of warmup iterations (default: 3)
+  -l, --loop-size=N            Loop size for latency tests (optional)
+  -d, --data-size=SIZE         Data size for bandwidth tests (default: 1GB)
+                               Can use expressions like "1<<30" for 1GB
+  -b, --buffer-size=SIZE       Buffer size for I/O operations (default: 1MB)
+                               Not applicable to memcpy benchmarks
+  -n, --num-threads=N          Number of threads for bandwidth_memcpy_mt
+      --log-level=LEVEL        Log level: INFO, DEBUG, WARNING, ERROR (default: WARNING)
+  -h, --help                   Display this help message
+)";
 }
 
 void RunLatencyBenchmarks(

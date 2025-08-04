@@ -19,16 +19,16 @@ static int g_num_warmups = 3;
 static uint64_t g_data_size = 1024 * 1024; // 1MB default
 
 void print_usage(const char *program_name) {
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
-  std::cout << "\nPing-pong benchmark tool for measuring MPI bandwidth.\n\n";
-  std::cout << "Options:\n";
-  std::cout << "  -i, --num-iterations=N   Number of measurement iterations "
-               "(min 3, default: 10)\n";
-  std::cout << "  -w, --num-warmups=N      Number of warmup iterations "
-               "(default: 3)\n";
-  std::cout << "  -d, --data-size=SIZE     Maximum message size in bytes "
-               "(default: 1MB)\n";
-  std::cout << "  -h, --help               Display this help message\n";
+  std::cout << R"(Usage: )" << program_name << R"( [OPTIONS]
+
+Ping-pong benchmark tool for measuring MPI bandwidth.
+
+Options:
+  -i, --num-iterations=N   Number of measurement iterations (min 3, default: 10)
+  -w, --num-warmups=N      Number of warmup iterations (default: 3)
+  -d, --data-size=SIZE     Maximum message size in bytes (default: 1MB)
+  -h, --help               Display this help message
+)";
 }
 
 int main(int argc, char **argv) {

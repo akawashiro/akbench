@@ -284,19 +284,18 @@ static int g_num_processes = 2;
 static int g_num_iterations = 20;
 
 void print_usage(const char *program_name) {
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n";
-  std::cout << "\nSense Reversing Barrier Test\n\n";
-  std::cout << "Options:\n";
-  std::cout << "  -t, --test-type=TYPE     Type of test to run (default: "
-               "constructor)\n";
-  std::cout << "                           Available types: constructor,\n";
-  std::cout << "                           wait_with_random_sleep, "
-               "wait_without_sleep\n";
-  std::cout << "  -p, --num-processes=N    Number of processes for wait test "
-               "(default: 2)\n";
-  std::cout << "  -i, --num-iterations=N   Number of iterations for wait test "
-               "(default: 20)\n";
-  std::cout << "  -h, --help               Display this help message\n";
+  std::cout << R"(Usage: )" << program_name << R"( [OPTIONS]
+
+Sense Reversing Barrier Test
+
+Options:
+  -t, --test-type=TYPE     Type of test to run (default: constructor)
+                           Available types: constructor,
+                           wait_with_random_sleep, wait_without_sleep
+  -p, --num-processes=N    Number of processes for wait test (default: 2)
+  -i, --num-iterations=N   Number of iterations for wait test (default: 20)
+  -h, --help               Display this help message
+)";
 }
 
 int main(int argc, char *argv[]) {
