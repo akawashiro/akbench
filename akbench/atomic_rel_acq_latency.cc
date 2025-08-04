@@ -42,7 +42,8 @@ void ChildFlip(std::atomic<bool> *child, const std::atomic<bool> &parent,
 
 } // namespace
 
-BenchmarkResult RunAtomicRelAcqLatencyBenchmark(int num_iterations, int num_warmups,
+BenchmarkResult RunAtomicRelAcqLatencyBenchmark(int num_iterations,
+                                                int num_warmups,
                                                 uint64_t loop_size) {
   std::atomic<bool> parent{false}, child{false};
 
