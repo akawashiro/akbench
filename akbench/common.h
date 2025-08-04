@@ -14,7 +14,7 @@ struct BenchmarkResult {
 
 std::vector<uint8_t> GenerateDataToSend(uint64_t data_size);
 bool VerifyDataReceived(const std::vector<uint8_t> &data, uint64_t data_size);
-BenchmarkResult CalculateBandwidth(std::vector<double> durations,
+BenchmarkResult CalculateBandwidth(const std::vector<double> &durations,
                                    int num_iterations, uint64_t data_size);
 BenchmarkResult CalculateOneTripDuration(const std::vector<double> &durations);
 std::string ReceivePrefix(int iteration);
