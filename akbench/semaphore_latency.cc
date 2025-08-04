@@ -91,8 +91,9 @@ void ChildProcess(uint64_t loop_size, int total_iterations) {
 
 } // namespace
 
-double RunSemaphoreLatencyBenchmark(int num_iterations, int num_warmups,
-                                    uint64_t loop_size) {
+BenchmarkResult RunSemaphoreLatencyBenchmark(int num_iterations,
+                                             int num_warmups,
+                                             uint64_t loop_size) {
   CleanupSemaphores();
 
   // Create semaphores before forking

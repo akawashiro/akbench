@@ -1,6 +1,8 @@
 #pragma once
 
+#include "common.h"
 #include <cstdint>
 
-double RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
-                                uint64_t data_size, uint64_t buffer_size);
+BenchmarkResult RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
+                                         uint64_t data_size,
+                                         uint64_t buffer_size);

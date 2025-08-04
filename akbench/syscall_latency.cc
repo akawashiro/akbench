@@ -12,8 +12,8 @@
 
 #include "common.h"
 
-double RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
-                                 uint64_t loop_size) {
+BenchmarkResult RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
+                                          uint64_t loop_size) {
   AKLOG(aklog::LogLevel::DEBUG,
         std::format("Running statfs benchmark with {} iterations, {} warmups, "
                     "and {} operations per iteration",
@@ -41,8 +41,8 @@ double RunStatfsLatencyBenchmark(int num_iterations, int num_warmups,
   return CalculateOneTripDuration(durations);
 }
 
-double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
-                                  uint64_t loop_size) {
+BenchmarkResult RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
+                                           uint64_t loop_size) {
   AKLOG(aklog::LogLevel::DEBUG,
         std::format("Running fstatfs benchmark with {} iterations, {} warmups, "
                     "and {} operations per iteration",
@@ -51,7 +51,7 @@ double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
   int fd = open(".", O_RDONLY);
   if (fd == -1) {
     AKLOG(aklog::LogLevel::ERROR, "Failed to open current directory");
-    return -1.0;
+    return {-1.0, 0.0};
   }
 
   std::vector<double> durations;
@@ -75,8 +75,8 @@ double RunFstatfsLatencyBenchmark(int num_iterations, int num_warmups,
   return CalculateOneTripDuration(durations);
 }
 
-double RunGetpidLatencyBenchmark(int num_iterations, int num_warmups,
-                                 uint64_t loop_size) {
+BenchmarkResult RunGetpidLatencyBenchmark(int num_iterations, int num_warmups,
+                                          uint64_t loop_size) {
   AKLOG(aklog::LogLevel::DEBUG,
         std::format("Running getpid benchmark with {} iterations, {} warmups, "
                     "and {} operations per iteration",

@@ -161,12 +161,13 @@ int main(int argc, char **argv) {
     }
   }
 
-  double bandwidth =
+  BenchmarkResult result =
       CalculateBandwidth(durations, num_iterations, 2 * data_size);
 
   if (rank == 0) {
     AKLOG(aklog::LogLevel::INFO,
-          std::format("{}{}", bandwidth / (1 << 30), GIBYTE_PER_SEC_UNIT));
+          std::format("{:.3f} ± {:.3f}{}", result.average / (1 << 30),
+                      result.stddev / (1 << 30), GIBYTE_PER_SEC_UNIT));
   }
 
   MPI_Finalize();

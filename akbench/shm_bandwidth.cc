@@ -30,8 +30,8 @@ struct SharedBuffer {
 
 void CleanupResources() { shm_unlink(SHM_NAME.c_str()); }
 
-double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
-                      uint64_t buffer_size) {
+BenchmarkResult ReceiveProcess(int num_warmups, int num_iterations,
+                               uint64_t data_size, uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   std::vector<double> durations;
 
@@ -116,12 +116,14 @@ double ReceiveProcess(int num_warmups, int num_iterations, uint64_t data_size,
     CleanupResources();
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Receive bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
-  return bandwidth;
+  return result;
 }
 
 void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
@@ -191,16 +193,19 @@ void SendProcess(int num_warmups, int num_iterations, uint64_t data_size,
     close(shm_fd);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Send bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Send bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 }
 
 } // namespace
 
-double RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
-                                uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
+                                         uint64_t data_size,
+                                         uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   CleanupResources();
 
@@ -215,9 +220,9 @@ double RunShmBandwidthBenchmark(int num_iterations, int num_warmups,
     SendProcess(num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    double bandwidth =
+    BenchmarkResult result =
         ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
-    return bandwidth;
+    return result;
   }
 }

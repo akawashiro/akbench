@@ -10,8 +10,8 @@
 
 #include "common.h"
 
-double RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
-                                   uint64_t data_size) {
+BenchmarkResult RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
+                                            uint64_t data_size) {
   std::vector<uint8_t> src = GenerateDataToSend(data_size);
   std::vector<uint8_t> dst(data_size, 0);
   std::vector<double> durations;
@@ -32,10 +32,11 @@ double RunMemcpyBandwidthBenchmark(int num_iterations, int num_warmups,
     }
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Bandwidth: {}{}", bandwidth / (1 << 30),
-                    GIBYTE_PER_SEC_UNIT));
+        std::format("Bandwidth: {:.3f} ± {:.3f}{}", result.average / (1 << 30),
+                    result.stddev / (1 << 30), GIBYTE_PER_SEC_UNIT));
 
-  return bandwidth;
+  return result;
 }

@@ -106,16 +106,19 @@ void SendProcess(const int num_warmups, const int num_iterations,
     close(fd);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Send bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Send bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", SendPrefix(-1)));
 }
 
-double ReceiveProcess(const int num_warmups, const int num_iterations,
-                      const uint64_t data_size, const uint64_t buffer_size) {
+BenchmarkResult ReceiveProcess(const int num_warmups, const int num_iterations,
+                               const uint64_t data_size,
+                               const uint64_t buffer_size) {
   SenseReversingBarrier barrier(2, BARRIER_ID);
   barrier.Wait();
   std::vector<double> durations;
@@ -199,20 +202,23 @@ double ReceiveProcess(const int num_warmups, const int num_iterations,
     close(fd);
   }
 
-  double bandwidth = CalculateBandwidth(durations, num_iterations, data_size);
+  BenchmarkResult result =
+      CalculateBandwidth(durations, num_iterations, data_size);
   AKLOG(aklog::LogLevel::INFO,
-        std::format("Receive bandwidth: {}{}.", bandwidth / (1 << 30),
+        std::format("Receive bandwidth: {:.3f} ± {:.3f}{}.",
+                    result.average / (1 << 30), result.stddev / (1 << 30),
                     GIBYTE_PER_SEC_UNIT));
 
   AKLOG(aklog::LogLevel::DEBUG, std::format("{}Exiting.", ReceivePrefix(-1)));
 
-  return bandwidth;
+  return result;
 }
 
 } // namespace
 
-double RunMmapBandwidthBenchmark(int num_iterations, int num_warmups,
-                                 uint64_t data_size, uint64_t buffer_size) {
+BenchmarkResult RunMmapBandwidthBenchmark(int num_iterations, int num_warmups,
+                                          uint64_t data_size,
+                                          uint64_t buffer_size) {
   SenseReversingBarrier::ClearResource(BARRIER_ID);
   unlink(MMAP_FILE_PATH.c_str());
 
@@ -226,10 +232,10 @@ double RunMmapBandwidthBenchmark(int num_iterations, int num_warmups,
     SendProcess(num_warmups, num_iterations, data_size, buffer_size);
     exit(0);
   } else {
-    double bandwidth =
+    BenchmarkResult result =
         ReceiveProcess(num_warmups, num_iterations, data_size, buffer_size);
     waitpid(pid, nullptr, 0);
     unlink(MMAP_FILE_PATH.c_str());
-    return bandwidth;
+    return result;
   }
 }
