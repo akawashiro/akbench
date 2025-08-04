@@ -53,7 +53,8 @@ Arguments:
 Latency Tests (measure operation latency in nanoseconds):
   latency_atomic               Atomic variable synchronization between threads
   latency_atomic_rel_acq       Atomic operations with relaxed-acquire memory ordering
-  latency_barrier              Thread barrier synchronization
+  latency_barrier              Barrier between process synchronization.
+                               We use this barrier in bandwidth tests.
   latency_condition_variable   Condition variable wait/notify operations
   latency_semaphore            Semaphore wait/post operations
   latency_statfs               statfs() filesystem syscall
@@ -70,7 +71,9 @@ Bandwidth Tests (measure data transfer rate in GiByte/sec):
   bandwidth_fifo               Named pipe (FIFO) communication
   bandwidth_mq                 POSIX message queue communication
   bandwidth_mmap               Memory-mapped file communication
-  bandwidth_shm                Shared memory communication
+                               Use double buffering.
+  bandwidth_shm                Shared memory communication.
+                               Use double buffering.
   bandwidth_all                Run all bandwidth benchmarks
 
 Combined:
