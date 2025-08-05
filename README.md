@@ -13,7 +13,7 @@ $ cmake --install build
 
 ## How to run
 ```bash
-$ If you haven't installed it, ./build/akbench/akbench all
+$ # If you haven't installed it, ./build/akbench/akbench all
 $ akbench all
 Running all latency tests:
 
