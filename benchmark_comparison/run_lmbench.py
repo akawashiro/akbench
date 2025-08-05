@@ -327,8 +327,8 @@ def run_lmbench_bw_unix(logger):
         sys.exit(1)
 
 
-def run_lmbench_lat_syscall(logger):
-    """Run lmbench lat_syscall benchmark and format results in nanoseconds"""
+def run_lmbench_lat_syscall_single(logger, syscall_type, test_file=None):
+    """Run a single lmbench lat_syscall benchmark and format results in nanoseconds"""
 
     # Path to the lat_syscall binary
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -345,7 +345,6 @@ def run_lmbench_lat_syscall(logger):
     # Command arguments
     warmup = 3
     repetitions = 10
-    syscall_type = "null"
 
     # Build command
     cmd = [
@@ -357,8 +356,14 @@ def run_lmbench_lat_syscall(logger):
         syscall_type,
     ]
 
+    # Add test file if required
+    if test_file:
+        cmd.append(test_file)
+
     logger.info(f"Running: {' '.join(cmd)}")
     logger.info(f"Syscall type: {syscall_type}")
+    if test_file:
+        logger.info(f"Test file: {test_file}")
     logger.info(f"Warmup iterations: {warmup}")
     logger.info(f"Repetitions: {repetitions}")
     logger.info("Starting benchmark...")
@@ -374,36 +379,81 @@ def run_lmbench_lat_syscall(logger):
         if not output:
             output = result.stderr.strip()
 
-        # Parse output format: "Simple syscall: 0.1310 microseconds"
-        if "Simple syscall:" in output and "microseconds" in output:
-            parts = output.split()
-            if len(parts) >= 4 and parts[0] == "Simple" and parts[1] == "syscall:":
-                latency_microseconds = float(parts[2])
+        # Parse different output formats
+        syscall_patterns = {
+            "null": ("Simple syscall:", "syscall"),
+            "read": ("Simple read:", "read"),
+            "write": ("Simple write:", "write"),
+            "stat": ("Simple stat:", "stat"),
+            "fstat": ("Simple fstat:", "fstat"),
+            "open": ("Simple open/close:", "open/close"),
+        }
 
-                # Convert microseconds to nanoseconds
-                latency_nanoseconds = latency_microseconds * 1000
+        if syscall_type in syscall_patterns:
+            pattern, display_name = syscall_patterns[syscall_type]
+            if pattern in output and "microseconds" in output:
+                parts = output.split()
+                # Find the microseconds value (should be right before "microseconds")
+                microseconds_idx = None
+                for i, part in enumerate(parts):
+                    if part == "microseconds":
+                        microseconds_idx = i - 1
+                        break
 
-                logger.info(f"Raw output: {output}")
+                if microseconds_idx is not None and microseconds_idx >= 0:
+                    latency_microseconds = float(parts[microseconds_idx])
 
-                # Final output to stdout
-                print(f"lat_syscall null: {latency_nanoseconds:.2f} ns")
+                    # Convert microseconds to nanoseconds
+                    latency_nanoseconds = latency_microseconds * 1000
 
-                return latency_nanoseconds
+                    logger.info(f"Raw output: {output}")
+
+                    # Final output to stdout
+                    print(f"lat_syscall {syscall_type}: {latency_nanoseconds:.2f} ns")
+
+                    return latency_nanoseconds
+                else:
+                    logger.error(
+                        f"Could not find microseconds value in output: {output}"
+                    )
+                    sys.exit(1)
             else:
-                logger.error(f"Could not parse output: {output}")
+                logger.error(f"Unexpected output format for {syscall_type}: {output}")
                 sys.exit(1)
         else:
-            logger.error(f"Unexpected output format: {output}")
+            logger.error(f"Unknown syscall type: {syscall_type}")
             sys.exit(1)
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error running lat_syscall: {e}")
+        logger.error(f"Error running lat_syscall {syscall_type}: {e}")
         if e.stderr:
             logger.error(f"stderr: {e.stderr}")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         sys.exit(1)
+
+
+def run_lmbench_lat_syscall(logger):
+    """Run all lmbench lat_syscall benchmarks and format results in nanoseconds"""
+
+    # List of syscalls to test
+    syscalls = [
+        ("null", None),
+        ("read", None),
+        ("write", None),
+        ("stat", "/tmp"),
+        ("fstat", "/tmp"),
+        ("open", "/tmp"),
+    ]
+
+    results = {}
+    for syscall_type, test_file in syscalls:
+        results[syscall_type] = run_lmbench_lat_syscall_single(
+            logger, syscall_type, test_file
+        )
+
+    return results
 
 
 if __name__ == "__main__":
