@@ -79,4 +79,4 @@ jobs:
     - name: Test Gloo benchmark script
       run: |
         cd benchmark_comparison
-        ./gloo_benchmark.sh --log-level INFO --data-size=1048576 --num-iterations=2 --num-warmups=1
+        ./gloo_benchmark.sh --log-level INFO --data-size=1048576
