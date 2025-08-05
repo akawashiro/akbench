@@ -210,8 +210,88 @@ def run_lmbench_bw_pipe():
         sys.exit(1)
 
 
+def run_lmbench_bw_unix():
+    """Run lmbench bw_unix benchmark and format results in GiB/s"""
+
+    # Path to the bw_unix binary
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    bw_unix_path = os.path.join(
+        script_dir, "lmbench", "bin", "x86_64-linux-gnu", "bw_unix"
+    )
+
+    # Check if binary exists
+    if not os.path.isfile(bw_unix_path):
+        logger.error(f"bw_unix binary not found at {bw_unix_path}")
+        logger.error("Please run setup_lmbench.sh first to build lmbench")
+        sys.exit(1)
+
+    # Command arguments
+    warmup = 3
+    repetitions = 10
+    data_size = 1 << 30  # 1 GiB
+
+    # Build command
+    cmd = [
+        bw_unix_path,
+        "-W",
+        str(warmup),
+        "-N",
+        str(repetitions),
+        "-M",
+        str(data_size),
+    ]
+
+    logger.info(f"Running: {' '.join(cmd)}")
+    logger.info(f"Data size: {data_size / (1 << 30):.2f} GiB")
+    logger.info(f"Warmup iterations: {warmup}")
+    logger.info(f"Repetitions: {repetitions}")
+    logger.info("Starting benchmark...")
+
+    try:
+        # Run the command
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        logger.info("Benchmark completed, parsing results...")
+
+        # Check both stdout and stderr for output
+        output = result.stdout.strip()
+        if not output:
+            output = result.stderr.strip()
+
+        # Parse output format: "AF_UNIX sock stream bandwidth: 1234.56 MB/sec"
+        if "AF_UNIX sock stream bandwidth:" in output:
+            parts = output.split()
+            if len(parts) >= 6 and parts[-1] == "MB/sec":
+                bandwidth_mb_s = float(parts[-2])
+
+                # Convert MB/s to GiB/s (1 MB = 10^6 bytes, 1 GiB = 2^30 bytes)
+                bandwidth_gib_s = bandwidth_mb_s * 1e6 / (1 << 30)
+
+                logger.info(f"Raw output: {output}")
+
+                # Final output to stdout
+                print(f"bw_unix: {bandwidth_gib_s:.2f} GiB/s")
+
+                return bandwidth_gib_s
+            else:
+                logger.error(f"Could not parse output: {output}")
+                sys.exit(1)
+        else:
+            logger.error(f"Unexpected output format: {output}")
+            sys.exit(1)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running bw_unix: {e}")
+        if e.stderr:
+            logger.error(f"stderr: {e.stderr}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    # Run both benchmarks
+    # Run all benchmarks
     logger.info("Running lmbench bandwidth benchmarks...")
 
     # Run bw_mem benchmark
@@ -219,3 +299,6 @@ if __name__ == "__main__":
 
     # Run bw_pipe benchmark
     run_lmbench_bw_pipe()
+
+    # Run bw_unix benchmark
+    run_lmbench_bw_unix()
