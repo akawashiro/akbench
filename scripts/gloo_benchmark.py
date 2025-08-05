@@ -1,15 +1,18 @@
-import torch
-import torch.distributed as dist
 import argparse
-import time
 import logging
 import os
+import time
+
+import torch
+import torch.distributed as dist
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
 console_handler = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s', datefmt='%H:%M:%S')
+formatter = logging.Formatter(
+    "%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s", datefmt="%H:%M:%S"
+)
 console_handler.setFormatter(formatter)
 
 _logger.addHandler(console_handler)
@@ -29,7 +32,9 @@ def run(rank, world_size, data_size):
     measure_iterations = 10
 
     if rank == 0:
-        _logger.info(f"Data size: {data_size_bytes} bytes ({data_size_bytes / (1024**3):.3f} GiB)")
+        _logger.info(
+            f"Data size: {data_size_bytes} bytes ({data_size_bytes / (1024**3):.3f} GiB)"
+        )
         _logger.info("Starting warm-up phase...")
 
         times = []
@@ -45,7 +50,9 @@ def run(rank, world_size, data_size):
             if i >= warmup_iterations:
                 elapsed_time = end_time - start_time
                 times.append(elapsed_time)
-                _logger.info(f"Rank {rank}: Iteration {i} took {elapsed_time:.6f} seconds.")
+                _logger.info(
+                    f"Rank {rank}: Iteration {i} took {elapsed_time:.6f} seconds."
+                )
 
         average_time = sum(times) / len(times)
         bandwidth = (data_size_bytes * 2) / average_time
@@ -57,22 +64,30 @@ def run(rank, world_size, data_size):
             dist.recv(tensor, src=0)
             _logger.info(f"Rank {rank}: Sending tensor to rank 0.")
             dist.send(tensor, dst=0)
-    
+
     _logger.info(f"Rank {rank}: Destroying process group.")
     dist.destroy_process_group()
     _logger.info(f"Rank {rank}: Process group destroyed.")
+
 
 def main():
     """
     Parses arguments and provides instructions for running the script.
     """
-    parser = argparse.ArgumentParser(description="Measure send/recv bandwidth using torch.distributed.")
-    parser.add_argument("--data_size", type=int, default=1024**3,
-                        help="Size of data to send/recv in bytes. Default is 1GiByte.")
+    parser = argparse.ArgumentParser(
+        description="Measure send/recv bandwidth using torch.distributed."
+    )
+    parser.add_argument(
+        "--data_size",
+        type=int,
+        default=1024**3,
+        help="Size of data to send/recv in bytes. Default is 1GiByte.",
+    )
     args = parser.parse_args()
     world_size = 2
     local_rank = int(os.environ["LOCAL_RANK"])
     run(rank=local_rank, world_size=world_size, data_size=args.data_size)
+
 
 if __name__ == "__main__":
     main()
