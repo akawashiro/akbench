@@ -56,7 +56,7 @@ def setup_argument_parser():
     )
 
     parser.add_argument(
-        "--data_size",
+        "--data-size",
         type=int,
         default=1024**3,
         help="Size of data to send/recv in bytes. Default is 1GiByte.",
