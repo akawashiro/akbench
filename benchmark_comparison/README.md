@@ -17,6 +17,13 @@ lat_syscall open: 1976.90 ns
 lat_sem: 1220.70 ns
 ```
 
+## Send/Recv using gloo
+```
+$ ./gloo_benchmark.sh
+...
+gloo_bandwidth: 5.75 GiB/s
+```
+
 ## perf bench
 
 ```
