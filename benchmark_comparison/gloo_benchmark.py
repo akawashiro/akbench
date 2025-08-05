@@ -61,7 +61,7 @@ def setup_argument_parser():
         default=1024**3,
         help="Size of data to send/recv in bytes. Default is 1GiByte.",
     )
-    
+
     parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -93,11 +93,11 @@ def setup_logging(log_level):
 
 def run_gloo_benchmark(logger, data_size):
     """Run Gloo bandwidth benchmark and format results in GiB/s"""
-    
+
     # Get rank and world size from environment
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     world_size = 2
-    
+
     logger.info(f"Rank {local_rank}: Initializing process group.")
     dist.init_process_group("gloo", rank=local_rank, world_size=world_size)
     logger.info(f"Rank {local_rank}: Process group initialized successfully.")
@@ -134,18 +134,18 @@ def run_gloo_benchmark(logger, data_size):
                 )
 
         logger.info("Benchmark completed, calculating results...")
-        
+
         average_time = sum(times) / len(times)
         # Multiply by 2 because we send and receive (round trip)
         bandwidth_bytes_per_sec = (data_size_bytes * 2) / average_time
         # Convert to GiB/s (1 GiB = 2^30 bytes)
         bandwidth_gib_s = bandwidth_bytes_per_sec / (1 << 30)
-        
+
         logger.info(f"Raw result: {bandwidth_gib_s:.6f} GiB/s")
-        
+
         # Final output to stdout in the same format as lmbench
         print(f"gloo_bandwidth: {bandwidth_gib_s:.2f} GiB/s")
-        
+
         result = bandwidth_gib_s
 
     elif local_rank == 1:
@@ -154,13 +154,13 @@ def run_gloo_benchmark(logger, data_size):
             dist.recv(tensor, src=0)
             logger.info(f"Rank {local_rank}: Sending tensor to rank 0.")
             dist.send(tensor, dst=0)
-            
+
         result = None
 
     logger.info(f"Rank {local_rank}: Destroying process group.")
     dist.destroy_process_group()
     logger.info(f"Rank {local_rank}: Process group destroyed.")
-    
+
     return result
 
 
@@ -175,15 +175,19 @@ def main():
 
     # Check if we're running in distributed mode
     if "LOCAL_RANK" not in os.environ:
-        logger.error("LOCAL_RANK environment variable not set. Please use torchrun to launch this script.")
-        logger.error("Example: torchrun --nproc_per_node=2 --nnodes=1 gloo_benchmark.py")
+        logger.error(
+            "LOCAL_RANK environment variable not set. Please use torchrun to launch this script."
+        )
+        logger.error(
+            "Example: torchrun --nproc_per_node=2 --nnodes=1 gloo_benchmark.py"
+        )
         sys.exit(1)
 
     try:
         # Run the benchmark
         logger.info("Running Gloo bandwidth benchmark...")
         run_gloo_benchmark(logger, args.data_size)
-        
+
     except Exception as e:
         logger.error(f"Error running Gloo benchmark: {e}")
         sys.exit(1)
