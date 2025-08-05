@@ -108,7 +108,7 @@ def run_lmbench_bw_mem():
                 logger.info(f"Raw output: {last_line}")
 
                 # Final output to stdout
-                print(f"{bandwidth_gib_s:.2f} GiB/s")
+                print(f"bw_mem cp: {bandwidth_gib_s:.2f} GiB/s")
 
                 return bandwidth_gib_s
             else:
