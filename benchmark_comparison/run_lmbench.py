@@ -327,6 +327,85 @@ def run_lmbench_bw_unix(logger):
         sys.exit(1)
 
 
+def run_lmbench_lat_syscall(logger):
+    """Run lmbench lat_syscall benchmark and format results in nanoseconds"""
+
+    # Path to the lat_syscall binary
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    lat_syscall_path = os.path.join(
+        script_dir, "lmbench", "bin", "x86_64-linux-gnu", "lat_syscall"
+    )
+
+    # Check if binary exists
+    if not os.path.isfile(lat_syscall_path):
+        logger.error(f"lat_syscall binary not found at {lat_syscall_path}")
+        logger.error("Please run setup_lmbench.sh first to build lmbench")
+        sys.exit(1)
+
+    # Command arguments
+    warmup = 3
+    repetitions = 10
+    syscall_type = "null"
+
+    # Build command
+    cmd = [
+        lat_syscall_path,
+        "-W",
+        str(warmup),
+        "-N",
+        str(repetitions),
+        syscall_type,
+    ]
+
+    logger.info(f"Running: {' '.join(cmd)}")
+    logger.info(f"Syscall type: {syscall_type}")
+    logger.info(f"Warmup iterations: {warmup}")
+    logger.info(f"Repetitions: {repetitions}")
+    logger.info("Starting benchmark...")
+
+    try:
+        # Run the command
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        logger.info("Benchmark completed, parsing results...")
+
+        # Check both stdout and stderr for output
+        output = result.stdout.strip()
+        if not output:
+            output = result.stderr.strip()
+
+        # Parse output format: "Simple syscall: 0.1310 microseconds"
+        if "Simple syscall:" in output and "microseconds" in output:
+            parts = output.split()
+            if len(parts) >= 4 and parts[0] == "Simple" and parts[1] == "syscall:":
+                latency_microseconds = float(parts[2])
+
+                # Convert microseconds to nanoseconds
+                latency_nanoseconds = latency_microseconds * 1000
+
+                logger.info(f"Raw output: {output}")
+
+                # Final output to stdout
+                print(f"lat_syscall null: {latency_nanoseconds:.2f} ns")
+
+                return latency_nanoseconds
+            else:
+                logger.error(f"Could not parse output: {output}")
+                sys.exit(1)
+        else:
+            logger.error(f"Unexpected output format: {output}")
+            sys.exit(1)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running lat_syscall: {e}")
+        if e.stderr:
+            logger.error(f"stderr: {e.stderr}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     # Parse command line arguments
     parser = setup_argument_parser()
@@ -336,13 +415,12 @@ if __name__ == "__main__":
     logger = setup_logging(args.log_level)
 
     # Run all benchmarks
-    logger.info("Running lmbench bandwidth benchmarks...")
+    logger.info("Running lmbench benchmarks...")
 
-    # Run bw_mem benchmark
+    # Run bandwidth benchmarks
     run_lmbench_bw_mem(logger)
-
-    # Run bw_pipe benchmark
     run_lmbench_bw_pipe(logger)
-
-    # Run bw_unix benchmark
     run_lmbench_bw_unix(logger)
+
+    # Run latency benchmarks
+    run_lmbench_lat_syscall(logger)
