@@ -456,6 +456,89 @@ def run_lmbench_lat_syscall(logger):
     return results
 
 
+def run_lmbench_lat_sem(logger):
+    """Run lmbench lat_sem benchmark and format results in nanoseconds"""
+
+    # Path to the lat_sem binary
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    lat_sem_path = os.path.join(
+        script_dir, "lmbench", "bin", "x86_64-linux-gnu", "lat_sem"
+    )
+
+    # Check if binary exists
+    if not os.path.isfile(lat_sem_path):
+        logger.error(f"lat_sem binary not found at {lat_sem_path}")
+        logger.error("Please run setup_lmbench.sh first to build lmbench")
+        sys.exit(1)
+
+    # Command arguments
+    warmup = 3
+    repetitions = 10
+
+    # Build command
+    cmd = [
+        lat_sem_path,
+        "-W",
+        str(warmup),
+        "-N",
+        str(repetitions),
+    ]
+
+    logger.info(f"Running: {' '.join(cmd)}")
+    logger.info(f"Warmup iterations: {warmup}")
+    logger.info(f"Repetitions: {repetitions}")
+    logger.info("Starting benchmark...")
+
+    try:
+        # Run the command
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        logger.info("Benchmark completed, parsing results...")
+
+        # Check both stdout and stderr for output
+        output = result.stdout.strip()
+        if not output:
+            output = result.stderr.strip()
+
+        # Parse output format: "Semaphore latency: 1.2366 microseconds"
+        if "Semaphore latency:" in output and "microseconds" in output:
+            parts = output.split()
+            # Find the microseconds value (should be right before "microseconds")
+            microseconds_idx = None
+            for i, part in enumerate(parts):
+                if part == "microseconds":
+                    microseconds_idx = i - 1
+                    break
+
+            if microseconds_idx is not None and microseconds_idx >= 0:
+                latency_microseconds = float(parts[microseconds_idx])
+
+                # Convert microseconds to nanoseconds
+                latency_nanoseconds = latency_microseconds * 1000
+
+                logger.info(f"Raw output: {output}")
+
+                # Final output to stdout
+                print(f"lat_sem: {latency_nanoseconds:.2f} ns")
+
+                return latency_nanoseconds
+            else:
+                logger.error(f"Could not find microseconds value in output: {output}")
+                sys.exit(1)
+        else:
+            logger.error(f"Unexpected output format: {output}")
+            sys.exit(1)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running lat_sem: {e}")
+        if e.stderr:
+            logger.error(f"stderr: {e.stderr}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     # Parse command line arguments
     parser = setup_argument_parser()
@@ -474,3 +557,4 @@ if __name__ == "__main__":
 
     # Run latency benchmarks
     run_lmbench_lat_syscall(logger)
+    run_lmbench_lat_sem(logger)

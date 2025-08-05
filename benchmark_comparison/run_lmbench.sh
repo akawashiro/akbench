@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux pipefail
+set -eux -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LMBENCH_DIR="$SCRIPT_DIR/lmbench"
