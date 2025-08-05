@@ -75,7 +75,7 @@ jobs:
     - name: Test LMbench benchmark script
       run: |
         cd benchmark_comparison
-        ./run_lmbench.sh --log-level INFO
+        ./run_lmbench.sh --log-level INFO --data-size=1M --num-iterations=3 --num-warmups=1
     - name: Test Gloo benchmark script
       run: |
         cd benchmark_comparison

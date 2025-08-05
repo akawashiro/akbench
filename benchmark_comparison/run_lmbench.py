@@ -60,6 +60,27 @@ Log levels:
         help="Set the logging level (default: WARNING)",
     )
 
+    parser.add_argument(
+        "--data-size",
+        type=str,
+        default="1G",
+        help="Data size for bandwidth benchmarks (default: 1G). Supports suffixes: K/M/G for KB/MB/GB",
+    )
+
+    parser.add_argument(
+        "--num-iterations",
+        type=int,
+        default=10,
+        help="Number of benchmark iterations (default: 10)",
+    )
+
+    parser.add_argument(
+        "--num-warmups",
+        type=int,
+        default=3,
+        help="Number of warmup iterations (default: 3)",
+    )
+
     return parser
 
 
@@ -82,7 +103,22 @@ def setup_logging(log_level):
     return logger
 
 
-def run_lmbench_bw_mem(logger):
+def parse_data_size(size_str):
+    """Parse data size string with K/M/G suffixes into bytes"""
+    size_str = size_str.upper().strip()
+
+    if size_str.endswith("K"):
+        return int(size_str[:-1]) * 1024
+    elif size_str.endswith("M"):
+        return int(size_str[:-1]) * 1024 * 1024
+    elif size_str.endswith("G"):
+        return int(size_str[:-1]) * 1024 * 1024 * 1024
+    else:
+        # Assume it's already in bytes
+        return int(size_str)
+
+
+def run_lmbench_bw_mem(logger, data_size=1 << 30, num_warmups=3, num_iterations=10):
     """Run lmbench bw_mem benchmark and format results in GiB/s"""
 
     # Path to the bw_mem binary
@@ -98,9 +134,8 @@ def run_lmbench_bw_mem(logger):
         sys.exit(1)
 
     # Command arguments
-    warmup = 3
-    repetitions = 10
-    data_size = 1 << 30  # 1 GiB
+    warmup = num_warmups
+    repetitions = num_iterations
     operation = "cp"
 
     # Build command
@@ -167,7 +202,7 @@ def run_lmbench_bw_mem(logger):
         sys.exit(1)
 
 
-def run_lmbench_bw_pipe(logger):
+def run_lmbench_bw_pipe(logger, data_size=1 << 30, num_warmups=3, num_iterations=10):
     """Run lmbench bw_pipe benchmark and format results in GiB/s"""
 
     # Path to the bw_pipe binary
@@ -183,9 +218,8 @@ def run_lmbench_bw_pipe(logger):
         sys.exit(1)
 
     # Command arguments
-    warmup = 3
-    repetitions = 10
-    data_size = 1 << 30  # 1 GiB
+    warmup = num_warmups
+    repetitions = num_iterations
 
     # Build command
     cmd = [
@@ -247,7 +281,7 @@ def run_lmbench_bw_pipe(logger):
         sys.exit(1)
 
 
-def run_lmbench_bw_unix(logger):
+def run_lmbench_bw_unix(logger, data_size=1 << 30, num_warmups=3, num_iterations=10):
     """Run lmbench bw_unix benchmark and format results in GiB/s"""
 
     # Path to the bw_unix binary
@@ -263,9 +297,8 @@ def run_lmbench_bw_unix(logger):
         sys.exit(1)
 
     # Command arguments
-    warmup = 3
-    repetitions = 10
-    data_size = 1 << 30  # 1 GiB
+    warmup = num_warmups
+    repetitions = num_iterations
 
     # Build command
     cmd = [
@@ -327,7 +360,9 @@ def run_lmbench_bw_unix(logger):
         sys.exit(1)
 
 
-def run_lmbench_lat_syscall_single(logger, syscall_type, test_file=None):
+def run_lmbench_lat_syscall_single(
+    logger, syscall_type, test_file=None, num_warmups=3, num_iterations=10
+):
     """Run a single lmbench lat_syscall benchmark and format results in nanoseconds"""
 
     # Path to the lat_syscall binary
@@ -343,8 +378,8 @@ def run_lmbench_lat_syscall_single(logger, syscall_type, test_file=None):
         sys.exit(1)
 
     # Command arguments
-    warmup = 3
-    repetitions = 10
+    warmup = num_warmups
+    repetitions = num_iterations
 
     # Build command
     cmd = [
@@ -434,7 +469,7 @@ def run_lmbench_lat_syscall_single(logger, syscall_type, test_file=None):
         sys.exit(1)
 
 
-def run_lmbench_lat_syscall(logger):
+def run_lmbench_lat_syscall(logger, num_warmups=3, num_iterations=10):
     """Run all lmbench lat_syscall benchmarks and format results in nanoseconds"""
 
     # List of syscalls to test
@@ -450,13 +485,13 @@ def run_lmbench_lat_syscall(logger):
     results = {}
     for syscall_type, test_file in syscalls:
         results[syscall_type] = run_lmbench_lat_syscall_single(
-            logger, syscall_type, test_file
+            logger, syscall_type, test_file, num_warmups, num_iterations
         )
 
     return results
 
 
-def run_lmbench_lat_sem(logger):
+def run_lmbench_lat_sem(logger, num_warmups=3, num_iterations=10):
     """Run lmbench lat_sem benchmark and format results in nanoseconds"""
 
     # Path to the lat_sem binary
@@ -472,8 +507,8 @@ def run_lmbench_lat_sem(logger):
         sys.exit(1)
 
     # Command arguments
-    warmup = 3
-    repetitions = 10
+    warmup = num_warmups
+    repetitions = num_iterations
 
     # Build command
     cmd = [
@@ -547,14 +582,21 @@ if __name__ == "__main__":
     # Setup logging with specified level
     logger = setup_logging(args.log_level)
 
+    # Parse data size
+    data_size = parse_data_size(args.data_size)
+    num_iterations = args.num_iterations
+    num_warmups = args.num_warmups
+
     # Run all benchmarks
     logger.info("Running lmbench benchmarks...")
+    logger.info(f"Data size: {data_size} bytes ({data_size / (1<<20):.1f} MiB)")
+    logger.info(f"Iterations: {num_iterations}, Warmups: {num_warmups}")
 
     # Run bandwidth benchmarks
-    run_lmbench_bw_mem(logger)
-    run_lmbench_bw_pipe(logger)
-    run_lmbench_bw_unix(logger)
+    run_lmbench_bw_mem(logger, data_size, num_warmups, num_iterations)
+    run_lmbench_bw_pipe(logger, data_size, num_warmups, num_iterations)
+    run_lmbench_bw_unix(logger, data_size, num_warmups, num_iterations)
 
     # Run latency benchmarks
-    run_lmbench_lat_syscall(logger)
-    run_lmbench_lat_sem(logger)
+    run_lmbench_lat_syscall(logger, num_warmups, num_iterations)
+    run_lmbench_lat_sem(logger, num_warmups, num_iterations)
