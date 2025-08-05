@@ -59,3 +59,24 @@ jobs:
         test -f /tmp/akbench_install/bin/akbench
         /tmp/akbench_install/bin/akbench --help
         /tmp/akbench_install/bin/akbench latency_atomic --num-iterations=3 --num-warmups=1
+  benchmark-comparison-test:
+    name: Benchmark comparison scripts
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3 python3-pip python3-venv git libtirpc-dev openmpi-bin libopenmpi-dev
+        pip3 install --upgrade pip torch
+    - name: Test LMbench benchmark script
+      run: |
+        cd benchmark_comparison
+        ./run_lmbench.sh --log-level INFO --data-size=1M --num-iterations=3 --num-warmups=1
+    - name: Test Gloo benchmark script
+      run: |
+        cd benchmark_comparison
+        ./gloo_benchmark.sh --log-level INFO --data-size=1048576
