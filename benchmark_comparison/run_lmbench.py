@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import logging
 import os
 import subprocess
@@ -37,15 +38,51 @@ class AklogFormatter(logging.Formatter):
         return f"{level_char}{timestamp} {pid}  {thread_id} {filename}:{record.lineno}] {record.getMessage()}"
 
 
-# Configure logging with custom formatter
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stderr)
-handler.setFormatter(AklogFormatter())
-logger.addHandler(handler)
+def setup_argument_parser():
+    """Setup command line argument parser"""
+    parser = argparse.ArgumentParser(
+        description="Run lmbench bandwidth benchmarks and output results in GiB/s",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Log levels:
+  DEBUG    - Detailed debug information
+  INFO     - General information about benchmark progress  
+  WARNING  - Warning messages (default)
+  ERROR    - Error messages only
+  CRITICAL - Critical errors only
+        """.strip(),
+    )
+
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="WARNING",
+        help="Set the logging level (default: WARNING)",
+    )
+
+    return parser
 
 
-def run_lmbench_bw_mem():
+def setup_logging(log_level):
+    """Configure logging with custom formatter"""
+    logger = logging.getLogger(__name__)
+
+    # Clear any existing handlers
+    logger.handlers.clear()
+
+    # Set log level
+    numeric_level = getattr(logging, log_level.upper())
+    logger.setLevel(numeric_level)
+
+    # Create handler with custom formatter
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(AklogFormatter())
+    logger.addHandler(handler)
+
+    return logger
+
+
+def run_lmbench_bw_mem(logger):
     """Run lmbench bw_mem benchmark and format results in GiB/s"""
 
     # Path to the bw_mem binary
@@ -130,7 +167,7 @@ def run_lmbench_bw_mem():
         sys.exit(1)
 
 
-def run_lmbench_bw_pipe():
+def run_lmbench_bw_pipe(logger):
     """Run lmbench bw_pipe benchmark and format results in GiB/s"""
 
     # Path to the bw_pipe binary
@@ -210,7 +247,7 @@ def run_lmbench_bw_pipe():
         sys.exit(1)
 
 
-def run_lmbench_bw_unix():
+def run_lmbench_bw_unix(logger):
     """Run lmbench bw_unix benchmark and format results in GiB/s"""
 
     # Path to the bw_unix binary
@@ -291,14 +328,21 @@ def run_lmbench_bw_unix():
 
 
 if __name__ == "__main__":
+    # Parse command line arguments
+    parser = setup_argument_parser()
+    args = parser.parse_args()
+
+    # Setup logging with specified level
+    logger = setup_logging(args.log_level)
+
     # Run all benchmarks
     logger.info("Running lmbench bandwidth benchmarks...")
 
     # Run bw_mem benchmark
-    run_lmbench_bw_mem()
+    run_lmbench_bw_mem(logger)
 
     # Run bw_pipe benchmark
-    run_lmbench_bw_pipe()
+    run_lmbench_bw_pipe(logger)
 
     # Run bw_unix benchmark
-    run_lmbench_bw_unix()
+    run_lmbench_bw_unix(logger)
