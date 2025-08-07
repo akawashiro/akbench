@@ -17,28 +17,29 @@ $ # If you haven't installed it, ./build/akbench/akbench all
 $ akbench all
 Running all latency tests:
 
-latency_atomic: 33.579 ns
-latency_barrier: 1330.162 ns
-latency_condition_variable: 4032.889 ns
-latency_semaphore: 3711.238 ns
-latency_statfs: 1268.495 ns
-latency_fstatfs: 843.146 ns
-latency_getpid: 122.230 ns
+latency_atomic: 30.603 ± 7.456 ns
+latency_atomic_rel_acq: 28.425 ± 6.766 ns
+latency_barrier: 1207.463 ± 501.146 ns
+latency_condition_variable: 3154.424 ± 707.784 ns
+latency_semaphore: 2962.199 ± 681.565 ns
+latency_statfs: 1008.512 ± 225.512 ns
+latency_fstatfs: 664.642 ± 148.630 ns
+latency_getpid: 95.559 ± 21.436 ns
 
 Running all bandwidth tests:
 
-bandwidth_memcpy: 17.264 GiByte/sec
-bandwidth_memcpy_mt (1 threads): 17.324 GiByte/sec
-bandwidth_memcpy_mt (2 threads): 17.719 GiByte/sec
-bandwidth_memcpy_mt (3 threads): 18.491 GiByte/sec
-bandwidth_memcpy_mt (4 threads): 18.263 GiByte/sec
-bandwidth_tcp: 4.651 GiByte/sec
-bandwidth_uds: 6.320 GiByte/sec
-bandwidth_pipe: 2.041 GiByte/sec
-bandwidth_fifo: 2.049 GiByte/sec
-bandwidth_mq: 1.676 GiByte/sec
-bandwidth_mmap: 10.446 GiByte/sec
-bandwidth_shm: 10.452 GiByte/sec
+bandwidth_memcpy: 17.957 ± 0.440 GiByte/sec
+bandwidth_memcpy_mt (1 threads): 17.916 ± 0.144 GiByte/sec
+bandwidth_memcpy_mt (2 threads): 18.394 ± 0.189 GiByte/sec
+bandwidth_memcpy_mt (3 threads): 19.081 ± 0.356 GiByte/sec
+bandwidth_memcpy_mt (4 threads): 18.730 ± 0.563 GiByte/sec
+bandwidth_tcp: 4.914 ± 0.395 GiByte/sec
+bandwidth_uds: 6.684 ± 0.731 GiByte/sec
+bandwidth_pipe: 2.143 ± 0.021 GiByte/sec
+bandwidth_fifo: 2.100 ± 0.035 GiByte/sec
+bandwidth_mq: 1.758 ± 0.021 GiByte/sec
+bandwidth_mmap: 10.238 ± 0.120 GiByte/sec
+bandwidth_shm: 10.470 ± 0.185 GiByte/sec
 ```
 
 ## Machine information
