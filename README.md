@@ -1,5 +1,7 @@
 # akbench
 
+`akbench` is a microbenchmark suite for measuring the performance of system calls, memory operations, and inter-process communication (IPC) mechanisms.
+
 ## How to build and install
 You need `cmake`, `git`, and `clang++` (upper than 18) or `g++` (upper than 14) to build this project.
 
@@ -40,6 +42,58 @@ bandwidth_fifo: 2.100 ± 0.035 GiByte/sec
 bandwidth_mq: 1.758 ± 0.021 GiByte/sec
 bandwidth_mmap: 10.238 ± 0.120 GiByte/sec
 bandwidth_shm: 10.470 ± 0.185 GiByte/sec
+```
+
+## Usage
+```
+$ akbench --help
+Usage: akbench <TYPE> [OPTIONS]
+
+Unified benchmark tool for measuring system performance.
+
+Arguments:
+  TYPE                         Benchmark type to run (required)
+
+Latency Tests (measure operation latency in nanoseconds):
+  latency_atomic               Atomic variable synchronization between threads
+  latency_atomic_rel_acq       Atomic operations with relaxed-acquire memory ordering
+  latency_barrier              Barrier between process synchronization.
+                               We use this barrier in bandwidth tests.
+  latency_condition_variable   Condition variable wait/notify operations
+  latency_semaphore            Semaphore wait/post operations
+  latency_statfs               statfs() filesystem syscall
+  latency_fstatfs              fstatfs() filesystem syscall
+  latency_getpid               getpid() syscall
+  latency_all                  Run all latency benchmarks
+
+Bandwidth Tests (measure data transfer rate in GiByte/sec):
+  bandwidth_memcpy             Memory copy using memcpy()
+  bandwidth_memcpy_mt          Multi-threaded memory copy
+  bandwidth_tcp                TCP socket communication
+  bandwidth_uds                Unix domain socket communication
+  bandwidth_pipe               Anonymous pipe communication
+  bandwidth_fifo               Named pipe (FIFO) communication
+  bandwidth_mq                 POSIX message queue communication
+  bandwidth_mmap               Memory-mapped file communication
+                               Use double buffering.
+  bandwidth_shm                Shared memory communication.
+                               Use double buffering.
+  bandwidth_all                Run all bandwidth benchmarks
+
+Combined:
+  all                          Run all latency and bandwidth benchmarks
+
+Options:
+  -i, --num-iterations=N       Number of measurement iterations (default: 10)
+  -w, --num-warmups=N          Number of warmup iterations (default: 3)
+  -l, --loop-size=N            Loop size for latency tests
+                               The default value varies depending on the test.
+  -d, --data-size=SIZE         Data size in bytes for bandwidth tests (default: 1GB)
+  -b, --buffer-size=SIZE       Buffer size in bytes for I/O operations (default: 1MB)
+                               Not applicable to memcpy benchmarks
+  -n, --num-threads=N          Number of threads for bandwidth_memcpy_mt
+      --log-level=LEVEL        Log level: INFO, DEBUG, WARNING, ERROR (default: WARNING)
+  -h, --help                   Display this help message
 ```
 
 ## Machine information
