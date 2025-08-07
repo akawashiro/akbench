@@ -1,5 +1,7 @@
 # akbench
 
+`akbench` is a microbenchmark suite for measuring the performance of system calls, memory operations, and inter-process communication (IPC) mechanisms.
+
 ## How to build and install
 You need `cmake`, `git`, and clang++ (upper than 18) or g++ (upper than 14) to build this project.
 
