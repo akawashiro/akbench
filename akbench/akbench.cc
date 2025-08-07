@@ -80,12 +80,12 @@ Combined:
   all                          Run all latency and bandwidth benchmarks
 
 Options:
-  -i, --num-iterations=N       Number of measurement iterations (min 3, default: 10)
+  -i, --num-iterations=N       Number of measurement iterations (default: 10)
   -w, --num-warmups=N          Number of warmup iterations (default: 3)
-  -l, --loop-size=N            Loop size for latency tests (optional)
-  -d, --data-size=SIZE         Data size for bandwidth tests (default: 1GB)
-                               Can use expressions like "1<<30" for 1GB
-  -b, --buffer-size=SIZE       Buffer size for I/O operations (default: 1MB)
+  -l, --loop-size=N            Loop size for latency tests
+                               The default value varies depending on the test.
+  -d, --data-size=SIZE         Data size in bytes for bandwidth tests (default: 1GB)
+  -b, --buffer-size=SIZE       Buffer size in bytes for I/O operations (default: 1MB)
                                Not applicable to memcpy benchmarks
   -n, --num-threads=N          Number of threads for bandwidth_memcpy_mt
       --log-level=LEVEL        Log level: INFO, DEBUG, WARNING, ERROR (default: WARNING)
