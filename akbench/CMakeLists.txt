@@ -122,7 +122,9 @@ if(AKBENCH_ENABLE_MPI)
   find_package(MPI REQUIRED COMPONENTS CXX)
   add_executable(mpi_bandwidth mpi_bandwidth.cc)
   target_link_libraries(mpi_bandwidth PRIVATE MPI::MPI_CXX ${AKBENCH_LIBS})
-  add_test(NAME mpi_bandwidth_test COMMAND mpirun -np 2 ${CMAKE_CURRENT_BINARY_DIR}/mpi_bandwidth --data-size=1024)
+  add_test(NAME mpi_bandwidth_test
+           COMMAND mpirun -np 2 ${CMAKE_CURRENT_BINARY_DIR}/mpi_bandwidth
+                   --data-size=1024)
 endif()
 
 add_library(atomic_latency atomic_latency.cc)
