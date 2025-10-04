@@ -118,8 +118,6 @@ add_executable(syscall_latency_test syscall_latency_test.cc)
 target_link_libraries(syscall_latency_test syscall_latency ${AKBENCH_LIBS})
 add_test(NAME syscall_latency_test COMMAND syscall_latency_test)
 
-option(AKBENCH_ENABLE_MPI "Enable MPI support" OFF)
-
 if(AKBENCH_ENABLE_MPI)
   find_package(MPI REQUIRED COMPONENTS CXX)
   add_executable(mpi_bandwidth mpi_bandwidth.cc)
