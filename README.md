@@ -45,7 +45,7 @@ bandwidth_shm: 10.470 ± 0.185 GiByte/sec
 
 ## Usage
 ```
-$ akbench --help
+$ ./build/akbench/akbench --help
 Usage: akbench <TYPE> [OPTIONS]
 
 Unified benchmark tool for measuring system performance.
