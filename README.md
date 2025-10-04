@@ -10,13 +10,12 @@ $ git clone https://github.com/akawashiro/akbench.git
 $ cd akbench
 $ cmake -S . -B build -D CMAKE_CXX_COMPILER=clang++
 $ cmake --build build
-$ cmake --install build
+$ cmake --install build # If you want to install globally
 ```
 
 ## How to run
 ```bash
-$ # If you haven't installed it, ./build/akbench/akbench all
-$ akbench all
+$ ./build/akbench/akbench all
 Running all latency tests:
 
 latency_atomic: 30.603 ± 7.456 ns
