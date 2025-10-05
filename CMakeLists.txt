@@ -7,4 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(GNUInstallDirs)
 enable_testing()
 
+option(AKBENCH_ENABLE_MPI "Enable MPI support" OFF)
+
 add_subdirectory(akbench)

@@ -21,7 +21,10 @@ static uint64_t g_data_size = 1024 * 1024; // 1MB default
 void PrintUsage(const char *program_name) {
   std::cout << R"(Usage: )" << program_name << R"( [OPTIONS]
 
-Ping-pong benchmark tool for measuring MPI bandwidth.
+Ping-pong benchmark tool for measuring MPI bandwidth. Use mpirun to run with 2
+processes. For example:
+
+  mpirun -np 2 ./build/akbench/mpi_bandwidth
 
 Options:
   -i, --num-iterations=N   Number of measurement iterations (min 3, default: 10)
