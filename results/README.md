@@ -361,3 +361,91 @@ bandwidth_mq: 1.758 ± 0.021 GiByte/sec
 bandwidth_mmap: 10.238 ± 0.120 GiByte/sec
 bandwidth_shm: 10.470 ± 0.185 GiByte/sec
 ```
+
+# LAPTOP-7LEF3C0M
+
+## OS
+```
+$ uname -a
+Linux LAPTOP-7LEF3C0M 6.6.87.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun  5 18:30:46 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+```
+$ lscpu
+Architecture:                         x86_64
+CPU op-mode(s):                       32-bit, 64-bit
+Address sizes:                        39 bits physical, 48 bits virtual
+Byte Order:                           Little Endian
+CPU(s):                               8
+On-line CPU(s) list:                  0-7
+Vendor ID:                            GenuineIntel
+Model name:                           Intel(R) Core(TM) i5-8365U CPU @ 1.60GHz
+CPU family:                           6
+Model:                                142
+Thread(s) per core:                   2
+Core(s) per socket:                   4
+Socket(s):                            1
+Stepping:                             12
+BogoMIPS:                             3792.00
+Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon rep_good nopl xtopology cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt xsaveopt xsavec xgetbv1 xsaves vnmi md_clear flush_l1d arch_capabilities
+Virtualization:                       VT-x
+Hypervisor vendor:                    Microsoft
+Virtualization type:                  full
+L1d cache:                            128 KiB (4 instances)
+L1i cache:                            128 KiB (4 instances)
+L2 cache:                             1 MiB (4 instances)
+L3 cache:                             6 MiB (1 instance)
+NUMA node(s):                         1
+NUMA node0 CPU(s):                    0-7
+Vulnerability Gather data sampling:   Not affected
+Vulnerability Itlb multihit:          KVM: Mitigation: VMX disabled
+Vulnerability L1tf:                   Not affected
+Vulnerability Mds:                    Not affected
+Vulnerability Meltdown:               Not affected
+Vulnerability Mmio stale data:        Mitigation; Clear CPU buffers; SMT Host state unknown
+Vulnerability Reg file data sampling: Not affected
+Vulnerability Retbleed:               Mitigation; Enhanced IBRS
+Vulnerability Spec rstack overflow:   Not affected
+Vulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                  Unknown: Dependent on hypervisor status
+Vulnerability Tsx async abort:        Mitigation; TSX disabled
+```
+
+```
+$ sudo lshw -class memory
+  *-memory
+       description: System memory
+       physical id: 1
+       size: 11GiB
+```
+
+```
+$ ./build/akbench/akbench all
+Running all latency tests:
+
+latency_atomic: 42.706 ± 12.833 ns
+latency_atomic_rel_acq: 47.323 ± 14.577 ns
+latency_barrier: 31798.330 ± 8015.647 ns
+latency_condition_variable: 38019.592 ± 9726.333 ns
+latency_semaphore: 25298.642 ± 6972.319 ns
+latency_statfs: 737.350 ± 172.411 ns
+latency_fstatfs: 435.186 ± 113.216 ns
+latency_getpid: 148.462 ± 35.782 ns
+
+Running all bandwidth tests:
+
+bandwidth_memcpy: 5.938 ± 2.040 GiByte/sec
+bandwidth_memcpy_mt (1 threads): 7.358 ± 2.000 GiByte/sec
+bandwidth_memcpy_mt (2 threads): 8.990 ± 0.401 GiByte/sec
+bandwidth_memcpy_mt (3 threads): 8.660 ± 0.368 GiByte/sec
+bandwidth_memcpy_mt (4 threads): 8.338 ± 0.262 GiByte/sec
+bandwidth_tcp: 2.367 ± 0.490 GiByte/sec
+bandwidth_uds: 3.089 ± 0.217 GiByte/sec
+bandwidth_pipe: 0.545 ± 0.075 GiByte/sec
+bandwidth_fifo: 0.484 ± 0.093 GiByte/sec
+bandwidth_mq: 0.433 ± 0.130 GiByte/sec
+bandwidth_mmap: 4.066 ± 0.323 GiByte/sec
+bandwidth_shm: 3.613 ± 0.904 GiByte/sec
+```
