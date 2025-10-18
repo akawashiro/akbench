@@ -129,8 +129,7 @@ void OutputJsonResults(
 
 // Helper function to output latency and bandwidth results as a JSON dictionary
 void OutputJsonDictionary(
-    const std::vector<std::pair<std::string, BenchmarkResult>>
-        &latency_results,
+    const std::vector<std::pair<std::string, BenchmarkResult>> &latency_results,
     const std::vector<std::pair<std::string, BenchmarkResult>>
         &bandwidth_results) {
   std::println("{{");
@@ -703,21 +702,22 @@ int main(int argc, char *argv[]) {
       const uint64_t atomic_rel_acq_loop_size =
           loop_size_opt.has_value() ? *loop_size_opt
                                     : default_loop_sizes.at("atomic");
-      const uint64_t barrier_loop_size =
-          loop_size_opt.has_value() ? *loop_size_opt
-                                    : default_loop_sizes.at("barrier");
+      const uint64_t barrier_loop_size = loop_size_opt.has_value()
+                                             ? *loop_size_opt
+                                             : default_loop_sizes.at("barrier");
       const uint64_t cv_loop_size =
-          loop_size_opt.has_value() ? *loop_size_opt
-                                    : default_loop_sizes.at("condition_variable");
+          loop_size_opt.has_value()
+              ? *loop_size_opt
+              : default_loop_sizes.at("condition_variable");
       const uint64_t semaphore_loop_size =
           loop_size_opt.has_value() ? *loop_size_opt
                                     : default_loop_sizes.at("semaphore");
       const uint64_t statfs_loop_size = loop_size_opt.has_value()
                                             ? *loop_size_opt
                                             : default_loop_sizes.at("statfs");
-      const uint64_t fstatfs_loop_size =
-          loop_size_opt.has_value() ? *loop_size_opt
-                                    : default_loop_sizes.at("fstatfs");
+      const uint64_t fstatfs_loop_size = loop_size_opt.has_value()
+                                             ? *loop_size_opt
+                                             : default_loop_sizes.at("fstatfs");
       const uint64_t getpid_loop_size = loop_size_opt.has_value()
                                             ? *loop_size_opt
                                             : default_loop_sizes.at("getpid");
@@ -738,9 +738,8 @@ int main(int argc, char *argv[]) {
                                           barrier_loop_size);
       latency_results.emplace_back("latency_barrier", result);
 
-      result =
-          RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
-                                               cv_loop_size);
+      result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
+                                                    cv_loop_size);
       latency_results.emplace_back("latency_condition_variable", result);
 
       result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
@@ -770,10 +769,9 @@ int main(int argc, char *argv[]) {
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         benchmark_result = RunMemcpyMtBandwidthBenchmark(
             num_iterations, num_warmups, data_size, n_threads);
-        bandwidth_results.emplace_back("bandwidth_memcpy_mt (" +
-                                            std::to_string(n_threads) +
-                                            " threads)",
-                                        benchmark_result);
+        bandwidth_results.emplace_back(
+            "bandwidth_memcpy_mt (" + std::to_string(n_threads) + " threads)",
+            benchmark_result);
       }
 
       benchmark_result = RunTcpBandwidthBenchmark(num_iterations, num_warmups,
