@@ -21,13 +21,11 @@ import numpy as np
 
 
 def get_repo_root():
-    """Get the repository root directory."""
     script_dir = Path(__file__).resolve().parent
     return script_dir.parent
 
 
 def load_json_files(results_dir):
-    """Load all JSON files from the results directory."""
     data = {}
     for json_file in results_dir.glob("*.json"):
         machine_name = json_file.stem
@@ -37,7 +35,6 @@ def load_json_files(results_dir):
 
 
 def get_machine_color(machine_name, machine_names):
-    """Get a consistent color for a machine name."""
     # Use a colormap to get distinct colors
     colors = list(mcolors.TABLEAU_COLORS.values())
     idx = sorted(machine_names).index(machine_name)
@@ -45,7 +42,6 @@ def get_machine_color(machine_name, machine_names):
 
 
 def generate_bandwidth_graph(data, output_path):
-    """Generate bandwidth comparison graph."""
     # Extract all unique benchmark names
     all_benchmarks = set()
     for machine_data in data.values():
@@ -108,7 +104,6 @@ def generate_bandwidth_graph(data, output_path):
 
 
 def generate_latency_graph(data, output_path):
-    """Generate latency comparison graph."""
     # Extract all unique benchmark names
     all_benchmarks = set()
     for machine_data in data.values():
@@ -186,17 +181,7 @@ def generate_latency_graph(data, output_path):
     print(f"Generated latency graph: {output_path}")
 
 
-def print_readme_instructions(readme_path):
-    """Print instructions for adding graphs to README.md."""
-    print(f"\nTo add the graphs to {readme_path}, add the following lines:")
-    print("=" * 60)
-    print("![Bandwidth Comparison](bandwidth.png)")
-    print("![Latency Comparison](latency.png)")
-    print("=" * 60)
-
-
 def main():
-    """Main function."""
     repo_root = get_repo_root()
     results_dir = repo_root / "results"
 
@@ -216,10 +201,6 @@ def main():
 
     generate_bandwidth_graph(data, bandwidth_output)
     generate_latency_graph(data, latency_output)
-
-    # Print instructions for updating README
-    readme_path = results_dir / "README.md"
-    print_readme_instructions(readme_path)
 
     print("\nDone!")
 
