@@ -23,6 +23,25 @@ jobs:
       run: |
         ./scripts/format.sh
         git diff --exit-code
+  python-format:
+    name: Python Format
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install Python formatting tools
+      run: |
+        pip install black isort
+    - name: Check Python formatting with black
+      run: |
+        black --check scripts/generate_graphs.py
+    - name: Check Python imports with isort
+      run: |
+        isort --check scripts/generate_graphs.py
   build:
     name: Unit tests
     runs-on: ubuntu-latest
