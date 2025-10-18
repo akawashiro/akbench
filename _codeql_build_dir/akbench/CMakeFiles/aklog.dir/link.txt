@@ -1,0 +1,2 @@
+/usr/bin/ar qc libaklog.a CMakeFiles/aklog.dir/aklog.cc.o
+/usr/bin/ranlib libaklog.a

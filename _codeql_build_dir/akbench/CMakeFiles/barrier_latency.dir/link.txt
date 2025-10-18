@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbarrier_latency.a CMakeFiles/barrier_latency.dir/barrier_latency.cc.o
+/usr/bin/ranlib libbarrier_latency.a

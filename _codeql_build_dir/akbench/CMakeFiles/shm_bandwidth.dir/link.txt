@@ -1,0 +1,2 @@
+/usr/bin/ar qc libshm_bandwidth.a CMakeFiles/shm_bandwidth.dir/shm_bandwidth.cc.o
+/usr/bin/ranlib libshm_bandwidth.a

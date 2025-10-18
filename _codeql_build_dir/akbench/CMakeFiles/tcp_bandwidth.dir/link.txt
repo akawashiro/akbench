@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtcp_bandwidth.a CMakeFiles/tcp_bandwidth.dir/tcp_bandwidth.cc.o
+/usr/bin/ranlib libtcp_bandwidth.a

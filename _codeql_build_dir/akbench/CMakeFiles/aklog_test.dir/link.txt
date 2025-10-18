@@ -1,0 +1,1 @@
+/home/runner/work/akbench/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/aklog_test.dir/link.d CMakeFiles/aklog_test.dir/aklog_test.cc.o -o aklog_test  libaklog.a

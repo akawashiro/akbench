@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsemaphore_latency.a CMakeFiles/semaphore_latency.dir/semaphore_latency.cc.o
+/usr/bin/ranlib libsemaphore_latency.a

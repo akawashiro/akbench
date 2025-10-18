@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsyscall_latency.a CMakeFiles/syscall_latency.dir/syscall_latency.cc.o
+/usr/bin/ranlib libsyscall_latency.a

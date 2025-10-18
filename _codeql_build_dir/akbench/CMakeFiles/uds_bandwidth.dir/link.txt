@@ -1,0 +1,2 @@
+/usr/bin/ar qc libuds_bandwidth.a CMakeFiles/uds_bandwidth.dir/uds_bandwidth.cc.o
+/usr/bin/ranlib libuds_bandwidth.a

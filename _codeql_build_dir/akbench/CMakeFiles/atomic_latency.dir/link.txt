@@ -1,0 +1,2 @@
+/usr/bin/ar qc libatomic_latency.a CMakeFiles/atomic_latency.dir/atomic_latency.cc.o
+/usr/bin/ranlib libatomic_latency.a

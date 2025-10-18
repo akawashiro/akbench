@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmemcpy_bandwidth.a CMakeFiles/memcpy_bandwidth.dir/memcpy_bandwidth.cc.o
+/usr/bin/ranlib libmemcpy_bandwidth.a

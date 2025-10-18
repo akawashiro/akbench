@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfifo_bandwidth.a CMakeFiles/fifo_bandwidth.dir/fifo_bandwidth.cc.o
+/usr/bin/ranlib libfifo_bandwidth.a

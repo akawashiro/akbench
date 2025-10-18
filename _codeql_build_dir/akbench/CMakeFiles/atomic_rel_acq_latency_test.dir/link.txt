@@ -1,0 +1,1 @@
+/home/runner/work/akbench/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/atomic_rel_acq_latency_test.dir/link.d CMakeFiles/atomic_rel_acq_latency_test.dir/atomic_rel_acq_latency_test.cc.o -o atomic_rel_acq_latency_test  libatomic_rel_acq_latency.a libcommon.a libaklog.a libbarrier.a -lrt -lpthread libaklog.a

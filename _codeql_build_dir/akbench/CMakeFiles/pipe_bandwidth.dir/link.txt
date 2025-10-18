@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpipe_bandwidth.a CMakeFiles/pipe_bandwidth.dir/pipe_bandwidth.cc.o
+/usr/bin/ranlib libpipe_bandwidth.a

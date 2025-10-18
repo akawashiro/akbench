@@ -1,0 +1,1 @@
+/home/runner/work/akbench/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/barrier_test.dir/link.d CMakeFiles/barrier_test.dir/barrier_test.cc.o -o barrier_test  libcommon.a libaklog.a libbarrier.a -lrt -lpthread libaklog.a

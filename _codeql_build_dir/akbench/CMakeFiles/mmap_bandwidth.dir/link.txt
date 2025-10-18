@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmmap_bandwidth.a CMakeFiles/mmap_bandwidth.dir/mmap_bandwidth.cc.o
+/usr/bin/ranlib libmmap_bandwidth.a

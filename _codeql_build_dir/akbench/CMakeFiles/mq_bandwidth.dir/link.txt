@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmq_bandwidth.a CMakeFiles/mq_bandwidth.dir/mq_bandwidth.cc.o
+/usr/bin/ranlib libmq_bandwidth.a
