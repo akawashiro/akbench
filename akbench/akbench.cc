@@ -95,10 +95,43 @@ Options:
 )";
 }
 
+// Helper function to output a single benchmark result as JSON
+void OutputJsonResult(const std::string &name, const BenchmarkResult &result,
+                      const std::string &unit) {
+  std::println(R"({{)");
+  std::println(R"(  "name": "{}",)", name);
+  std::println(R"(  "average": {},)", result.average);
+  std::println(R"(  "stddev": {},)", result.stddev);
+  std::println(R"(  "unit": "{}")", unit);
+  std::println(R"(}})");
+}
+
+// Helper function to output multiple benchmark results as JSON
+void OutputJsonResults(
+    const std::vector<std::pair<std::string, BenchmarkResult>> &results,
+    const std::string &unit) {
+  std::println("[");
+  for (size_t i = 0; i < results.size(); ++i) {
+    const auto &[name, result] = results[i];
+    std::println("  {{");
+    std::println(R"(    "name": "{}",)", name);
+    std::println(R"(    "average": {},)", result.average);
+    std::println(R"(    "stddev": {},)", result.stddev);
+    std::println(R"(    "unit": "{}")", unit);
+    if (i < results.size() - 1) {
+      std::println("  }},");
+    } else {
+      std::println("  }}");
+    }
+  }
+  std::println("]");
+}
+
 void RunLatencyBenchmarks(
     int num_iterations, int num_warmups,
     const std::map<std::string, uint64_t> &default_loop_sizes,
-    const std::optional<uint64_t> &loop_size_opt, const std::string &type) {
+    const std::optional<uint64_t> &loop_size_opt, const std::string &type,
+    bool json_output) {
 
   const uint64_t atomic_loop_size = loop_size_opt.has_value()
                                         ? *loop_size_opt
@@ -163,58 +196,99 @@ void RunLatencyBenchmarks(
     results.emplace_back("latency_getpid", result);
 
     // Output all results at the end
-    for (const auto &benchmark_result : results) {
-      std::println("{}: {:.3f} ± {:.3f} ns", benchmark_result.first,
-                   benchmark_result.second.average * 1e9,
-                   benchmark_result.second.stddev * 1e9);
+    if (json_output) {
+      // Convert results to nanoseconds for JSON output
+      std::vector<std::pair<std::string, BenchmarkResult>> ns_results;
+      for (const auto &[name, res] : results) {
+        ns_results.emplace_back(name, BenchmarkResult{res.average * 1e9, res.stddev * 1e9});
+      }
+      OutputJsonResults(ns_results, "ns");
+    } else {
+      for (const auto &benchmark_result : results) {
+        std::println("{}: {:.3f} ± {:.3f} ns", benchmark_result.first,
+                     benchmark_result.second.average * 1e9,
+                     benchmark_result.second.stddev * 1e9);
+      }
     }
   } else if (type == "latency_atomic") {
     result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
                                        atomic_loop_size);
-    std::println("Atomic benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_atomic", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Atomic benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_atomic_rel_acq") {
     result = RunAtomicRelAcqLatencyBenchmark(num_iterations, num_warmups,
                                              atomic_rel_acq_loop_size);
-    std::println("Atomic RelAcq benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_atomic_rel_acq", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Atomic RelAcq benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_barrier") {
     result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
                                         barrier_loop_size);
-    std::println("Barrier benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_barrier", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Barrier benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_condition_variable") {
     result = RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
                                                   cv_loop_size);
-    std::println("Condition Variable benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_condition_variable", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Condition Variable benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_semaphore") {
     result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
                                           semaphore_loop_size);
-    std::println("Semaphore benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_semaphore", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Semaphore benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_statfs") {
     result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
                                        statfs_loop_size);
-    std::println("Statfs benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_statfs", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Statfs benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_fstatfs") {
     result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
                                         fstatfs_loop_size);
-    std::println("Fstatfs benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_fstatfs", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Fstatfs benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   } else if (type == "latency_getpid") {
     result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
                                        getpid_loop_size);
-    std::println("Getpid benchmark result: {:.3f} ± {:.3f} ns",
-                 result.average * 1e9, result.stddev * 1e9);
+    if (json_output) {
+      OutputJsonResult("latency_getpid", BenchmarkResult{result.average * 1e9, result.stddev * 1e9}, "ns");
+    } else {
+      std::println("Getpid benchmark result: {:.3f} ± {:.3f} ns",
+                   result.average * 1e9, result.stddev * 1e9);
+    }
   }
 }
 
 void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
                             uint64_t data_size, uint64_t buffer_size,
                             const std::optional<uint64_t> &num_threads_opt,
-                            const std::string &type) {
+                            const std::string &type, bool json_output) {
   BenchmarkResult benchmark_result;
 
   if (type == "bandwidth_all") {
@@ -263,78 +337,134 @@ void RunBandwidthBenchmarks(int num_iterations, int num_warmups,
     results.emplace_back("bandwidth_shm", benchmark_result);
 
     // Output all results at the end
-    for (const auto &result : results) {
-      std::println("{}: {:.3f} ± {:.3f}{}", result.first,
-                   result.second.average / (1ULL << 30),
-                   result.second.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      // Convert results to GiByte/sec for JSON output
+      std::vector<std::pair<std::string, BenchmarkResult>> gib_results;
+      for (const auto &[name, res] : results) {
+        gib_results.emplace_back(name, BenchmarkResult{res.average / (1ULL << 30), res.stddev / (1ULL << 30)});
+      }
+      OutputJsonResults(gib_results, "GiByte/sec");
+    } else {
+      for (const auto &result : results) {
+        std::println("{}: {:.3f} ± {:.3f}{}", result.first,
+                     result.second.average / (1ULL << 30),
+                     result.second.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+      }
     }
   } else if (type == "bandwidth_memcpy") {
     benchmark_result =
         RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
-    std::println("bandwidth_memcpy: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_memcpy", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_memcpy: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_memcpy_mt") {
     if (num_threads_opt.has_value()) {
       // Run with specified number of threads
       benchmark_result = RunMemcpyMtBandwidthBenchmark(
           num_iterations, num_warmups, data_size, num_threads_opt.value());
-      std::println("bandwidth_memcpy_mt: {:.3f} ± {:.3f}{}",
-                   benchmark_result.average / (1ULL << 30),
-                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+      if (json_output) {
+        OutputJsonResult("bandwidth_memcpy_mt", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+      } else {
+        std::println("bandwidth_memcpy_mt: {:.3f} ± {:.3f}{}",
+                     benchmark_result.average / (1ULL << 30),
+                     benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+      }
     } else {
       // Run with 1-4 threads for compatibility
+      std::vector<std::pair<std::string, BenchmarkResult>> results;
       for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
         benchmark_result = RunMemcpyMtBandwidthBenchmark(
             num_iterations, num_warmups, data_size, n_threads);
-        std::println("bandwidth_memcpy_mt ({} threads): {:.3f} ± {:.3f}{}",
-                     n_threads, benchmark_result.average / (1ULL << 30),
-                     benchmark_result.stddev / (1ULL << 30),
-                     GIBYTE_PER_SEC_UNIT);
+        results.emplace_back("bandwidth_memcpy_mt (" + std::to_string(n_threads) + " threads)", benchmark_result);
+      }
+      if (json_output) {
+        std::vector<std::pair<std::string, BenchmarkResult>> gib_results;
+        for (const auto &[name, res] : results) {
+          gib_results.emplace_back(name, BenchmarkResult{res.average / (1ULL << 30), res.stddev / (1ULL << 30)});
+        }
+        OutputJsonResults(gib_results, "GiByte/sec");
+      } else {
+        for (const auto &[name, res] : results) {
+          std::println("{}: {:.3f} ± {:.3f}{}", name,
+                       res.average / (1ULL << 30),
+                       res.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+        }
       }
     }
   } else if (type == "bandwidth_tcp") {
     benchmark_result = RunTcpBandwidthBenchmark(num_iterations, num_warmups,
                                                 data_size, buffer_size);
-    std::println("bandwidth_tcp: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_tcp", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_tcp: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_uds") {
     benchmark_result = RunUdsBandwidthBenchmark(num_iterations, num_warmups,
                                                 data_size, buffer_size);
-    std::println("bandwidth_uds: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_uds", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_uds: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_pipe") {
     benchmark_result = RunPipeBandwidthBenchmark(num_iterations, num_warmups,
                                                  data_size, buffer_size);
-    std::println("bandwidth_pipe: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_pipe", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_pipe: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_fifo") {
     benchmark_result = RunFifoBandwidthBenchmark(num_iterations, num_warmups,
                                                  data_size, buffer_size);
-    std::println("bandwidth_fifo: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_fifo", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_fifo: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_mq") {
     benchmark_result = RunMqBandwidthBenchmark(num_iterations, num_warmups,
                                                data_size, buffer_size);
-    std::println("bandwidth_mq: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_mq", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_mq: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_mmap") {
     benchmark_result = RunMmapBandwidthBenchmark(num_iterations, num_warmups,
                                                  data_size, buffer_size);
-    std::println("bandwidth_mmap: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_mmap", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_mmap: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   } else if (type == "bandwidth_shm") {
     benchmark_result = RunShmBandwidthBenchmark(num_iterations, num_warmups,
                                                 data_size, buffer_size);
-    std::println("bandwidth_shm: {:.3f} ± {:.3f}{}",
-                 benchmark_result.average / (1ULL << 30),
-                 benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    if (json_output) {
+      OutputJsonResult("bandwidth_shm", BenchmarkResult{benchmark_result.average / (1ULL << 30), benchmark_result.stddev / (1ULL << 30)}, "GiByte/sec");
+    } else {
+      std::println("bandwidth_shm: {:.3f} ± {:.3f}{}",
+                   benchmark_result.average / (1ULL << 30),
+                   benchmark_result.stddev / (1ULL << 30), GIBYTE_PER_SEC_UNIT);
+    }
   }
 }
 
@@ -349,8 +479,8 @@ int main(int argc, char *argv[]) {
       {"data-size", required_argument, nullptr, 'd'},
       {"buffer-size", required_argument, nullptr, 'b'},
       {"num-threads", required_argument, nullptr, 'n'},
-      {"log-level", required_argument, nullptr, 256},   // No short option
-      {"json-output", required_argument, nullptr, 257}, // No short option
+      {"log-level", required_argument, nullptr, 256}, // No short option
+      {"json-output", no_argument, nullptr, 257},     // No short option
       {"help", no_argument, nullptr, 'h'},
       {nullptr, 0, nullptr, 0}};
 
@@ -529,28 +659,32 @@ int main(int argc, char *argv[]) {
 
   // Handle the "all" case which runs all tests
   if (type == "all") {
-    std::println("Running all latency tests:");
-    std::println("");
+    if (!g_json_output) {
+      std::println("Running all latency tests:");
+      std::println("");
+    }
     RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
-                         loop_size_opt, "latency_all");
+                         loop_size_opt, "latency_all", g_json_output);
 
-    std::println("");
-    std::println("Running all bandwidth tests:");
-    std::println("");
+    if (!g_json_output) {
+      std::println("");
+      std::println("Running all bandwidth tests:");
+      std::println("");
+    }
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
-                           num_threads_opt, "bandwidth_all");
+                           num_threads_opt, "bandwidth_all", g_json_output);
     return 0;
   }
 
   // Handle latency tests
   if (type.find("latency_") == 0 || type == "latency_all") {
     RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
-                         loop_size_opt, type);
+                         loop_size_opt, type, g_json_output);
   }
   // Handle bandwidth tests
   else if (type.find("bandwidth_") == 0 || type == "bandwidth_all") {
     RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
-                           num_threads_opt, type);
+                           num_threads_opt, type, g_json_output);
   } else {
     AKLOG(aklog::LogLevel::ERROR,
           std::format(
