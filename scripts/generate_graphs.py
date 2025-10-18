@@ -87,8 +87,8 @@ def generate_bandwidth_graph(data, output_path):
             capsize=3,
         )
 
-    ax.set_xlabel("Benchmark", fontsize=12, fontweight="bold")
-    ax.set_ylabel("Bandwidth (GiByte/sec)", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Benchmark", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Bandwidth (GiByte/sec)", fontsize=14, fontweight="bold")
     ax.set_title(
         "IPC Bandwidth Comparison (higher is better)", fontsize=14, fontweight="bold"
     )
@@ -149,8 +149,8 @@ def generate_latency_graph(data, output_path):
             capsize=3,
         )
 
-    ax.set_xlabel("Benchmark", fontsize=12, fontweight="bold")
-    ax.set_ylabel("Latency (nanoseconds)", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Benchmark", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Latency (nanoseconds)", fontsize=14, fontweight="bold")
     ax.set_title(
         "IPC Latency Comparison (lower is better)", fontsize=14, fontweight="bold"
     )
