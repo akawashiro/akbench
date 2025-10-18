@@ -8,7 +8,6 @@ It also embeds these graphs into the top of results/README.md.
 """
 
 import json
-import os
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -142,8 +141,19 @@ def generate_latency_graph(data, output_path):
     ax.grid(axis='y', alpha=0.3)
     
     # Use log scale if values span multiple orders of magnitude
-    values_flat = [v for vals in [values] for v in vals if v > 0]
-    if values_flat and max(values_flat) / min(values_flat) > 100:
+    # Collect all non-zero values across all machines
+    all_values = []
+    for machine_name in machine_names:
+        machine_data = data[machine_name].get('latency', [])
+        bench_dict = {b['name']: b for b in machine_data}
+        for bench_name in benchmark_names:
+            if bench_name in bench_dict:
+                bench = bench_dict[bench_name]
+                value_ns = bench['average'] * 1e9
+                if value_ns > 0:
+                    all_values.append(value_ns)
+    
+    if all_values and max(all_values) / min(all_values) > 100:
         ax.set_yscale('log')
     
     plt.tight_layout()
@@ -152,7 +162,7 @@ def generate_latency_graph(data, output_path):
     print(f"Generated latency graph: {output_path}")
 
 
-def update_readme(readme_path, bandwidth_img, latency_img):
+def update_readme(readme_path):
     """Update README.md to include graphs at the top."""
     # Read existing README
     with open(readme_path, 'r') as f:
@@ -227,7 +237,7 @@ def main():
     
     # Update README
     readme_path = results_dir / "README.md"
-    update_readme(readme_path, bandwidth_output, latency_output)
+    update_readme(readme_path)
     
     print("\nDone!")
 
