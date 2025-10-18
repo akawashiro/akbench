@@ -1,0 +1,236 @@
+#!/usr/bin/env python3
+"""
+Script to generate bandwidth and latency graphs from JSON benchmark results.
+
+This script reads all JSON files in the results directory, extracts bandwidth
+and latency data, and generates two graphs (bandwidth.png and latency.png).
+It also embeds these graphs into the top of results/README.md.
+"""
+
+import json
+import os
+from pathlib import Path
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+
+
+def get_repo_root():
+    """Get the repository root directory."""
+    script_dir = Path(__file__).resolve().parent
+    return script_dir.parent
+
+
+def load_json_files(results_dir):
+    """Load all JSON files from the results directory."""
+    data = {}
+    for json_file in results_dir.glob("*.json"):
+        machine_name = json_file.stem
+        with open(json_file, 'r') as f:
+            data[machine_name] = json.load(f)
+    return data
+
+
+def get_machine_color(machine_name, machine_names):
+    """Get a consistent color for a machine name."""
+    # Use a colormap to get distinct colors
+    colors = list(mcolors.TABLEAU_COLORS.values())
+    idx = sorted(machine_names).index(machine_name)
+    return colors[idx % len(colors)]
+
+
+def generate_bandwidth_graph(data, output_path):
+    """Generate bandwidth comparison graph."""
+    # Extract all unique benchmark names
+    all_benchmarks = set()
+    for machine_data in data.values():
+        for bench in machine_data.get('bandwidth', []):
+            all_benchmarks.add(bench['name'])
+    
+    benchmark_names = sorted(all_benchmarks)
+    machine_names = sorted(data.keys())
+    
+    # Prepare data for plotting
+    fig, ax = plt.subplots(figsize=(14, 8))
+    
+    x = np.arange(len(benchmark_names))
+    width = 0.8 / len(machine_names)
+    
+    for i, machine_name in enumerate(machine_names):
+        values = []
+        errors = []
+        
+        machine_data = data[machine_name].get('bandwidth', [])
+        bench_dict = {b['name']: b for b in machine_data}
+        
+        for bench_name in benchmark_names:
+            if bench_name in bench_dict:
+                bench = bench_dict[bench_name]
+                # Convert from Bytes/sec to GiByte/sec
+                value_gib = bench['average'] / (1024**3)
+                stddev_gib = bench['stddev'] / (1024**3)
+                values.append(value_gib)
+                errors.append(stddev_gib)
+            else:
+                values.append(0)
+                errors.append(0)
+        
+        color = get_machine_color(machine_name, machine_names)
+        ax.bar(x + i * width, values, width, label=machine_name, 
+               color=color, yerr=errors, capsize=3)
+    
+    ax.set_xlabel('Benchmark', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Bandwidth (GiByte/sec)', fontsize=12, fontweight='bold')
+    ax.set_title('IPC Bandwidth Comparison', fontsize=14, fontweight='bold')
+    ax.set_xticks(x + width * (len(machine_names) - 1) / 2)
+    ax.set_xticklabels(benchmark_names, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"Generated bandwidth graph: {output_path}")
+
+
+def generate_latency_graph(data, output_path):
+    """Generate latency comparison graph."""
+    # Extract all unique benchmark names
+    all_benchmarks = set()
+    for machine_data in data.values():
+        for bench in machine_data.get('latency', []):
+            all_benchmarks.add(bench['name'])
+    
+    benchmark_names = sorted(all_benchmarks)
+    machine_names = sorted(data.keys())
+    
+    # Prepare data for plotting
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    x = np.arange(len(benchmark_names))
+    width = 0.8 / len(machine_names)
+    
+    for i, machine_name in enumerate(machine_names):
+        values = []
+        errors = []
+        
+        machine_data = data[machine_name].get('latency', [])
+        bench_dict = {b['name']: b for b in machine_data}
+        
+        for bench_name in benchmark_names:
+            if bench_name in bench_dict:
+                bench = bench_dict[bench_name]
+                # Convert from seconds to nanoseconds
+                value_ns = bench['average'] * 1e9
+                stddev_ns = bench['stddev'] * 1e9
+                values.append(value_ns)
+                errors.append(stddev_ns)
+            else:
+                values.append(0)
+                errors.append(0)
+        
+        color = get_machine_color(machine_name, machine_names)
+        ax.bar(x + i * width, values, width, label=machine_name, 
+               color=color, yerr=errors, capsize=3)
+    
+    ax.set_xlabel('Benchmark', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Latency (nanoseconds)', fontsize=12, fontweight='bold')
+    ax.set_title('IPC Latency Comparison', fontsize=14, fontweight='bold')
+    ax.set_xticks(x + width * (len(machine_names) - 1) / 2)
+    ax.set_xticklabels(benchmark_names, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    
+    # Use log scale if values span multiple orders of magnitude
+    values_flat = [v for vals in [values] for v in vals if v > 0]
+    if values_flat and max(values_flat) / min(values_flat) > 100:
+        ax.set_yscale('log')
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"Generated latency graph: {output_path}")
+
+
+def update_readme(readme_path, bandwidth_img, latency_img):
+    """Update README.md to include graphs at the top."""
+    # Read existing README
+    with open(readme_path, 'r') as f:
+        content = f.read()
+    
+    # Create graph section
+    graph_section = f"""# Benchmark Results
+
+## Bandwidth
+![Bandwidth Comparison](bandwidth.png)
+
+## Latency
+![Latency Comparison](latency.png)
+
+---
+
+"""
+    
+    # Check if graphs are already embedded
+    if "![Bandwidth Comparison]" in content:
+        # Replace existing graph section
+        # Find the end of the graph section (marked by ---)
+        start_idx = content.find("# Benchmark Results")
+        if start_idx == -1:
+            # Old format, look for first image
+            start_idx = content.find("![Bandwidth Comparison]")
+            if start_idx != -1:
+                # Find start of line
+                while start_idx > 0 and content[start_idx - 1] != '\n':
+                    start_idx -= 1
+        
+        end_marker = "\n---\n"
+        end_idx = content.find(end_marker, start_idx)
+        if end_idx != -1:
+            end_idx += len(end_marker)
+            content = content[:start_idx] + graph_section + content[end_idx:]
+        else:
+            # No end marker found, just prepend
+            content = graph_section + content
+    else:
+        # Prepend graph section
+        content = graph_section + content
+    
+    # Write updated README
+    with open(readme_path, 'w') as f:
+        f.write(content)
+    
+    print(f"Updated README: {readme_path}")
+
+
+def main():
+    """Main function."""
+    repo_root = get_repo_root()
+    results_dir = repo_root / "results"
+    
+    # Load all JSON files
+    print(f"Loading JSON files from {results_dir}")
+    data = load_json_files(results_dir)
+    
+    if not data:
+        print("No JSON files found in results directory")
+        return
+    
+    print(f"Found {len(data)} machine(s): {', '.join(sorted(data.keys()))}")
+    
+    # Generate graphs
+    bandwidth_output = results_dir / "bandwidth.png"
+    latency_output = results_dir / "latency.png"
+    
+    generate_bandwidth_graph(data, bandwidth_output)
+    generate_latency_graph(data, latency_output)
+    
+    # Update README
+    readme_path = results_dir / "README.md"
+    update_readme(readme_path, bandwidth_output, latency_output)
+    
+    print("\nDone!")
+
+
+if __name__ == "__main__":
+    main()

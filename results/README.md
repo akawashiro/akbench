@@ -1,3 +1,14 @@
+# Benchmark Results
+
+## Bandwidth
+![Bandwidth Comparison](bandwidth.png)
+
+## Latency
+![Latency Comparison](latency.png)
+
+---
+
+
 # misen
 
 ## OS
