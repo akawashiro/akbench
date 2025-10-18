@@ -1,3 +1,6 @@
+![Bandwidth Comparison](bandwidth.png)
+![Latency Comparison](latency.png)
+
 # misen
 
 ## OS
