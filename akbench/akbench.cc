@@ -127,6 +127,51 @@ void OutputJsonResults(
   std::println("]");
 }
 
+// Helper function to output latency and bandwidth results as a JSON dictionary
+void OutputJsonDictionary(
+    const std::vector<std::pair<std::string, BenchmarkResult>>
+        &latency_results,
+    const std::vector<std::pair<std::string, BenchmarkResult>>
+        &bandwidth_results) {
+  std::println("{{");
+
+  // Output latency array
+  std::println(R"(  "latency": [)");
+  for (size_t i = 0; i < latency_results.size(); ++i) {
+    const auto &[name, result] = latency_results[i];
+    std::println("    {{");
+    std::println(R"(      "name": "{}",)", name);
+    std::println(R"(      "average": {:e},)", result.average);
+    std::println(R"(      "stddev": {:e},)", result.stddev);
+    std::println(R"(      "unit": "sec")");
+    if (i < latency_results.size() - 1) {
+      std::println("    }},");
+    } else {
+      std::println("    }}");
+    }
+  }
+  std::println("  ],");
+
+  // Output bandwidth array
+  std::println(R"(  "bandwidth": [)");
+  for (size_t i = 0; i < bandwidth_results.size(); ++i) {
+    const auto &[name, result] = bandwidth_results[i];
+    std::println("    {{");
+    std::println(R"(      "name": "{}",)", name);
+    std::println(R"(      "average": {:e},)", result.average);
+    std::println(R"(      "stddev": {:e},)", result.stddev);
+    std::println(R"(      "unit": "Byte/sec")");
+    if (i < bandwidth_results.size() - 1) {
+      std::println("    }},");
+    } else {
+      std::println("    }}");
+    }
+  }
+  std::println("  ]");
+
+  std::println("}}");
+}
+
 void RunLatencyBenchmarks(
     int num_iterations, int num_warmups,
     const std::map<std::string, uint64_t> &default_loop_sizes,
@@ -648,20 +693,133 @@ int main(int argc, char *argv[]) {
 
   // Handle the "all" case which runs all tests
   if (type == "all") {
-    if (!g_json_output) {
+    if (g_json_output) {
+      // For JSON output, collect all results and output as a dictionary
+
+      // Calculate loop sizes for latency tests
+      const uint64_t atomic_loop_size = loop_size_opt.has_value()
+                                            ? *loop_size_opt
+                                            : default_loop_sizes.at("atomic");
+      const uint64_t atomic_rel_acq_loop_size =
+          loop_size_opt.has_value() ? *loop_size_opt
+                                    : default_loop_sizes.at("atomic");
+      const uint64_t barrier_loop_size =
+          loop_size_opt.has_value() ? *loop_size_opt
+                                    : default_loop_sizes.at("barrier");
+      const uint64_t cv_loop_size =
+          loop_size_opt.has_value() ? *loop_size_opt
+                                    : default_loop_sizes.at("condition_variable");
+      const uint64_t semaphore_loop_size =
+          loop_size_opt.has_value() ? *loop_size_opt
+                                    : default_loop_sizes.at("semaphore");
+      const uint64_t statfs_loop_size = loop_size_opt.has_value()
+                                            ? *loop_size_opt
+                                            : default_loop_sizes.at("statfs");
+      const uint64_t fstatfs_loop_size =
+          loop_size_opt.has_value() ? *loop_size_opt
+                                    : default_loop_sizes.at("fstatfs");
+      const uint64_t getpid_loop_size = loop_size_opt.has_value()
+                                            ? *loop_size_opt
+                                            : default_loop_sizes.at("getpid");
+
+      // Run all latency benchmarks
+      std::vector<std::pair<std::string, BenchmarkResult>> latency_results;
+      BenchmarkResult result;
+
+      result = RunAtomicLatencyBenchmark(num_iterations, num_warmups,
+                                         atomic_loop_size);
+      latency_results.emplace_back("latency_atomic", result);
+
+      result = RunAtomicRelAcqLatencyBenchmark(num_iterations, num_warmups,
+                                               atomic_rel_acq_loop_size);
+      latency_results.emplace_back("latency_atomic_rel_acq", result);
+
+      result = RunBarrierLatencyBenchmark(num_iterations, num_warmups,
+                                          barrier_loop_size);
+      latency_results.emplace_back("latency_barrier", result);
+
+      result =
+          RunConditionVariableLatencyBenchmark(num_iterations, num_warmups,
+                                               cv_loop_size);
+      latency_results.emplace_back("latency_condition_variable", result);
+
+      result = RunSemaphoreLatencyBenchmark(num_iterations, num_warmups,
+                                            semaphore_loop_size);
+      latency_results.emplace_back("latency_semaphore", result);
+
+      result = RunStatfsLatencyBenchmark(num_iterations, num_warmups,
+                                         statfs_loop_size);
+      latency_results.emplace_back("latency_statfs", result);
+
+      result = RunFstatfsLatencyBenchmark(num_iterations, num_warmups,
+                                          fstatfs_loop_size);
+      latency_results.emplace_back("latency_fstatfs", result);
+
+      result = RunGetpidLatencyBenchmark(num_iterations, num_warmups,
+                                         getpid_loop_size);
+      latency_results.emplace_back("latency_getpid", result);
+
+      // Run all bandwidth benchmarks
+      std::vector<std::pair<std::string, BenchmarkResult>> bandwidth_results;
+      BenchmarkResult benchmark_result;
+
+      benchmark_result =
+          RunMemcpyBandwidthBenchmark(num_iterations, num_warmups, data_size);
+      bandwidth_results.emplace_back("bandwidth_memcpy", benchmark_result);
+
+      for (uint64_t n_threads = 1; n_threads <= 4; ++n_threads) {
+        benchmark_result = RunMemcpyMtBandwidthBenchmark(
+            num_iterations, num_warmups, data_size, n_threads);
+        bandwidth_results.emplace_back("bandwidth_memcpy_mt (" +
+                                            std::to_string(n_threads) +
+                                            " threads)",
+                                        benchmark_result);
+      }
+
+      benchmark_result = RunTcpBandwidthBenchmark(num_iterations, num_warmups,
+                                                  data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_tcp", benchmark_result);
+
+      benchmark_result = RunUdsBandwidthBenchmark(num_iterations, num_warmups,
+                                                  data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_uds", benchmark_result);
+
+      benchmark_result = RunPipeBandwidthBenchmark(num_iterations, num_warmups,
+                                                   data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_pipe", benchmark_result);
+
+      benchmark_result = RunFifoBandwidthBenchmark(num_iterations, num_warmups,
+                                                   data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_fifo", benchmark_result);
+
+      benchmark_result = RunMqBandwidthBenchmark(num_iterations, num_warmups,
+                                                 data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_mq", benchmark_result);
+
+      benchmark_result = RunMmapBandwidthBenchmark(num_iterations, num_warmups,
+                                                   data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_mmap", benchmark_result);
+
+      benchmark_result = RunShmBandwidthBenchmark(num_iterations, num_warmups,
+                                                  data_size, buffer_size);
+      bandwidth_results.emplace_back("bandwidth_shm", benchmark_result);
+
+      // Output results as dictionary
+      OutputJsonDictionary(latency_results, bandwidth_results);
+    } else {
+      // For non-JSON output, use existing functions
       std::println("Running all latency tests:");
       std::println("");
-    }
-    RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
-                         loop_size_opt, "latency_all", g_json_output);
+      RunLatencyBenchmarks(num_iterations, num_warmups, default_loop_sizes,
+                           loop_size_opt, "latency_all", g_json_output);
 
-    if (!g_json_output) {
       std::println("");
       std::println("Running all bandwidth tests:");
       std::println("");
+      RunBandwidthBenchmarks(num_iterations, num_warmups, data_size,
+                             buffer_size, num_threads_opt, "bandwidth_all",
+                             g_json_output);
     }
-    RunBandwidthBenchmarks(num_iterations, num_warmups, data_size, buffer_size,
-                           num_threads_opt, "bandwidth_all", g_json_output);
     return 0;
   }
 
