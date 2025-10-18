@@ -167,4 +167,9 @@ target_link_libraries(
   shm_bandwidth
   ${AKBENCH_LIBS})
 
+# Test JSON output functionality
+add_test(NAME akbench_json_test
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/akbench_json_test.sh
+                 ${CMAKE_CURRENT_BINARY_DIR}/akbench)
+
 install(TARGETS akbench DESTINATION ${CMAKE_INSTALL_BINDIR})
