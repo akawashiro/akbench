@@ -39,6 +39,7 @@ static uint64_t g_data_size = (1ULL << 30); // 1GB default
 static std::optional<uint64_t> g_buffer_size = std::nullopt;
 static std::optional<uint64_t> g_num_threads = std::nullopt;
 static std::string g_log_level = "WARNING";
+static bool g_json_output = false;
 
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1 << 20; // 1 MiByte
 
@@ -88,7 +89,8 @@ Options:
   -b, --buffer-size=SIZE       Buffer size in bytes for I/O operations (default: 1MB)
                                Not applicable to memcpy benchmarks
   -n, --num-threads=N          Number of threads for bandwidth_memcpy_mt
-      --log-level=LEVEL        Log level: INFO, DEBUG, WARNING, ERROR (default: WARNING)
+  --log-level=LEVEL            Log level: INFO, DEBUG, WARNING, ERROR (default: WARNING)
+  --json-output                Output results in JSON format
   -h, --help                   Display this help message
 )";
 }
@@ -347,7 +349,8 @@ int main(int argc, char *argv[]) {
       {"data-size", required_argument, nullptr, 'd'},
       {"buffer-size", required_argument, nullptr, 'b'},
       {"num-threads", required_argument, nullptr, 'n'},
-      {"log-level", required_argument, nullptr, 256}, // No short option
+      {"log-level", required_argument, nullptr, 256},   // No short option
+      {"json-output", required_argument, nullptr, 257}, // No short option
       {"help", no_argument, nullptr, 'h'},
       {nullptr, 0, nullptr, 0}};
 
@@ -378,6 +381,9 @@ int main(int argc, char *argv[]) {
         break;
       case 256: // --log-level
         g_log_level = optarg;
+        break;
+      case 257: // --json-output
+        g_json_output = true;
         break;
       case 'h':
         PrintUsage(program_name);
