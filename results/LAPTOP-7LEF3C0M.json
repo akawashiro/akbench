@@ -1,0 +1,126 @@
+{
+  "latency": [
+    {
+      "name": "latency_atomic",
+      "average": 5.748799e-08,
+      "stddev": 1.551659e-08,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_atomic_rel_acq",
+      "average": 6.407930e-08,
+      "stddev": 1.636211e-08,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_barrier",
+      "average": 2.481730e-06,
+      "stddev": 1.422703e-06,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_condition_variable",
+      "average": 9.864825e-05,
+      "stddev": 2.311965e-05,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_fstatfs",
+      "average": 4.678663e-07,
+      "stddev": 1.072800e-07,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_getpid",
+      "average": 1.481395e-07,
+      "stddev": 4.246704e-08,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_semaphore",
+      "average": 7.870530e-05,
+      "stddev": 2.629778e-05,
+      "unit": "sec"
+    },
+    {
+      "name": "latency_statfs",
+      "average": 1.032116e-06,
+      "stddev": 2.763446e-07,
+      "unit": "sec"
+    }
+  ],
+  "bandwidth": [
+    {
+      "name": "bandwidth_fifo",
+      "average": 3.279565e+08,
+      "stddev": 6.244616e+07,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_memcpy",
+      "average": 8.274445e+09,
+      "stddev": 4.589518e+08,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_memcpy_mt (1 threads)",
+      "average": 7.034646e+09,
+      "stddev": 1.183311e+09,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_memcpy_mt (2 threads)",
+      "average": 7.651785e+09,
+      "stddev": 4.944497e+08,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_memcpy_mt (3 threads)",
+      "average": 6.325544e+09,
+      "stddev": 1.074787e+09,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_memcpy_mt (4 threads)",
+      "average": 6.740829e+09,
+      "stddev": 1.130385e+09,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_mmap",
+      "average": 3.363115e+09,
+      "stddev": 6.690573e+08,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_mq",
+      "average": 7.182318e+08,
+      "stddev": 2.188430e+08,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_pipe",
+      "average": 3.401696e+08,
+      "stddev": 3.897623e+07,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_shm",
+      "average": 4.154459e+09,
+      "stddev": 1.112416e+09,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_tcp",
+      "average": 2.376399e+09,
+      "stddev": 3.075612e+08,
+      "unit": "Byte/sec"
+    },
+    {
+      "name": "bandwidth_uds",
+      "average": 1.647321e+09,
+      "stddev": 2.853786e+08,
+      "unit": "Byte/sec"
+    }
+  ]
+}
