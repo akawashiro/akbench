@@ -167,36 +167,6 @@ Vulnerability Srbds:                     Not affected
 Vulnerability Tsx async abort:           Not affected
 ```
 
-## Results
-```
-$ ./build/akbench/akbench all 
-Running all latency tests:
-
-latency_atomic: 43.128 ± 9.649 ns
-latency_atomic_rel_acq: 40.417 ± 9.139 ns
-latency_barrier: 3962.947 ± 1051.561 ns
-latency_condition_variable: 1611.880 ± 374.936 ns
-latency_semaphore: 1435.548 ± 321.478 ns
-latency_statfs: 467.024 ± 104.537 ns
-latency_fstatfs: 367.529 ± 82.243 ns
-latency_getpid: 54.231 ± 12.151 ns
-
-Running all bandwidth tests:
-
-bandwidth_memcpy: 17.604 ± 0.225 GiByte/sec
-bandwidth_memcpy_mt (1 threads): 17.599 ± 0.256 GiByte/sec
-bandwidth_memcpy_mt (2 threads): 18.235 ± 0.124 GiByte/sec
-bandwidth_memcpy_mt (3 threads): 18.617 ± 0.135 GiByte/sec
-bandwidth_memcpy_mt (4 threads): 19.000 ± 0.061 GiByte/sec
-bandwidth_tcp: 7.677 ± 0.043 GiByte/sec
-bandwidth_uds: 7.026 ± 0.261 GiByte/sec
-bandwidth_pipe: 2.482 ± 0.062 GiByte/sec
-bandwidth_fifo: 2.373 ± 0.109 GiByte/sec
-bandwidth_mq: 2.154 ± 0.080 GiByte/sec
-bandwidth_mmap: 9.575 ± 0.575 GiByte/sec
-bandwidth_shm: 9.439 ± 0.989 GiByte/sec
-```
-
 ## masumi
 
 ## CPU
@@ -332,36 +302,6 @@ $ sudo lshw -class memory
        configuration: level=3
 ```
 
-## Results
-```bash
-$ ./build/akbench/akbench all
-Running all latency tests:
-
-latency_atomic: 30.603 ± 7.456 ns
-latency_atomic_rel_acq: 28.425 ± 6.766 ns
-latency_barrier: 1207.463 ± 501.146 ns
-latency_condition_variable: 3154.424 ± 707.784 ns
-latency_semaphore: 2962.199 ± 681.565 ns
-latency_statfs: 1008.512 ± 225.512 ns
-latency_fstatfs: 664.642 ± 148.630 ns
-latency_getpid: 95.559 ± 21.436 ns
-
-Running all bandwidth tests:
-
-bandwidth_memcpy: 17.957 ± 0.440 GiByte/sec
-bandwidth_memcpy_mt (1 threads): 17.916 ± 0.144 GiByte/sec
-bandwidth_memcpy_mt (2 threads): 18.394 ± 0.189 GiByte/sec
-bandwidth_memcpy_mt (3 threads): 19.081 ± 0.356 GiByte/sec
-bandwidth_memcpy_mt (4 threads): 18.730 ± 0.563 GiByte/sec
-bandwidth_tcp: 4.914 ± 0.395 GiByte/sec
-bandwidth_uds: 6.684 ± 0.731 GiByte/sec
-bandwidth_pipe: 2.143 ± 0.021 GiByte/sec
-bandwidth_fifo: 2.100 ± 0.035 GiByte/sec
-bandwidth_mq: 1.758 ± 0.021 GiByte/sec
-bandwidth_mmap: 10.238 ± 0.120 GiByte/sec
-bandwidth_shm: 10.470 ± 0.185 GiByte/sec
-```
-
 # LAPTOP-7LEF3C0M
 
 ## OS
@@ -419,33 +359,4 @@ $ sudo lshw -class memory
        description: System memory
        physical id: 1
        size: 11GiB
-```
-
-```
-$ ./build/akbench/akbench all
-Running all latency tests:
-
-latency_atomic: 42.706 ± 12.833 ns
-latency_atomic_rel_acq: 47.323 ± 14.577 ns
-latency_barrier: 31798.330 ± 8015.647 ns
-latency_condition_variable: 38019.592 ± 9726.333 ns
-latency_semaphore: 25298.642 ± 6972.319 ns
-latency_statfs: 737.350 ± 172.411 ns
-latency_fstatfs: 435.186 ± 113.216 ns
-latency_getpid: 148.462 ± 35.782 ns
-
-Running all bandwidth tests:
-
-bandwidth_memcpy: 5.938 ± 2.040 GiByte/sec
-bandwidth_memcpy_mt (1 threads): 7.358 ± 2.000 GiByte/sec
-bandwidth_memcpy_mt (2 threads): 8.990 ± 0.401 GiByte/sec
-bandwidth_memcpy_mt (3 threads): 8.660 ± 0.368 GiByte/sec
-bandwidth_memcpy_mt (4 threads): 8.338 ± 0.262 GiByte/sec
-bandwidth_tcp: 2.367 ± 0.490 GiByte/sec
-bandwidth_uds: 3.089 ± 0.217 GiByte/sec
-bandwidth_pipe: 0.545 ± 0.075 GiByte/sec
-bandwidth_fifo: 0.484 ± 0.093 GiByte/sec
-bandwidth_mq: 0.433 ± 0.130 GiByte/sec
-bandwidth_mmap: 4.066 ± 0.323 GiByte/sec
-bandwidth_shm: 3.613 ± 0.904 GiByte/sec
 ```
