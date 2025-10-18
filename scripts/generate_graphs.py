@@ -5,6 +5,12 @@ Script to generate bandwidth and latency graphs from JSON benchmark results.
 This script reads all JSON files in the results directory, extracts bandwidth
 and latency data, and generates two graphs (bandwidth.png and latency.png).
 It also embeds these graphs into the top of results/README.md.
+
+Usage:
+    python3 scripts/generate_graphs.py
+
+The script can be run from any directory - it will automatically find the
+repository root and work with the results directory.
 """
 
 import json
