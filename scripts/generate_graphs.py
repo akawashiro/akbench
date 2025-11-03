@@ -48,7 +48,9 @@ def generate_bandwidth_graph(data, output_path):
         for bench in machine_data.get("bandwidth", []):
             all_benchmarks.add(bench["name"])
 
+    # Remove "bandwidth_" prefix from benchmark names for display
     benchmark_names = sorted(all_benchmarks)
+    display_names = [name.replace("bandwidth_", "") for name in benchmark_names]
     machine_names = sorted(data.keys())
 
     # Prepare data for plotting
@@ -93,7 +95,7 @@ def generate_bandwidth_graph(data, output_path):
         "IPC Bandwidth Comparison (higher is better)", fontsize=14, fontweight="bold"
     )
     ax.set_xticks(x + width * (len(machine_names) - 1) / 2)
-    ax.set_xticklabels(benchmark_names, rotation=45, ha="right")
+    ax.set_xticklabels(display_names, rotation=45, ha="right")
     ax.legend()
     ax.grid(axis="y", alpha=0.3)
 
@@ -110,7 +112,9 @@ def generate_latency_graph(data, output_path):
         for bench in machine_data.get("latency", []):
             all_benchmarks.add(bench["name"])
 
+    # Remove "latency_" prefix from benchmark names for display
     benchmark_names = sorted(all_benchmarks)
+    display_names = [name.replace("latency_", "") for name in benchmark_names]
     machine_names = sorted(data.keys())
 
     # Prepare data for plotting
@@ -155,7 +159,7 @@ def generate_latency_graph(data, output_path):
         "IPC Latency Comparison (lower is better)", fontsize=14, fontweight="bold"
     )
     ax.set_xticks(x + width * (len(machine_names) - 1) / 2)
-    ax.set_xticklabels(benchmark_names, rotation=45, ha="right")
+    ax.set_xticklabels(display_names, rotation=45, ha="right")
     ax.legend()
     ax.grid(axis="y", alpha=0.3)
 
